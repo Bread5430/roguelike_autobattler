@@ -14,7 +14,7 @@ enum GameState {
 
 @onready var battle_manager = $BattleManager
 @onready var viewport = $Viewport
-@onready var gui = $Viewport/Gui
+@onready var gui = $UICanvas/Gui
 @onready var map_generator = $MapManager
 
 var current_state: GameState = GameState.MAP_EXPLORATION
@@ -82,6 +82,8 @@ func enable_map_interaction():
 	battle_manager.set_process(false)
 	battle_manager.hide()
 	
+	viewport.reset_zoom()
+	
 	print("Map exploration enabled. Available nodes: %d" % map_generator.get_available_nodes().size())
 
 func _on_map_node_selected(node: MapNode):
@@ -108,6 +110,8 @@ func prepare_battle():
 	
 	print("Preparing battle at node %d (Stage: %d, Difficulty: %s)" % 
 		  [current_battle_node.id, current_battle_node.stage, current_battle_node.difficulty])
+	
+	viewport.enable_zoom()
 	
 	# Setup battle environment
 	setup_battle_environment()

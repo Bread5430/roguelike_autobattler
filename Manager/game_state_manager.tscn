@@ -19,9 +19,13 @@ anchor_mode = 0
 script = ExtResource("4_4wcpc")
 camera_move_speed = 200
 camera_default_size = Vector2(1600, 900)
-camera_max_size = 3.0
-camera_min_size = 0.3
-camera_scroll_speed = 0.3
+camera_scroll_speed = 0.15
 
-[node name="Gui" parent="Viewport" node_paths=PackedStringArray("battle_manager") instance=ExtResource("5_4wcpc")]
+[node name="UICanvas" type="CanvasLayer" parent="."]
+
+[node name="Gui" parent="UICanvas" node_paths=PackedStringArray("battle_manager") instance=ExtResource("5_4wcpc")]
+offset_left = -2.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = 2.0
 battle_manager = NodePath("../../BattleManager")
