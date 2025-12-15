@@ -10,8 +10,7 @@ extends Camera2D
 
 @export_group("Mouse Controls")
 @export var enable_mouse_pan : bool = true
-@export var pan_button : MouseButton = MOUSE_BUTTON_MIDDLE  # Middle mouse button for panning
-@export var invert_pan_direction : bool = false  # Set true for inverted panning (drag down = camera up)
+@export var invert_pan_direction : bool = true  # Set true for inverted panning (drag down = camera up)
 
 # Mouse panning state
 var is_panning : bool = false
@@ -31,26 +30,23 @@ func _ready():
 		self.limit_top = limit_top
 		self.limit_bottom = limit_bottom
 
-func _unhandled_input(event):
-	# Mouse wheel zoom - use _unhandled_input to avoid conflicts
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			zoom_camera(-camera_scroll_speed)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			zoom_camera(camera_scroll_speed)
+func _input(event):
+	# Mouse wheel zoom 
+	if Input.is_action_just_released("scroll_up"):
+		zoom_camera(-camera_scroll_speed)
+	elif Input.is_action_just_released("scroll_down"):
+		zoom_camera(camera_scroll_speed)
 			
-		# Start panning
-		elif enable_mouse_pan and event.button_index == pan_button:
-			start_pan()
-	
-	# Stop panning when button released
-	if event is InputEventMouseButton and not event.pressed:
-		if event.button_index == pan_button:
-			stop_pan()
-	
+			
+	if enable_mouse_pan and Input.is_action_just_pressed("middle_mouse"):
+		start_pan()
+	elif Input.is_action_just_released("middle_mouse"): # Stop panning when button released
+		stop_pan()
+		
 	# Handle mouse motion for panning
 	if is_panning and event is InputEventMouseMotion:
 		update_pan()
+	
 
 
 func start_pan():
@@ -72,8 +68,8 @@ func update_pan():
 	# Apply inversion if needed
 	var direction_multiplier = -1 if invert_pan_direction else 1
 	
-	# Move camera (accounting for zoom level)
-	position = pan_start_camera_pos + (mouse_delta * zoom.x * direction_multiplier)
+	# Move camera (mouse delta internally accounts for zoom level)
+	position = pan_start_camera_pos + (mouse_delta * direction_multiplier)
 
 func zoom_camera(zoom_change: float):
 	"""Zoom the camera towards the mouse cursor"""
@@ -98,6 +94,8 @@ func zoom_camera(zoom_change: float):
 	position += mouse_pos - new_mouse_pos
 
 func _process(delta: float) -> void:
+	if is_panning:
+		return
 	# Viewport movement with WASD/Arrow keys
 	var camera_move_dir := Vector2.ZERO
 	if Input.is_action_pressed("move_up"):    camera_move_dir.y -= 1
