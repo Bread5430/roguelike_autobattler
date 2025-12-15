@@ -14,7 +14,7 @@ var tile_map_size : Vector2i
 @onready var board_tiles = $BoardUI
 @onready var enemy_spawner = $Enemy_Spawner
 @onready var manager_timer = $Manager_Update
-@onready var viewport = $Viewport
+#@onready var viewport = $Viewport
 
 var enemies_tiles : Array[Array]
 var allies_tiles : Array[Array]

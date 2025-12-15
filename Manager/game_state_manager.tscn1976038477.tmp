@@ -1,11 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://ooyule8c5gdc"]
+[gd_scene load_steps=6 format=3 uid="uid://ooyule8c5gdc"]
 
 [ext_resource type="PackedScene" uid="uid://b2hkuu4ohgbnk" path="res://Manager/battle_manager.tscn" id="1_b7jtx"]
 [ext_resource type="Script" uid="uid://dtlxst4r4hl5x" path="res://Manager/game_state_manager.gd" id="1_rks66"]
 [ext_resource type="PackedScene" uid="uid://bkofyitbtwadk" path="res://Map_Gen/map_manager.tscn" id="2_rks66"]
 [ext_resource type="Script" uid="uid://dhg02pnrm87rk" path="res://Manager/viewport.gd" id="4_4wcpc"]
 [ext_resource type="PackedScene" uid="uid://dy1rgpvj3afyd" path="res://UI/GUI.tscn" id="5_4wcpc"]
-[ext_resource type="Script" uid="uid://dxaapkuxw4574" path="res://UI/ui_canvas.gd" id="5_drtnq"]
 
 [node name="GameStateManager" type="Node"]
 script = ExtResource("1_rks66")
@@ -23,7 +22,10 @@ camera_default_size = Vector2(1600, 900)
 camera_scroll_speed = 0.15
 
 [node name="UICanvas" type="CanvasLayer" parent="."]
-script = ExtResource("5_drtnq")
 
 [node name="Gui" parent="UICanvas" node_paths=PackedStringArray("battle_manager") instance=ExtResource("5_4wcpc")]
+offset_left = -2.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = 2.0
 battle_manager = NodePath("../../BattleManager")
