@@ -113,11 +113,22 @@ func connect_nearest_neighbors():
 	for node in nodes:
 		# Find nearest neighbors
 		var distances: Array = []
+		# Ensure that every node has at least 1 connection
+		var min_dist: float = 10000
+		var min_dist_node = null
 		for other_node in nodes:
 			if other_node != node:
 				var distance = node.global_position.distance_to(other_node.global_position)
+				if distance < min_dist:
+					min_dist = distance
+					min_dist_node = other_node
 				if distance <= connection_distance_threshold:
 					distances.append({"node": other_node, "distance": distance})
+		
+		# Isolated nodes get 1 guarenteed connection
+		if distances.is_empty() and min_dist_node != null:
+			create_connection(node, min_dist_node)
+			continue
 		
 		# Sort by distance
 		distances.sort_custom(func(a, b): return a.distance < b.distance)
