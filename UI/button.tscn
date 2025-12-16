@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://bfpyyxl3pptin"]
+
+[ext_resource type="Script" uid="uid://bpjgg1vocg037" path="res://UI/Button.gd" id="1_dxkr5"]
+[ext_resource type="AudioStream" uid="uid://4usek3chsx35" path="res://Audio/click.wav" id="2_ojdn7"]
+
+[node name="Button" type="Button"]
+offset_right = 8.0
+offset_bottom = 8.0
+text = "Example Text"
+script = ExtResource("1_dxkr5")
+
+[node name="click_snd" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("2_ojdn7")
+pitch_scale = 1.5
+
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
+[connection signal="pressed" from="." to="." method="_on_pressed"]
+[connection signal="finished" from="click_snd" to="." method="_on_click_snd_finished"]

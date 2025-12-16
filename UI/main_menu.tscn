@@ -1,0 +1,56 @@
+[gd_scene load_steps=3 format=3 uid="uid://bbrcv1ycfye4u"]
+
+[ext_resource type="Script" uid="uid://cmrc48jmp21pf" path="res://UI/main_menu.gd" id="1_71kaw"]
+[ext_resource type="PackedScene" uid="uid://bfpyyxl3pptin" path="res://UI/button.tscn" id="1_h5rxw"]
+
+[node name="Main_Menu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_71kaw")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.160784, 0.223529, 0.313726, 1)
+
+[node name="Play" parent="." instance=ExtResource("1_h5rxw")]
+layout_mode = 0
+offset_left = 562.0
+offset_top = 344.0
+offset_right = 674.0
+offset_bottom = 375.0
+text = "Play"
+script = null
+
+[node name="Settings" parent="." instance=ExtResource("1_h5rxw")]
+layout_mode = 0
+offset_left = 563.0
+offset_top = 428.0
+offset_right = 675.0
+offset_bottom = 459.0
+text = "Options"
+script = null
+
+[node name="Exit" parent="." instance=ExtResource("1_h5rxw")]
+layout_mode = 0
+offset_left = 559.0
+offset_top = 509.0
+offset_right = 671.0
+offset_bottom = 540.0
+text = "Exit"
+script = null
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = -1.0
+offset_right = 1289.0
+offset_bottom = 311.0
+theme_override_font_sizes/font_size = 64
+text = "Game Name"
+horizontal_alignment = 1
+vertical_alignment = 1

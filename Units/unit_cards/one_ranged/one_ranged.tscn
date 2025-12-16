@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://dn2oragnui52v" path="res://Units/unit_cards/four_melee/four_melee.gd" id="3_cxyqe"]
 [ext_resource type="PackedScene" uid="uid://cpeerva01chph" path="res://Units/melee_unit_template/MeleeUnitTemplate.tscn" id="4_1n6x7"]
 
-[node name="Four_Melee" instance=ExtResource("1_p4chj")]
+[node name="One_Ranged" instance=ExtResource("1_p4chj")]
 texture = ExtResource("2_tqhhj")
 script = ExtResource("3_cxyqe")
 num_units = 4
