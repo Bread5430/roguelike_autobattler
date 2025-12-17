@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3 uid="uid://boogfqogoucb5"]
+
+[ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_wug0t"]
+[ext_resource type="Texture2D" uid="uid://c4ehc12h5y6vo" path="res://Units/unit_cards/four_melee/4_Melee.png" id="2_eac0c"]
+[ext_resource type="Script" uid="uid://b3oqmybdba7b8" path="res://Utilities/Base_Unit.gd" id="3_qnlh8"]
+
+[node name="Chaff_Swarm" instance=ExtResource("1_wug0t")]
+texture = ExtResource("2_eac0c")
+script = ExtResource("3_qnlh8")
+max_hp = 0
+base_speed = 0
+spawn_position = Vector2(0, 0)
+faction = false
