@@ -132,6 +132,10 @@ func setup_battle_environment():
 		"node_type": current_battle_node.node_type
 	})
 	
+	print("stage " + str(current_battle_node.stage) + 
+		" difficulty " + current_battle_node.difficulty +
+		" node_type "+ current_battle_node.node_type)
+	
 	gui.start_prep_phase()
 
 	# Hide map during battle
@@ -166,6 +170,8 @@ func _on_battle_ended(victory: bool):
 	else:
 		# Handle defeat - could retry, return to map, etc.
 		handle_battle_defeat()
+		
+	battle_manager.clear_battlefield()
 
 func handle_battle_defeat():
 	"""Handle what happens when player loses a battle"""

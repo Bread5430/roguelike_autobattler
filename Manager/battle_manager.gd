@@ -27,7 +27,9 @@ func setup_battle(battle_params : Dictionary):
 		enemy_spawner.get_enemy_spawns(
 			battle_params["stage"],
 			battle_params["difficulty"]
-	)
+		)
+	#else:
+		
 	
 func clear_battlefield():
 	"""Clear all units from the battlefield"""

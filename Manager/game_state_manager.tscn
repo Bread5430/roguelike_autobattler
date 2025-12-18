@@ -27,3 +27,9 @@ script = ExtResource("5_drtnq")
 
 [node name="Gui" parent="UICanvas" node_paths=PackedStringArray("battle_manager") instance=ExtResource("5_4wcpc")]
 battle_manager = NodePath("../../BattleManager")
+
+[node name="Inventory" parent="UICanvas/Gui" index="0"]
+starter_items = Array[String](["chaff_swarm"])
+starter_items_count = Array[int]([3])
+
+[editable path="UICanvas/Gui"]

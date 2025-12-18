@@ -7,6 +7,8 @@ func item_lookup(itemname : String) -> PackedScene:
 
 const name_obj_map = {
 	"four_melee" : preload("res://Units/unit_cards/four_melee/four_melee.tscn"),
+	"chaff_swarm" : preload("res://Units/unit_cards/chaff_swarm/chaff_swarm.tscn"),
+	"one_ranged" : preload("res://Units/unit_cards/one_ranged/one_ranged.tscn"),
 }
 
 
@@ -28,5 +30,7 @@ func get_all_matching_roles(bitstring : int) -> Array:
 
 const unit_role_map = [
 	[ROLES.SWARM | ROLES.TANK, "four_melee"],
+	[ROLES.SWARM, "chaff_swarm"],
+	[ROLES.CARRY, "one_ranged"],
 	
 ]
