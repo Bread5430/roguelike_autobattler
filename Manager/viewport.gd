@@ -5,7 +5,7 @@ extends Camera2D
 @export var camera_default_size : Vector2 = Vector2(1920, 1080)
 @export var camera_max_zoom: float = 2.0  # Zoom out (smaller numbers = more zoomed out)
 @export var camera_min_zoom: float = 0.5  # Zoom in (larger numbers = more zoomed in)
-@export var camera_scroll_speed : float = 0.1
+@export var camera_scroll_speed : float = 0.2
 @export var camera_edge_margin : float = 5.0
 
 @export_group("Mouse Controls")
@@ -37,7 +37,6 @@ func _input(event):
 	elif Input.is_action_just_released("scroll_down"):
 		zoom_camera(camera_scroll_speed)
 			
-			
 	if enable_mouse_pan and Input.is_action_just_pressed("middle_mouse"):
 		start_pan()
 	elif Input.is_action_just_released("middle_mouse"): # Stop panning when button released
@@ -46,7 +45,6 @@ func _input(event):
 	# Handle mouse motion for panning
 	if is_panning and event is InputEventMouseMotion:
 		update_pan()
-	
 
 
 func start_pan():
@@ -56,9 +54,11 @@ func start_pan():
 		pan_start_mouse_pos = get_viewport().get_mouse_position()
 		pan_start_camera_pos = position
 
+
 func stop_pan():
 	"""Stop mouse panning"""
 	is_panning = false
+
 
 func update_pan():
 	"""Update camera position while panning"""
@@ -70,6 +70,7 @@ func update_pan():
 	
 	# Move camera (mouse delta internally accounts for zoom level)
 	position = pan_start_camera_pos + (mouse_delta * direction_multiplier)
+
 
 func zoom_camera(zoom_change: float):
 	"""Zoom the camera towards the mouse cursor"""

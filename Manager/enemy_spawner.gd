@@ -116,7 +116,8 @@ func parse_spawn_string(s: String) -> Dictionary:
 	var regex = RegEx.new()
 	# Updated regex to include optional string parameter at the end
 	# The string can contain any characters except closing bracket
-	regex.compile(r"\[(\d+),(\d+),(\d+),(\d+),(\d+),(\d+),(?:,([^\]]+))?\]")
+	regex.compile(r"\[(\d+),(\d+),(\d+),(\d+),(\d+),(\d+)(?:,([^\]]+))?\]")
+
 	var result = regex.search(s)
 	if result:
 		var parsed_data = {
@@ -162,13 +163,14 @@ func weighted_random_selections(array: Array) -> PackedScene:
 	
 	# Step 1: Compute weights (inverse of how often item has been selected)
 	var weights = []
+	var total_weight = 0
 	for item in array:
 		var count = selection_counts[item]
 		var weight = 1.0 / (1 + count)  # Decaying weight
 		weights.append(weight)
+		total_weight += weight
 	
 	# Step 2: Normalize weights
-	var total_weight = weights.sum()
 	var cumulative = []
 	var sum_so_far = 0.0
 	for w in weights:
@@ -181,16 +183,16 @@ func weighted_random_selections(array: Array) -> PackedScene:
 		if r <= cumulative[idx]:
 			var selected_item = array[idx]
 			if selected_item in recently_seen_units:
-				recently_seen_units[selected_item] = 2
-			else:
 				recently_seen_units[selected_item] += 2
+			else:
+				recently_seen_units[selected_item] = 2
 			return ITEM_NAME.item_lookup(selected_item)
 			
 	return null
 
 func post_ready():
 	bm = get_parent()
-	
+
 
 # Test support variables
 var test_formation_override: Array = []

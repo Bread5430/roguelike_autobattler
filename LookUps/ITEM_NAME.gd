@@ -25,7 +25,7 @@ func get_all_matching_roles(bitstring : int) -> Array:
 	var matches = []
 	for map_item in unit_role_map:
 		if bitstring & map_item[0]:
-			matches.append(unit_role_map[0])
+			matches.append(map_item[1])
 	return matches
 
 const unit_role_map = [
