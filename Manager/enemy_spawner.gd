@@ -76,19 +76,17 @@ func get_enemy_spawns(stage: int, difficulty: String) -> Array:
 		
 		# Get the Item instance to determine placement vectors
 		var unit_item_inst = selected_unit_scene.instantiate()
-		if not unit_item_inst.has_method("get_placement_vectors"):
-			push_warning("Unit doesn't have placement vectors method")
-			unit_item_inst.queue_free()
-			continue
+		unit_item_inst.setup_unit()
 		
 		# Calculate world position for spawning
 		var world_spawn_pos = bm.grid_to_world(spawn_pos)
 		
 		# Generate placement vectors based on the spawn area size
-		var placement_vectors = unit_item_inst.placement_vectors
+		# TODO: Determine if we want to spawn things in a rotated fashion
+		var placement = unit_item_inst.get_placement(false)
 		
 		# Use battle manager's add_unit_to_board function
-		bm.add_unit_to_board(unit_item_inst, world_spawn_pos, placement_vectors)
+		bm.add_unit_to_board(unit_item_inst, world_spawn_pos, placement[1])
 		
 		# Clean up the temporary instance
 		unit_item_inst.queue_free()

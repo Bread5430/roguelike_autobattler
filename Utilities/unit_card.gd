@@ -11,20 +11,30 @@ var rotated_placement_size : Vector2
 var placement_vectors : Array
 var rotated_vectors : Array
 
+
+# Returns of Vector of size 1x2, based on if it wants to be rotated
+# First index is placement size
+# Second index is plcement vectors
+func get_placement(rotated : bool) -> Array:
+	if rotated:
+		return [rotated_placement_size,rotated_vectors]
+	else:
+		return [placement_size, placement_vectors]
+
+
+### Internal Functions
+
 func setup_unit():
 	item_type = TYPE.unit_card
 	placement_vectors = divide_grid(num_units)
 	rotated_vectors = get_rotated_placement_vectors()
 	rotated_placement_size = Vector2(placement_size.y, placement_size.x)
 
-
 func get_rotated_placement_vectors() -> Array:
 	var rot_arr = []
 	for i in placement_vectors:
 		rot_arr.append(Vector2(i.y, i.x))
 	return rot_arr
-
-
 
 func divide_grid(n: int) -> Array:
 	var best_rows : int = 1

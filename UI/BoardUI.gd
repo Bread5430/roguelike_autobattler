@@ -48,4 +48,5 @@ func _remove_grid():
 
 func post_ready():
 	for i in get_children():
-		i.post_ready()
+		if i.has_method("post_ready"):
+			i.post_ready()

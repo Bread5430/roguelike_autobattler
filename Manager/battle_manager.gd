@@ -67,6 +67,11 @@ func _ready():
 			enemies_tiles[x].append([])
 	
 func post_ready():
+	
+	for node in get_children():
+		if node.has_method("post_ready"):
+			node.post_ready()
+	
 	flow_gen.init_fields()
 	for node in unit_parent.get_children():
 		node.post_ready()
