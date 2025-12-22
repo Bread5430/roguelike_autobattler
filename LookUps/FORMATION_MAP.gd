@@ -25,7 +25,7 @@ func random_formation(density : String):
 
 const formation_map = {
 	"light" : {
-		"test_light": ["[2,2,1,1,1,1]", "[4,5,2,2,1,1]"],
+		"test_light": ["[2,2,1,1,1,1]", "[2,5,2,2,1,1]"],
 	},
 	"medium" : {
 		"test_medium" : ["[2,2,2,2,1,1]", "[5,4,2,2,1,1]", "[6,6,1,1,1,1]"],

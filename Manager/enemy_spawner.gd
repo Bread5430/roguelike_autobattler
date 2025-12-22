@@ -17,7 +17,7 @@ extends Node
 
 var bm
 
-@export var grid_size := Vector2i(8, 8)
+@export var grid_size := Vector2i(10, 0)
 
 
 #var unit_bitstring_cache = {}

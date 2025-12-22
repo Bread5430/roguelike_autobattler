@@ -1,11 +1,13 @@
-[gd_scene load_steps=4 format=3 uid="uid://dnq0skelvfx8x"]
+[gd_scene load_steps=5 format=3 uid="uid://dnq0skelvfx8x"]
 
 [ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_p4chj"]
 [ext_resource type="Texture2D" uid="uid://c4ehc12h5y6vo" path="res://Units/unit_cards/four_melee/4_Melee.png" id="2_tqhhj"]
 [ext_resource type="Script" uid="uid://cny4ix6f5chl8" path="res://Units/unit_cards/one_ranged/one_ranged.gd" id="3_a7te0"]
+[ext_resource type="PackedScene" uid="uid://dntchg7qjone2" path="res://Units/ranged_unit_template/RangedUnitTemplate.tscn" id="4_t8jau"]
 
 [node name="One_Ranged" instance=ExtResource("1_p4chj")]
 texture = ExtResource("2_tqhhj")
 script = ExtResource("3_a7te0")
 num_units = 4
 placement_size = Vector2(1, 4)
+related_unit = ExtResource("4_t8jau")
