@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://dqe8xadue3a2n"]
+
+[ext_resource type="Script" uid="uid://b3oqmybdba7b8" path="res://Utilities/Base_Unit.gd" id="1_5brfk"]
+[ext_resource type="Script" uid="uid://ywvro142shb6" path="res://Utilities/Entity_Components/FSM.gd" id="3_b7mou"]
+[ext_resource type="Script" uid="uid://b2rp17h2m3mrp" path="res://Utilities/Entity_Components/targetting_cmp.gd" id="3_pfrkj"]
+
+[node name="BaseUnit" type="CharacterBody2D"]
+motion_mode = 1
+slide_on_ceiling = false
+platform_floor_layers = 4294967040
+safe_margin = 0.3
+script = ExtResource("1_5brfk")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+
+[node name="FSM" type="Node" parent="."]
+script = ExtResource("3_b7mou")
+
+[node name="Target_Movement" type="Node" parent="."]
+script = ExtResource("3_pfrkj")

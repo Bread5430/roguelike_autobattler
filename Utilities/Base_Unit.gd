@@ -41,3 +41,6 @@ func post_ready():
 	for node in get_children():
 		if node.has_method("post_ready"):
 			node.post_ready()
+
+func set_start_stop(stopped_state : bool):
+	state_machine.round_start_check = stopped_state

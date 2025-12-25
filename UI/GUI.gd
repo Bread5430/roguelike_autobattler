@@ -98,7 +98,8 @@ func check_cell():
 	# Potentially might need to change to work with moving and scaling camera
 	# var eventPosition = get_viewport().canvas_transform.affine_inverse().xform(event.position)
 	
-	var mouse_pos = get_viewport().get_mouse_position()
+	#var mouse_pos = get_viewport().get_mouse_position()
+	var mouse_pos = get_global_mouse_position()
 	curr_mouse_tile = mouse_pos / Vector2(unit_board.cellWidth, unit_board.cellHeight)
 	
 	var new_target = _get_target_cell(mouse_pos)
@@ -176,10 +177,10 @@ func _place_unit():
 
 	if rotated_placement:
 		place_on_board(grid_pos, curr_unit_inst.rotated_placement_size, curr_unit)
-		battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, curr_unit_inst.rotated_vectors)
+		battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, curr_unit_inst.rotated_vectors, false)
 	else:
 		place_on_board(grid_pos, curr_unit_inst.placement_size, curr_unit)
-		battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, curr_unit_inst.placement_vectors)
+		battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, curr_unit_inst.placement_vectors, false)
 
 	_reset_highlight(objectCells)
 

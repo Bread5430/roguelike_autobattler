@@ -5,6 +5,8 @@ var states: Dictionary = {}
 var previous_state: int = -1
 var state: int = -1: set = set_state
 var post_ready_check = false
+var round_start_check = false
+var start_state = null
 
 @onready var parent: Base_Unit = get_parent()
 @onready var sprite: AnimatedSprite2D = parent.get_node("AnimatedSprite2D")
@@ -33,6 +35,12 @@ func _state_logic(_delta: float) -> void:
 
 
 func _get_transition() -> int:
+	if state == states.wait_ready:
+		# Ensure that the round has started, and that this node is ready
+		if round_start_check == true and post_ready_check == true:
+			if start_state != null:
+				return start_state
+			 
 	return -1
 
 

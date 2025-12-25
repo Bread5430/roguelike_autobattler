@@ -86,7 +86,8 @@ func get_enemy_spawns(stage: int, difficulty: String) -> Array:
 		var placement = unit_item_inst.get_placement(false)
 		
 		# Use battle manager's add_unit_to_board function
-		bm.add_unit_to_board(unit_item_inst, world_spawn_pos, placement[1])
+		# Faction = True corresponds to enemy faction
+		bm.add_unit_to_board(unit_item_inst, world_spawn_pos, placement[1], true)
 		
 		# Clean up the temporary instance
 		unit_item_inst.queue_free()

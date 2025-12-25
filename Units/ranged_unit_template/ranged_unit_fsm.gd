@@ -12,6 +12,8 @@ func _init() -> void:
 	_add_state("attack")
 	_add_state("dead")
 	
+	start_state = states.march
+	
 	
 func _state_logic(_delta: float) -> void:
 	match state:
@@ -29,10 +31,6 @@ func _state_logic(_delta: float) -> void:
 
 func _get_transition() -> int:
 	match state:
-		states.wait_ready:
-			if post_ready_check:
-				set_state(states.march)
-		
 		states.march:
 			if ranged_attack.in_range():
 				set_state(states.attack)
@@ -40,7 +38,7 @@ func _get_transition() -> int:
 		states.attack:
 			if not ranged_attack.in_range():
 				set_state(states.march)
-	return -1
+	return super()
 	
 	
 func _enter_state(_previous_state: int, new_state: int) -> void:

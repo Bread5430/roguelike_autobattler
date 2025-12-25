@@ -44,16 +44,20 @@ func clear_battlefield():
 
 func start_battle():
 	manager_timer.start()
+	set_unit_start_stop(true)
 	# TODO: FOR DEBUGGING THIS JUST IMMEDIATELY ENDS THE BATTLE
-	end_battle()
+	#end_battle()
 
 func end_battle():
 	manager_timer.stop()
+	set_unit_start_stop(false)
 	# TODO: Add way to calculate if the player won or lost
 	battle_ended.emit(true)
 	
 
-
+func set_unit_start_stop(stopped : bool):
+	for i in unit_parent.get_children():
+		i.set_start_stop(stopped)
 
 # Triggers after both the manager and all its children have entered the scene
 func _ready():
@@ -99,12 +103,13 @@ func update_tiles():
 		else: # If unit is an enemy unit
 			enemies_tiles[tile.x][tile.y].append(unit)
  
-func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vectors : Array) -> void:
+func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vectors : Array, faction : bool) -> void:
 	var unit_group : Array = []
 	for unit_pos : Vector2 in placement_vectors:
 		var this_inst = unit_ref.related_unit.instantiate()
 		# This assumes the board tiles are square
 		this_inst.position = unit_pos * board_tiles.cellHeight + start_position
+		this_inst.faction = faction
 		unit_parent.add_child(this_inst)
 		unit_group.append(this_inst)
 		this_inst.post_ready()
