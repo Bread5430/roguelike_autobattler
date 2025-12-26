@@ -29,8 +29,7 @@ func setup_battle(battle_params : Dictionary):
 			battle_params["difficulty"]
 		)
 	#else:
-		
-	board_tiles.z_index = 3
+
 	
 func clear_battlefield():
 	"""Clear all units from the battlefield"""
@@ -46,8 +45,7 @@ func clear_battlefield():
 func start_battle():
 	manager_timer.start()
 	set_unit_start_stop(true)
-	# TODO: FOR DEBUGGING THIS JUST IMMEDIATELY ENDS THE BATTLE
-	#end_battle()
+
 
 func end_battle():
 	manager_timer.stop()
@@ -59,6 +57,12 @@ func end_battle():
 func set_unit_start_stop(stopped : bool):
 	for i in unit_parent.get_children():
 		i.set_start_stop(stopped)
+
+func check_only_faction_units_alive(faction : bool):
+	for i in unit_parent.get_children():
+		if i.faction != faction:
+			return false
+	return true 
 
 # Triggers after both the manager and all its children have entered the scene
 func _ready():
@@ -123,6 +127,13 @@ func remove_unit_from_board(top_corner: Vector2, size: Vector2) -> void:
 
 
 func _on_manager_update_timeout():
+	# Check if we can end the battle
+	
+	if check_only_faction_units_alive(false): # if only allied units alive at end - you win
+		end_battle()
+	if check_only_faction_units_alive(true):  # if only enemy units alive at end - you lose
+		end_battle()
+	
 	update_tiles()
 	
 	# Calculate Border Tiles
@@ -135,3 +146,4 @@ func _on_manager_update_timeout():
 	
 	# Reset targetting component
 	target_man.reset_cache()
+	
