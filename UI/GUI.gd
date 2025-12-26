@@ -6,7 +6,7 @@ extends Control
 var selector_rect : Rect2
 
 #### NODE REFERENCES
-@export var battle_manager : Node2D
+@export var battle_manager : Control
 var inventory : Inventory
 var unit_board : GridContainer
 @onready var spell_bar : GridContainer = $SpellBar
@@ -85,6 +85,7 @@ func _input(event: InputEvent):
 		# Force cell check to be recomputed
 		targetCell = null
 		check_cell()
+	
 
 func toggle_inventory(can_use_inventory : bool):
 	if can_use_inventory == true:
@@ -99,7 +100,7 @@ func check_cell():
 	# var eventPosition = get_viewport().canvas_transform.affine_inverse().xform(event.position)
 	
 	#var mouse_pos = get_viewport().get_mouse_position()
-	var mouse_pos = get_global_mouse_position()
+	var mouse_pos = Vector2(DisplayServer.mouse_get_position()) - unit_board.global_position
 	curr_mouse_tile = mouse_pos / Vector2(unit_board.cellWidth, unit_board.cellHeight)
 	
 	var new_target = _get_target_cell(mouse_pos)
@@ -209,9 +210,9 @@ func place_on_board(top_corner: Vector2, size: Vector2, unit_ref: PackedScene) -
 		for y in size.y:
 			unit_board_space_map[top_corner.x + x][top_corner.y + y] = unit_ref
 
-func _get_target_cell(mouse_pos):
+func _get_target_cell(mouse_pos: Vector2):
 	for cell: Control in unit_board.get_children():
-		if cell.get_global_rect().has_point(mouse_pos):
+		if cell.mouse_over == true:
 			return cell
 	return null
 

@@ -7,7 +7,9 @@
 [ext_resource type="Script" uid="uid://bqo443bjdc1tg" path="res://Manager/enemy_spawner.gd" id="9_tj47k"]
 [ext_resource type="Script" uid="uid://bl0o5tym6ijaq" path="res://UI/flow_visualizer.gd" id="10_lsjgq"]
 
-[node name="BattleManager" type="Node2D" groups=["BATTLEMANAGER"]]
+[node name="BattleManager" type="Control" groups=["BATTLEMANAGER"]]
+layout_mode = 3
+anchors_preset = 0
 script = ExtResource("1_c6fe6")
 map_size = Vector2i(2000, 1600)
 tile_size = 100

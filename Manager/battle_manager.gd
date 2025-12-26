@@ -1,4 +1,4 @@
-extends Node2D
+extends Control
 
 @export_group("Battle Map Config")
 @export var map_size : Vector2i
@@ -30,6 +30,7 @@ func setup_battle(battle_params : Dictionary):
 		)
 	#else:
 		
+	board_tiles.z_index = 3
 	
 func clear_battlefield():
 	"""Clear all units from the battlefield"""
