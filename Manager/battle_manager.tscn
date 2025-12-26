@@ -14,6 +14,14 @@ script = ExtResource("1_c6fe6")
 map_size = Vector2i(2000, 1600)
 tile_size = 100
 
+[node name="flow_visualizer" type="Node2D" parent="."]
+script = ExtResource("10_lsjgq")
+showAllied = true
+drawGrid = true
+
+[node name="Redraw_Timer" type="Timer" parent="flow_visualizer"]
+wait_time = 0.5
+
 [node name="BoardUI" parent="." instance=ExtResource("3_vbtom")]
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
@@ -37,12 +45,5 @@ wait_time = 0.1
 [node name="Enemy_Spawner" type="Node" parent="."]
 script = ExtResource("9_tj47k")
 
-[node name="flow_visualizer" type="Node2D" parent="."]
-script = ExtResource("10_lsjgq")
-drawGrid = true
-
-[node name="Redraw_Timer" type="Timer" parent="flow_visualizer"]
-wait_time = 0.5
-
-[connection signal="timeout" from="Manager_Update" to="." method="_on_manager_update_timeout"]
 [connection signal="timeout" from="flow_visualizer/Redraw_Timer" to="flow_visualizer" method="_on_redraw_timer_timeout"]
+[connection signal="timeout" from="Manager_Update" to="." method="_on_manager_update_timeout"]

@@ -107,28 +107,18 @@ func generate_nodes():
 			push_warning("Could not place node %d after %d attempts" % [i, max_attempts])
 
 func connect_nearest_neighbors():
-	"""Connect each node to its nearest neighbors"""
+	"""Connect each node to its nearest neighbors, ensuring full connectivity"""
 	connections.clear()
 	
+	# Phase 1: Connect each node to nearest neighbors within threshold
 	for node in nodes:
 		# Find nearest neighbors
 		var distances: Array = []
-		# Ensure that every node has at least 1 connection
-		var min_dist: float = 10000
-		var min_dist_node = null
 		for other_node in nodes:
 			if other_node != node:
 				var distance = node.global_position.distance_to(other_node.global_position)
-				if distance < min_dist:
-					min_dist = distance
-					min_dist_node = other_node
 				if distance <= connection_distance_threshold:
 					distances.append({"node": other_node, "distance": distance})
-		
-		# Isolated nodes get 1 guarenteed connection
-		if distances.is_empty() and min_dist_node != null:
-			create_connection(node, min_dist_node)
-			continue
 		
 		# Sort by distance
 		distances.sort_custom(func(a, b): return a.distance < b.distance)
@@ -145,6 +135,93 @@ func connect_nearest_neighbors():
 			if not node_is_connected(node, neighbor):
 				create_connection(node, neighbor)
 				connections_made += 1
+	
+	# Phase 2: Ensure all nodes have at least one connection
+	for node in nodes:
+		if node.connections.is_empty():
+			# Find closest node
+			var closest_node = null
+			var min_distance = INF
+			
+			for other_node in nodes:
+				if other_node != node:
+					var distance = node.global_position.distance_to(other_node.global_position)
+					if distance < min_distance:
+						min_distance = distance
+						closest_node = other_node
+			
+			if closest_node:
+				create_connection(node, closest_node)
+				print("Connected isolated node %d to nearest node" % node.id)
+	
+	# Phase 3: Ensure full graph connectivity using Union-Find
+	ensure_graph_connectivity()
+
+func ensure_graph_connectivity():
+	"""Ensure the entire graph is connected by finding and connecting disconnected components"""
+	if nodes.is_empty():
+		return
+	
+	# Find all connected components using BFS
+	var components: Array[Array] = []
+	var visited_nodes: Array[MapNode] = []
+	
+	for node in nodes:
+		if node in visited_nodes:
+			continue
+		
+		# BFS to find all nodes in this component
+		var component: Array[MapNode] = []
+		var queue: Array[MapNode] = [node]
+		
+		while not queue.is_empty():
+			var current = queue.pop_front()
+			if current in visited_nodes:
+				continue
+			
+			visited_nodes.append(current)
+			component.append(current)
+			
+			for connected_node in current.connections:
+				if connected_node not in visited_nodes:
+					queue.append(connected_node)
+		
+		components.append(component)
+	
+	# If we have multiple components, connect them
+	if components.size() > 1:
+		print("Found %d disconnected components, connecting them..." % components.size())
+		
+		# Connect each component to the next one
+		for i in range(components.size() - 1):
+			var component1 = components[i]
+			var component2 = components[i + 1]
+			
+			# Find the two closest nodes between components
+			var closest_pair = find_closest_nodes_between_components(component1, component2)
+			
+			if closest_pair:
+				create_connection(closest_pair.node1, closest_pair.node2)
+				print("Connected component %d to component %d" % [i, i + 1])
+
+func find_closest_nodes_between_components(component1: Array, component2: Array) -> Dictionary:
+	"""Find the two closest nodes between two components"""
+	var min_distance = INF
+	var closest_node1 = null
+	var closest_node2 = null
+	
+	for node1 in component1:
+		for node2 in component2:
+			var distance = node1.global_position.distance_to(node2.global_position)
+			if distance < min_distance:
+				min_distance = distance
+				closest_node1 = node1
+				closest_node2 = node2
+	
+	if closest_node1 and closest_node2:
+		return {"node1": closest_node1, "node2": closest_node2, "distance": min_distance}
+	
+	return {}
 
 func node_is_connected(node1: MapNode, node2: MapNode) -> bool:
 	"""Check if two nodes are already connected"""
