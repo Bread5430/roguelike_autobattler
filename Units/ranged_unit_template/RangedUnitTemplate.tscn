@@ -95,7 +95,7 @@ _data = {
 
 [node name="RangedUnitTemplate" instance=ExtResource("1_4obhc")]
 max_hp = 5
-base_speed = 8
+base_speed = 35
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)

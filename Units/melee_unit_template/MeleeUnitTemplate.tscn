@@ -95,7 +95,7 @@ _data = {
 
 [node name="MeleeUnitTemplate" instance=ExtResource("1_g2lu5")]
 max_hp = 10
-base_speed = 10
+base_speed = 40
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)
