@@ -178,10 +178,10 @@ func _place_unit():
 
 	if rotated_placement:
 		place_on_board(grid_pos, curr_unit_inst.rotated_placement_size, curr_unit)
-		battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, curr_unit_inst.rotated_vectors, false)
+		battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, curr_unit_inst.rotated_vectors, true)
 	else:
 		place_on_board(grid_pos, curr_unit_inst.placement_size, curr_unit)
-		battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, curr_unit_inst.placement_vectors, false)
+		battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, curr_unit_inst.placement_vectors, true)
 
 	_reset_highlight(objectCells)
 
