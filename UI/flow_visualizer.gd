@@ -15,10 +15,10 @@ func draw_field(faction : bool):
 	var flow_field
 	var color
 	if faction:
-		flow_field =  get_parent().flow_gen.friendly_flow
+		flow_field = get_parent().flow_gen.friendly_flow
 		color = Color(0,255,0)
 	else:
-		flow_field =  get_parent().flow_gen.enemy_flow
+		flow_field = get_parent().flow_gen.enemy_flow
 		color = Color(255,0,0)
 	
 	var tile_size = get_parent().tile_size

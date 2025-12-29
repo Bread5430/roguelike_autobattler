@@ -17,12 +17,14 @@ tile_size = 100
 [node name="flow_visualizer" type="Node2D" parent="."]
 script = ExtResource("10_lsjgq")
 showAllied = true
+showEnemy = true
 drawGrid = true
 
 [node name="Redraw_Timer" type="Timer" parent="flow_visualizer"]
 wait_time = 0.5
 
 [node name="BoardUI" parent="." instance=ExtResource("3_vbtom")]
+layout_mode = 0
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
 columns = 30

@@ -30,19 +30,17 @@ func init_fields():
 
 func get_edge_positions(faction : bool) -> void:
 	var matrix
-	var border_tiles
+	
 	if faction:
 		matrix = get_parent().allies_tiles
-		border_tiles = friendly_border_tiles
 	else:
 		matrix = get_parent().enemies_tiles
-		border_tiles = enemy_border_tiles
 		
 	
 	var rows = get_parent().tile_map_size.x
 	var cols = get_parent().tile_map_size.y
-	border_tiles.clear()
 
+	var border_tiles = []
 	for r in range(rows):
 		for c in range(cols):
 			if matrix[r][c].size() > 0:
@@ -60,43 +58,64 @@ func get_edge_positions(faction : bool) -> void:
 				if edge_tile:
 					border_tiles.append(Vector2(r, c))
 
+	if faction:
+		friendly_border_tiles = border_tiles
+	else:
+		enemy_border_tiles = border_tiles
 
-func calculate_flow_field(faction : bool) -> void:
-	
-	# Determine which faction this flow is for
+func calculate_flow_field(faction: bool) -> void:
 	var curr_flow_field
 	var border_tiles
+	
 	if faction:
 		curr_flow_field = friendly_flow
 		border_tiles = friendly_border_tiles
 	else:
 		curr_flow_field = enemy_flow
 		border_tiles = enemy_border_tiles
-
+	
+	if border_tiles.is_empty():
+		push_warning("No border tiles found for faction: %s" % faction)
+		return	
+	
 	var rows = get_parent().tile_map_size.x
 	var cols = get_parent().tile_map_size.y
-
-	# For each valid tile, create a flow to the closest border tile
+	
+	# For each tile, find closest border and create normalized direction vector
 	for r in range(rows):
 		for c in range(cols):
-			var min_dist : int = rows * rows + cols * cols + 1 # Set to max distance
-			var min_border = null
-			# Search through the borders to find the closest one
-			for border in border_tiles:
-				if r == border.x and c == border.y: # Do not set flow for border tiles
-					min_border = null
-					break
-				if (border - Vector2(r,c)).length_squared() < min_dist:
-					min_border = border
-					min_dist = int(border.x - r) ^ 2 + int(border.y - c) ^ 2
+			var current_pos = Vector2(r, c)
+			var min_dist_squared: float = INF
+			var closest_border: Vector2 = Vector2.ZERO
+			var is_border = false
 			
-			# At this flow tile, store the best vector to get to the target
-			if min_border != null:
-				curr_flow_field[r][c] =  min_border - Vector2(r,c)
-
+			# Check if current tile IS a border tile
+			for border in border_tiles:
+				if border.x == r and border.y == c:
+					is_border = true
+					break
+			
+			# Border tiles have zero flow (they're the destination)
+			if is_border:
+				curr_flow_field[r][c] = Vector2.ZERO
+				continue
+			
+			# Find closest border tile
+			for border in border_tiles:
+				var dist_squared = current_pos.distance_squared_to(border)
+				
+				if dist_squared < min_dist_squared:
+					min_dist_squared = dist_squared
+					closest_border = border
+			
+			# Calculate direction vector and NORMALIZE it
+			var direction = closest_border - current_pos
+			
+			if direction.length() > 0:
+				curr_flow_field[r][c] = direction.normalized()
 			else:
 				curr_flow_field[r][c] = Vector2.ZERO
-			
+
 			
 func get_flow(faction : bool, position : Vector2) -> Vector2:
 	var target_location = get_parent().world_to_grid(position)

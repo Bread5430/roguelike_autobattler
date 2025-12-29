@@ -131,8 +131,11 @@ func _on_manager_update_timeout():
 	
 	if check_only_faction_units_alive(false): # if only allied units alive at end - you win
 		end_battle()
+		return
+	
 	if check_only_faction_units_alive(true):  # if only enemy units alive at end - you lose
 		end_battle()
+		return
 	
 	update_tiles()
 	
