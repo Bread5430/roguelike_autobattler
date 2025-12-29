@@ -7,13 +7,13 @@ var tile_map_size : Vector2i
 
 
 
-
 @onready var unit_parent = $Unit_Parent
 @onready var flow_gen = $FlowGen
 @onready var target_man = $TargetManager
 @onready var board_tiles = $BoardUI
 @onready var enemy_spawner = $Enemy_Spawner
 @onready var manager_timer = $Manager_Update
+@onready var flow_visualizer = $flow_visualizer
 #@onready var viewport = $Viewport
 
 var enemies_tiles : Array[Array]
@@ -44,11 +44,13 @@ func clear_battlefield():
 
 func start_battle():
 	manager_timer.start()
+	flow_visualizer.redraw_timer.start()
 	set_unit_start_stop(true)
 
 
 func end_battle():
 	manager_timer.stop()
+	flow_visualizer.redraw_timer.stop()
 	set_unit_start_stop(false)
 	# TODO: Add way to calculate if the player won or lost
 	battle_ended.emit(true)

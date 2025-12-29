@@ -115,8 +115,12 @@ func calculate_flow_field(faction: bool) -> void:
 				curr_flow_field[r][c] = direction.normalized()
 			else:
 				curr_flow_field[r][c] = Vector2.ZERO
+				
+	if faction:
+		friendly_flow = curr_flow_field
+	else:
+		enemy_flow = curr_flow_field
 
-			
 func get_flow(faction : bool, position : Vector2) -> Vector2:
 	var target_location = get_parent().world_to_grid(position)
 	

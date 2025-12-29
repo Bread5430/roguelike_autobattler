@@ -38,7 +38,7 @@ func draw_borders(faction : bool):
 	var border
 	var color
 	if faction:
-		border =  get_parent().flow_gen.friendly_border_tiles
+		border = get_parent().flow_gen.friendly_border_tiles
 		color = Color(0,255,30)
 	else:
 		border =  get_parent().flow_gen.enemy_border_tiles
