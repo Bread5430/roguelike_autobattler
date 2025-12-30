@@ -305,6 +305,7 @@ func update_node_availability():
 func complete_current_battle():
 	current_node.completed = true
 	completed_nodes.append(current_node)
+	update_node_availability()
 
 # =============================================================================
 # PLAYER MOVEMENT
