@@ -15,11 +15,12 @@ var direction : Vector2
 var target_faction : bool
 var is_active: bool = false
 
+##### Refernces
+var parent_unit = null
+var target_unit = null
+
 # Optional: Trail/particles that need cleanup
 var trail_particles: GPUParticles2D = null
-
-###### Standard Functions
-
 
 ##### Spawning and Pooling management
 func _ready():
@@ -34,6 +35,7 @@ func set_pool_manager(pool: ProjectilePool) -> void:
 func on_spawned() -> void:
 	"""Called when projectile is taken from pool and activated"""
 	is_active = true
+	self.monitoring = true
 	
 	# Reset any state
 	if trail_particles:
@@ -41,8 +43,11 @@ func on_spawned() -> void:
 	
 	# Override this in child classes for custom setup
 
-func setup(spawn_position: Vector2, spawn_direction: Vector2, spawn_speed: float = -1.0) -> void:
+func setup(parent_unit : Base_Unit, spawn_position: Vector2, tgt_faction : bool, spawn_direction: Vector2 = Vector2.ZERO, spawn_speed: float = -1.0) -> void:
 	"""Setup projectile parameters after spawning"""
+	self.parent_unit = parent_unit
+	target_faction = tgt_faction
+	
 	global_position = spawn_position
 	direction = spawn_direction.normalized()
 	
@@ -84,10 +89,13 @@ func activate_hit_effect(body):
 func set_direction():
 	direction = Vector2.from_angle(rotation)
 
-func set_target(target_position: Vector2) -> void:
+func set_target_position(target_position: Vector2) -> void:
 	"""Aim at a specific target"""
 	direction = (target_position - global_position).normalized()
 	rotation = direction.angle()
+
+func set_target_unit(tgt_unit : Base_Unit) -> void:
+	target_unit = tgt_unit
 
 # ============================================================================
 # DEBUG METHODS
@@ -95,7 +103,7 @@ func set_target(target_position: Vector2) -> void:
 
 func get_remaining_lifetime() -> float:
 	"""Get remaining lifetime in seconds"""
-	return max(0.0, lifetime.wait_time - lifetime.time_left)
+	return max(0.0, lifetime.time_left)
 
 func is_expired() -> bool:
 	"""Check if projectile has exceeded its lifetime"""
