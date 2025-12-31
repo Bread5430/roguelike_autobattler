@@ -1,12 +1,12 @@
 [gd_scene load_steps=8 format=3 uid="uid://b2hkuu4ohgbnk"]
 
 [ext_resource type="Script" uid="uid://cuad6lpso0q62" path="res://Manager/battle_manager.gd" id="1_c6fe6"]
-[ext_resource type="Script" uid="uid://hqlphn02kabu" path="res://UI/FlowGen.gd" id="1_i8jx7"]
-[ext_resource type="Script" uid="uid://dxavhucjkx8u3" path="res://Manager/TargetManager.gd" id="2_7x82o"]
-[ext_resource type="PackedScene" uid="uid://dvin2a62ufrm8" path="res://UI/BoardUI.tscn" id="3_vbtom"]
-[ext_resource type="Script" uid="uid://cuj7pk5iu8qbi" path="res://Manager/proj_pool.gd" id="7_0kdsf"]
-[ext_resource type="Script" uid="uid://bqo443bjdc1tg" path="res://Manager/enemy_spawner.gd" id="9_tj47k"]
-[ext_resource type="Script" uid="uid://bl0o5tym6ijaq" path="res://UI/flow_visualizer.gd" id="10_lsjgq"]
+[ext_resource type="Script" uid="uid://dxavhucjkx8u3" path="res://Manager/battle_manager_components/TargetManager.gd" id="2_7x82o"]
+[ext_resource type="Script" uid="uid://bl0o5tym6ijaq" path="res://Manager/battle_manager_components/flow_visualizer.gd" id="2_tj47k"]
+[ext_resource type="PackedScene" uid="uid://cx6oj4k7ftyrd" path="res://Manager/battle_manager_components/BoardUI.tscn" id="3_0kdsf"]
+[ext_resource type="Script" uid="uid://hqlphn02kabu" path="res://Manager/battle_manager_components/FlowGen.gd" id="6_ksii2"]
+[ext_resource type="Script" uid="uid://cuj7pk5iu8qbi" path="res://Manager/battle_manager_components/proj_pool.gd" id="7_0kdsf"]
+[ext_resource type="Script" uid="uid://bqo443bjdc1tg" path="res://Manager/battle_manager_components/enemy_spawner.gd" id="9_tj47k"]
 
 [node name="BattleManager" type="Control" groups=["BATTLEMANAGER"]]
 layout_mode = 3
@@ -16,23 +16,20 @@ map_size = Vector2i(2000, 1600)
 tile_size = 100
 
 [node name="flow_visualizer" type="Node2D" parent="."]
-script = ExtResource("10_lsjgq")
+script = ExtResource("2_tj47k")
 
 [node name="Redraw_Timer" type="Timer" parent="flow_visualizer"]
 wait_time = 0.5
 
-[node name="BoardUI" parent="." instance=ExtResource("3_vbtom")]
+[node name="BoardUI" parent="." instance=ExtResource("3_0kdsf")]
 layout_mode = 0
-theme_override_constants/h_separation = 0
-theme_override_constants/v_separation = 0
-columns = 30
-width = 20
-height = 32
+width = 30
+height = 20
 cellWidth = 50
 cellHeight = 50
 
 [node name="FlowGen" type="Node" parent="." groups=["FLOWGEN"]]
-script = ExtResource("1_i8jx7")
+script = ExtResource("6_ksii2")
 
 [node name="TargetManager" type="Node" parent="." groups=["TARGETMANAGER"]]
 script = ExtResource("2_7x82o")

@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://cx6oj4k7ftyrd"]
+
+[ext_resource type="Script" uid="uid://d2bsoiajcikq2" path="res://Manager/battle_manager_components/BoardUI.gd" id="1_pmti6"]
+[ext_resource type="PackedScene" uid="uid://cyaeu0mhehbvk" path="res://Manager/battle_manager_components/BoardSlot.tscn" id="2_6eu8f"]
+
+[node name="BoardUI" type="GridContainer"]
+script = ExtResource("1_pmti6")
+GRID_CELL = ExtResource("2_6eu8f")
+
+[connection signal="gui_input" from="." to="." method="_on_gui_input"]

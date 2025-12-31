@@ -1,8 +1,8 @@
 [gd_scene load_steps=8 format=3 uid="uid://bky3sgnwr1jl6"]
 
 [ext_resource type="PackedScene" uid="uid://ds2ntigtworxc" path="res://Utilities/Base_projectile.tscn" id="1_ffh5k"]
-[ext_resource type="Script" uid="uid://b55owucbfxqdp" path="res://Units/splash_template/splash_projectile.gd" id="2_mqb11"]
-[ext_resource type="Texture2D" uid="uid://c14s0skccalsk" path="res://Units/splash_template/splash_projectile.png" id="3_4um4s"]
+[ext_resource type="Script" uid="uid://b55owucbfxqdp" path="res://Units/unit_scenes/splash_template/splash_projectile.gd" id="2_mqb11"]
+[ext_resource type="Texture2D" uid="uid://c14s0skccalsk" path="res://Assets/Projectiles/splash_projectile.png" id="3_4um4s"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rh28y"]
 atlas = ExtResource("3_4um4s")
@@ -37,3 +37,7 @@ sprite_frames = SubResource("SpriteFrames_g4j7r")
 
 [node name="CollisionShape2D" parent="." index="1"]
 shape = SubResource("CircleShape2D_mqb11")
+
+[node name="Lifetime" parent="." index="3"]
+one_shot = true
+autostart = false

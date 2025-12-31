@@ -1,12 +1,12 @@
-[gd_scene load_steps=2 format=3 uid="uid://blnyjtre2v7ly"]
+[gd_scene load_steps=2 format=3 uid="uid://cyaeu0mhehbvk"]
 
-[ext_resource type="Script" uid="uid://cv4mafbqcwg5j" path="res://UI/BoardSlot.gd" id="1_melhx"]
+[ext_resource type="Script" uid="uid://cv4mafbqcwg5j" path="res://Manager/battle_manager_components/BoardSlot.gd" id="1_kkpg3"]
 
 [node name="BoardSlot" type="PanelContainer"]
 custom_minimum_size = Vector2(32, 32)
 offset_right = 8.0
 offset_bottom = 8.0
-script = ExtResource("1_melhx")
+script = ExtResource("1_kkpg3")
 
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
