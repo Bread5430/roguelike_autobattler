@@ -1,10 +1,11 @@
-[gd_scene load_steps=17 format=3 uid="uid://dlkx6a5ss8152"]
+[gd_scene load_steps=18 format=3 uid="uid://dlkx6a5ss8152"]
 
 [ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_om312"]
+[ext_resource type="Script" uid="uid://cjw18r4c0jeuy" path="res://Units/splash_template/physical_proj_shooter.gd" id="2_6m7fj"]
 [ext_resource type="Texture2D" uid="uid://ce1bfpxqrdj" path="res://Units/melee_unit_template/basic_unit_sprites.png" id="2_s0wpa"]
 [ext_resource type="Script" uid="uid://dh4tqvn6emwhy" path="res://Units/ranged_unit_template/ranged_unit_fsm.gd" id="3_6m7fj"]
 [ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_eh422"]
-[ext_resource type="Script" uid="uid://bfh0eex83r6af" path="res://Units/ranged_unit_template/basic_ranged.gd" id="5_pksuc"]
+[ext_resource type="Script" uid="uid://3wquyd6048ej" path="res://Units/splash_template/physical_proj.gd" id="5_om312"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rfhwj"]
 atlas = ExtResource("2_s0wpa")
@@ -93,7 +94,8 @@ _data = {
 &"dead": SubResource("Animation_rbyda")
 }
 
-[node name="RangedUnitTemplate" instance=ExtResource("1_om312")]
+[node name="SplashUnitTemplate" instance=ExtResource("1_om312")]
+script = ExtResource("2_6m7fj")
 max_hp = 5
 base_speed = 35
 
@@ -114,17 +116,12 @@ libraries = {
 script = ExtResource("3_6m7fj")
 
 [node name="Ranged_Attack" parent="." index="5" instance=ExtResource("4_eh422")]
-script = ExtResource("5_pksuc")
+script = ExtResource("5_om312")
+proj_scene = null
 attack_range = 200
 damage = 1
 
 [node name="Attack_CD" parent="Ranged_Attack" index="0"]
 wait_time = 0.5
-
-[node name="visble_time" type="Timer" parent="Ranged_Attack" index="1"]
-wait_time = 0.05
-one_shot = true
-
-[connection signal="timeout" from="Ranged_Attack/visble_time" to="Ranged_Attack" method="_on_visble_time_timeout"]
 
 [editable path="Ranged_Attack"]

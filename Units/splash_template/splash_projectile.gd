@@ -7,11 +7,13 @@ extends Base_Projectile
 
 func on_spawned():
 	is_active = true
+	col_shape.disabled = true
 	# Don't set monitoring to be true
 	
 
 func _on_lifetime_timeout():
 	self.monitoring = true
+	col_shape.disabled = false
 	# TODO: await the effect animation to complete
 	super()
 

@@ -14,6 +14,7 @@ var tile_map_size : Vector2i
 @onready var enemy_spawner = $Enemy_Spawner
 @onready var manager_timer = $Manager_Update
 @onready var flow_visualizer = $flow_visualizer
+@onready var proj_pool = $Proj_Pool
 #@onready var viewport = $Viewport
 
 var enemies_tiles : Array[Array]

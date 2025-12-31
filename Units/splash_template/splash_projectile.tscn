@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://bky3sgnwr1jl6"]
+[gd_scene load_steps=8 format=3 uid="uid://bky3sgnwr1jl6"]
 
 [ext_resource type="PackedScene" uid="uid://ds2ntigtworxc" path="res://Utilities/Base_projectile.tscn" id="1_ffh5k"]
 [ext_resource type="Script" uid="uid://b55owucbfxqdp" path="res://Units/splash_template/splash_projectile.gd" id="2_mqb11"]
@@ -26,9 +26,14 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_mqb11"]
+
 [node name="Splash_Proj" instance=ExtResource("1_ffh5k")]
 script = ExtResource("2_mqb11")
 damage = 3
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 sprite_frames = SubResource("SpriteFrames_g4j7r")
+
+[node name="CollisionShape2D" parent="." index="1"]
+shape = SubResource("CircleShape2D_mqb11")
