@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c6qna6ifst26a"
-path="res://.godot/imported/basic_chaff_sprites.png-7b19b536cc83132a31c2bcbbb0771402.ctex"
+uid="uid://hrh8osfwvxt"
+path="res://.godot/imported/splash_unit.png-8c391b90bbd875d0a39f4f2a35c3b207.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Units/basic_chaff/basic_chaff_sprites.png"
-dest_files=["res://.godot/imported/basic_chaff_sprites.png-7b19b536cc83132a31c2bcbbb0771402.ctex"]
+source_file="res://Assets/CardSprites/splash_unit.png"
+dest_files=["res://.godot/imported/splash_unit.png-8c391b90bbd875d0a39f4f2a35c3b207.ctex"]
 
 [params]
 

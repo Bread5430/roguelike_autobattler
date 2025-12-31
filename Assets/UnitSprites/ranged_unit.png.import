@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c14s0skccalsk"
-path="res://.godot/imported/splash_projectile.png-fa2f6c2ba15e9e6a88ee958062908fb8.ctex"
+uid="uid://d27uvg5o4dqir"
+path="res://.godot/imported/ranged_unit.png-18822508f26a35e916253b17f731d0c0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Units/splash_template/splash_projectile.png"
-dest_files=["res://.godot/imported/splash_projectile.png-fa2f6c2ba15e9e6a88ee958062908fb8.ctex"]
+source_file="res://Assets/UnitSprites/ranged_unit.png"
+dest_files=["res://.godot/imported/ranged_unit.png-18822508f26a35e916253b17f731d0c0.ctex"]
 
 [params]
 

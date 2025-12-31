@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d27uvg5o4dqir"
-path="res://.godot/imported/ranged_unit.png-6ea0f150ba56a755442b7455681b9b2d.ctex"
+uid="uid://c4ehc12h5y6vo"
+path="res://.godot/imported/4_Melee.png-ea458a0cddbba123f7d500be696b563a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Units/ranged_unit_template/ranged_unit.png"
-dest_files=["res://.godot/imported/ranged_unit.png-6ea0f150ba56a755442b7455681b9b2d.ctex"]
+source_file="res://Assets/CardSprites/4_Melee.png"
+dest_files=["res://.godot/imported/4_Melee.png-ea458a0cddbba123f7d500be696b563a.ctex"]
 
 [params]
 

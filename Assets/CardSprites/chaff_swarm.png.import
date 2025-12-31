@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c4ehc12h5y6vo"
-path="res://.godot/imported/4_Melee.png-6e88c36df50d60724497236435c2fc73.ctex"
+uid="uid://drbo1shwt4m6m"
+path="res://.godot/imported/chaff_swarm.png-995edc06e42dae9bbc3021b030bbb239.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Units/unit_cards/four_melee/4_Melee.png"
-dest_files=["res://.godot/imported/4_Melee.png-6e88c36df50d60724497236435c2fc73.ctex"]
+source_file="res://Assets/CardSprites/chaff_swarm.png"
+dest_files=["res://.godot/imported/chaff_swarm.png-995edc06e42dae9bbc3021b030bbb239.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dduabfim1mu2t"
-path="res://.godot/imported/one_ranged.png-d65be79d2c68b9e26f118e944c90daf9.ctex"
+uid="uid://ce1bfpxqrdj"
+path="res://.godot/imported/basic_unit_sprites.png-2a66a563cd9ad55c16efad78bc89d690.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Units/unit_cards/one_ranged/one_ranged.png"
-dest_files=["res://.godot/imported/one_ranged.png-d65be79d2c68b9e26f118e944c90daf9.ctex"]
+source_file="res://Assets/UnitSprites/basic_unit_sprites.png"
+dest_files=["res://.godot/imported/basic_unit_sprites.png-2a66a563cd9ad55c16efad78bc89d690.ctex"]
 
 [params]
 
