@@ -9,6 +9,7 @@ const name_obj_map = {
 	"four_melee" : preload("res://Units/unit_cards/four_melee/four_melee.tscn"),
 	"chaff_swarm" : preload("res://Units/unit_cards/chaff_swarm/chaff_swarm.tscn"),
 	"one_ranged" : preload("res://Units/unit_cards/one_ranged/one_ranged.tscn"),
+	"splash_unit" : preload("res://Units/unit_cards/splash_unit/splash_unit.tscn"),
 }
 
 

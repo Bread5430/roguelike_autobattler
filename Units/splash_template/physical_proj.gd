@@ -10,7 +10,7 @@ func do_attack():
 	
 	# Spawn a projectile instance, and pass it the information of its target
 	var new_projectile = proj_pool.pool_instantiate(proj_scene)
-	new_projectile.set_target(target_unit)
+	new_projectile.set_target_position(target_unit.position)
 	proj_pool.enable_in_scene(new_projectile)
 	
 	super()

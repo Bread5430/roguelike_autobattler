@@ -29,7 +29,7 @@ script = ExtResource("5_drtnq")
 battle_manager = NodePath("../../BattleManager")
 
 [node name="Inventory" parent="UICanvas/Gui" index="0"]
-starter_items = Array[String](["chaff_swarm"])
-starter_items_count = Array[int]([3])
+starter_items = Array[String](["chaff_swarm", "splash_unit", "one_ranged", "four_melee"])
+starter_items_count = Array[int]([3, 3, 3, 3])
 
 [editable path="UICanvas/Gui"]
