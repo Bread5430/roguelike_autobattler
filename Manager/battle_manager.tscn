@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://b2hkuu4ohgbnk"]
+[gd_scene load_steps=8 format=3 uid="uid://b2hkuu4ohgbnk"]
 
 [ext_resource type="Script" uid="uid://cuad6lpso0q62" path="res://Manager/battle_manager.gd" id="1_c6fe6"]
 [ext_resource type="Script" uid="uid://hqlphn02kabu" path="res://UI/FlowGen.gd" id="1_i8jx7"]
 [ext_resource type="Script" uid="uid://dxavhucjkx8u3" path="res://Manager/TargetManager.gd" id="2_7x82o"]
 [ext_resource type="PackedScene" uid="uid://dvin2a62ufrm8" path="res://UI/BoardUI.tscn" id="3_vbtom"]
+[ext_resource type="Script" uid="uid://cuj7pk5iu8qbi" path="res://Manager/proj_pool.gd" id="7_0kdsf"]
 [ext_resource type="Script" uid="uid://bqo443bjdc1tg" path="res://Manager/enemy_spawner.gd" id="9_tj47k"]
 [ext_resource type="Script" uid="uid://bl0o5tym6ijaq" path="res://UI/flow_visualizer.gd" id="10_lsjgq"]
 
@@ -46,6 +47,9 @@ wait_time = 0.1
 
 [node name="Enemy_Spawner" type="Node" parent="."]
 script = ExtResource("9_tj47k")
+
+[node name="Proj_Pool" type="Node" parent="."]
+script = ExtResource("7_0kdsf")
 
 [connection signal="timeout" from="flow_visualizer/Redraw_Timer" to="flow_visualizer" method="_on_redraw_timer_timeout"]
 [connection signal="timeout" from="Manager_Update" to="." method="_on_manager_update_timeout"]
