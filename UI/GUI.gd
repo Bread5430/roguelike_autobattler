@@ -59,13 +59,13 @@ func _draw():
 	if selector_rect_debug:
 		draw_rect(selector_rect, Color.RED, false)
 
-func _process(delta):
+func _process(_delta):
 	if post_ready_check:
 		check_cell()
 		queue_redraw()
 
 
-func _input(event: InputEvent):
+func _input(_event: InputEvent):
 	# Allow placement only if we are currently in deployment mode
 	if Input.is_action_just_pressed("leftClick") and deployment_mode:
 		if placement_mode:
@@ -103,7 +103,7 @@ func check_cell():
 	var mouse_pos = Vector2(DisplayServer.mouse_get_position()) - unit_board.global_position
 	curr_mouse_tile = mouse_pos / Vector2(unit_board.cellWidth, unit_board.cellHeight)
 	
-	var new_target = _get_target_cell(mouse_pos)
+	var new_target = _get_target_cell()
 	if new_target and new_target != targetCell:
 		targetCell = new_target
 		if curr_unit_inst:
@@ -210,7 +210,7 @@ func place_on_board(top_corner: Vector2, size: Vector2, unit_ref: PackedScene) -
 		for y in size.y:
 			unit_board_space_map[top_corner.x + x][top_corner.y + y] = unit_ref
 
-func _get_target_cell(mouse_pos: Vector2):
+func _get_target_cell():
 	for cell: Control in unit_board.get_children():
 		if cell.mouse_over == true:
 			return cell

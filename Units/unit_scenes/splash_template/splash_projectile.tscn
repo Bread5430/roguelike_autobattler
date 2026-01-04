@@ -31,6 +31,7 @@ animations = [{
 [node name="Splash_Proj" instance=ExtResource("1_ffh5k")]
 script = ExtResource("2_mqb11")
 damage = 3
+speed = 300
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 sprite_frames = SubResource("SpriteFrames_g4j7r")

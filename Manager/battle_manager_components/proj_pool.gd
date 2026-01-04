@@ -138,11 +138,8 @@ func enable_in_scene(projectile: Node) -> void:
 		push_warning("Attempted to enable null projectile")
 		return
 	
-	# Call setup method if available
-	if projectile.has_method("on_spawned"):
-		projectile.on_spawned()
-	elif projectile.has_method("setup"):
-		projectile.setup()
+	# Call on_spawned method if available
+	projectile.on_spawned()
 	
 	# Activate the projectile
 	_activate_projectile(projectile)
@@ -308,13 +305,8 @@ func print_stats() -> void:
 # HELPER: Get projectile with setup
 # ============================================================================
 
-func spawn_projectile(proj_scene: PackedScene, spawn_position: Vector2, spawn_rotation: float = 0.0) -> Node:
+func spawn_projectile(proj_scene: PackedScene) -> Node:
 	"""Convenience method to get and setup a projectile in one call"""
 	var projectile = pool_instantiate(proj_scene)
-	
-	if projectile:
-		projectile.global_position = spawn_position
-		projectile.global_rotation = spawn_rotation
-		enable_in_scene(projectile)
-	
+	enable_in_scene(projectile)
 	return projectile

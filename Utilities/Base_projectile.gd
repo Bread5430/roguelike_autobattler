@@ -15,7 +15,7 @@ var direction : Vector2
 var target_faction : bool
 var is_active: bool = false
 
-##### Refernces
+##### Unit Refernces
 var parent_unit = null
 var target_unit = null
 
@@ -32,10 +32,12 @@ func set_pool_manager(pool: ProjectilePool) -> void:
 	pool_manager = pool
 	
 
+# called by pool to enable projectile state
 func on_spawned() -> void:
 	"""Called when projectile is taken from pool and activated"""
 	is_active = true
 	self.monitoring = true
+	lifetime.start()
 	
 	# Reset any state
 	if trail_particles:
@@ -43,6 +45,7 @@ func on_spawned() -> void:
 	
 	# Override this in child classes for custom setup
 
+# called by unit's attack node to pass its information
 func setup(parent_unit : Base_Unit, spawn_position: Vector2, tgt_faction : bool, spawn_direction: Vector2 = Vector2.ZERO, spawn_speed: float = -1.0) -> void:
 	"""Setup projectile parameters after spawning"""
 	self.parent_unit = parent_unit
@@ -52,7 +55,7 @@ func setup(parent_unit : Base_Unit, spawn_position: Vector2, tgt_faction : bool,
 	direction = spawn_direction.normalized()
 	
 	if spawn_speed > 0:
-		speed = spawn_speed
+		speed += spawn_speed
 	
 	# Rotate sprite to face direction
 	rotation = direction.angle()
