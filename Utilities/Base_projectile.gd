@@ -9,6 +9,7 @@ class_name Base_Projectile
 var pool_manager: ProjectilePool = null
 
 ###### Internal Vars
+@export var damage : int = 3
 @export var speed : int = 50
 @export var lifetime_val : float = 1.0
 var direction : Vector2
@@ -16,8 +17,11 @@ var target_faction : bool
 var is_active: bool = false
 
 ##### Unit Refernces
+#### TODO: All usages of these nodes must account for node ceasing to exist in flight
 var parent_unit = null
 var target_unit = null
+
+var parent_dmg_mult : float = 1.0
 
 # Optional: Trail/particles that need cleanup
 var trail_particles: GPUParticles2D = null
@@ -37,7 +41,7 @@ func on_spawned() -> void:
 	"""Called when projectile is taken from pool and activated"""
 	is_active = true
 	self.monitoring = true
-	lifetime.start()
+	lifetime.start(lifetime_val)
 	
 	# Reset any state
 	if trail_particles:
@@ -49,6 +53,7 @@ func on_spawned() -> void:
 func setup(parent_unit : Base_Unit, spawn_position: Vector2, tgt_faction : bool, spawn_direction: Vector2 = Vector2.ZERO, spawn_speed: float = -1.0) -> void:
 	"""Setup projectile parameters after spawning"""
 	self.parent_unit = parent_unit
+	parent_dmg_mult = parent_unit.dmg_dealt_mult
 	target_faction = tgt_faction
 	
 	global_position = spawn_position
@@ -87,7 +92,24 @@ func return_to_pool() -> void:
 
 #OVERIDE - This is to be overrided in each seperate projectile
 func activate_hit_effect(body):
-	pass
+	body.take_damage(damage * parent_dmg_mult)
+
+##### Set method for passing variable data via the spawner
+
+func set_properties_via_spawner(properties: Dictionary) -> void:
+	"""Set multiple properties from a dictionary passed by the spawner"""
+	for key in properties:
+		var value = properties[key]
+		
+		# Check if property exists in this projectile
+		if key in self:
+			# Use set() to dynamically set the property by string name
+			set(key, value)
+		else:
+			push_warning("Property '%s' does not exist in %s" % [key, get_class()])
+
+
+##### Target setters
 
 func set_direction():
 	direction = Vector2.from_angle(rotation)

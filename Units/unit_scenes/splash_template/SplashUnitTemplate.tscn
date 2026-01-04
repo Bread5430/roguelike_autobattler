@@ -119,6 +119,8 @@ script = ExtResource("3_6m7fj")
 [node name="Ranged_Attack" parent="." index="5" instance=ExtResource("4_eh422")]
 script = ExtResource("5_om312")
 proj_scene = ExtResource("7_6m7fj")
+speed = 50
+lifetime_val = 1.0
 attack_range = 200
 damage = 1
 

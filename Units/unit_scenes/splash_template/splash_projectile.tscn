@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://bky3sgnwr1jl6"]
+[gd_scene load_steps=14 format=3 uid="uid://bky3sgnwr1jl6"]
 
 [ext_resource type="PackedScene" uid="uid://ds2ntigtworxc" path="res://Utilities/Base_projectile.tscn" id="1_ffh5k"]
 [ext_resource type="Script" uid="uid://b55owucbfxqdp" path="res://Units/unit_scenes/splash_template/splash_projectile.gd" id="2_mqb11"]
 [ext_resource type="Texture2D" uid="uid://c14s0skccalsk" path="res://Assets/Projectiles/splash_projectile.png" id="3_4um4s"]
+[ext_resource type="Texture2D" uid="uid://8nuiven25sng" path="res://Assets/Projectiles/splash_effect.png" id="4_rcvsi"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rh28y"]
 atlas = ExtResource("3_4um4s")
@@ -11,6 +12,14 @@ region = Rect2(0, 0, 16, 16)
 [sub_resource type="AtlasTexture" id="AtlasTexture_3oitc"]
 atlas = ExtResource("3_4um4s")
 region = Rect2(0, 16, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wbvwd"]
+atlas = ExtResource("4_rcvsi")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jv6xf"]
+atlas = ExtResource("4_rcvsi")
+region = Rect2(32, 0, 32, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_g4j7r"]
 animations = [{
@@ -24,20 +33,87 @@ animations = [{
 "loop": true,
 "name": &"default",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wbvwd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jv6xf")
+}],
+"loop": false,
+"name": &"splash_effect",
+"speed": 6.0
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_mqb11"]
 
+[sub_resource type="Animation" id="Animation_rcvsi"]
+resource_name = "explode"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimatedSprite2D:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [&"splash_effect"]
+}
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.3),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"return_to_pool"
+}]
+}
+
+[sub_resource type="Animation" id="Animation_wbvwd"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimatedSprite2D:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [&"splash_effect"]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_jv6xf"]
+_data = {
+&"RESET": SubResource("Animation_wbvwd"),
+&"explode": SubResource("Animation_rcvsi")
+}
+
 [node name="Splash_Proj" instance=ExtResource("1_ffh5k")]
 script = ExtResource("2_mqb11")
-damage = 3
 speed = 300
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 sprite_frames = SubResource("SpriteFrames_g4j7r")
+animation = &"splash_effect"
 
 [node name="CollisionShape2D" parent="." index="1"]
 shape = SubResource("CircleShape2D_mqb11")
+
+[node name="AnimationPlayer" parent="." index="2"]
+libraries = {
+&"": SubResource("AnimationLibrary_jv6xf")
+}
 
 [node name="Lifetime" parent="." index="3"]
 one_shot = true
