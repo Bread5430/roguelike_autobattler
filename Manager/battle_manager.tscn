@@ -23,7 +23,7 @@ wait_time = 0.5
 
 [node name="BoardUI" parent="." instance=ExtResource("3_0kdsf")]
 layout_mode = 0
-width = 30
+width = 15
 height = 20
 cellWidth = 50
 cellHeight = 50

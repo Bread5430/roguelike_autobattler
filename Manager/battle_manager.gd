@@ -30,6 +30,8 @@ func setup_battle(battle_params : Dictionary):
 			battle_params["difficulty"]
 		)
 	#else:
+	
+	board_tiles.visible = true
 
 	
 func clear_battlefield():
@@ -46,6 +48,7 @@ func clear_battlefield():
 func start_battle():
 	manager_timer.start()
 	flow_visualizer.redraw_timer.start()
+	board_tiles.visible = false
 	set_unit_start_stop(true)
 
 
