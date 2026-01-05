@@ -18,6 +18,7 @@ var unit_board_height : int
 var unit_board_width : int
 
 var unit_board_space_map : Array[Array] = [] # Stores references to units on the board
+var is_rotated_map : Array[Array] = [] # Stores if the placed units are rotated
 
 #### Store these state variables in globals since they are required by the input events
 
@@ -30,7 +31,6 @@ var curr_unit_inst : Item
 var curr_inv_slot : InventorySlot
 var curr_mouse_tile : Vector2
 var isValid = false
-var placement_mode : bool = true # True for placing, false for removing
 var rotated_placement : bool = false
 
 signal preperation_ended
@@ -44,9 +44,11 @@ func post_ready():
 	# Initialize empty grid
 	for i in unit_board_width:
 		unit_board_space_map.append([])
+		is_rotated_map.append([])
 		for j in unit_board_height:
 			unit_board_space_map[i].append(null)
-	
+			is_rotated_map[i].append(-1)
+
 	# Needed to prevent process from running too soon
 	post_ready_check = true
 	
@@ -68,17 +70,18 @@ func _process(_delta):
 func _input(_event: InputEvent):
 	# Allow placement only if we are currently in deployment mode
 	if Input.is_action_just_pressed("leftClick") and deployment_mode:
-		if placement_mode:
-			if curr_unit and isValid:
-				_place_unit()
-		else:
-			# TODO: Get starting position of the unit, and its rotation state
-			var removed_unit = get_unit_at_tile(curr_mouse_tile)
-			if removed_unit:
-				# TODO : Determine if the removed unit was rotated, then remove the rotated version
-				remove_from_board(curr_mouse_tile, removed_unit.placement_size)
-		
-		
+		if curr_unit and isValid:
+			_place_unit()
+	elif Input.is_action_just_pressed("rightClick") and deployment_mode:
+		# TODO: Get starting position of the unit, and its rotation state
+		var mouse_tile_int = Vector2i(curr_mouse_tile)
+		var removed_unit = get_unit_at_tile(mouse_tile_int)
+		var removed_unit_is_rotated = get_rotation_at_tile(mouse_tile_int)
+		if removed_unit:
+			if removed_unit_is_rotated:
+				remove_from_board(mouse_tile_int, removed_unit.rotated_placement_size)
+			else:
+				remove_from_board(mouse_tile_int, removed_unit.placement_size)
 	elif Input.is_action_just_pressed("rotatePlacement"):
 		rotated_placement = !rotated_placement
 		
@@ -114,13 +117,14 @@ func check_cell():
 			isValid = _check_and_highlight_cells(objectCells)
 
 
-func remove_from_board(top_corner: Vector2, size: Vector2) -> void:
+func remove_from_board(top_corner: Vector2i, size: Vector2) -> void:
 	# Set current unit to reference of removed unit
 	curr_unit = unit_board_space_map[top_corner.x][top_corner.y]
-	
+
 	for x in size.x:
 		for y in size.y:
 			unit_board_space_map[top_corner.x + x][top_corner.y + y] = null
+			is_rotated_map[top_corner.x + x][top_corner.y + y] = -1
 
 	# Reset cells' full flag
 	for cell in _get_object_cells():
@@ -209,6 +213,7 @@ func place_on_board(top_corner: Vector2, size: Vector2, unit_ref: PackedScene) -
 	for x in size.x:
 		for y in size.y:
 			unit_board_space_map[top_corner.x + x][top_corner.y + y] = unit_ref
+			is_rotated_map[top_corner.x + x][top_corner.y + y] = rotated_placement
 
 func _get_target_cell():
 	for cell: Control in unit_board.get_children():
@@ -241,7 +246,12 @@ func _get_object_cells() -> Array:
 	return cells
 
 
-func get_unit_at_tile(tile: Vector2) -> PackedScene:
+func get_unit_at_tile(tile: Vector2i) -> PackedScene:
 	if tile.x >= 0 and tile.x < unit_board_width and tile.y >= 0 and tile.y < unit_board_height:
 		return unit_board_space_map[tile.x][tile.y]
 	return null
+
+func get_rotation_at_tile(tile: Vector2i) -> bool:
+	if tile.x >= 0 and tile.x < unit_board_width and tile.y >= 0 and tile.y < unit_board_height:
+		return is_rotated_map[tile.x][tile.y]
+	return false

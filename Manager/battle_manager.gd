@@ -125,7 +125,7 @@ func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vect
 		unit_group.append(this_inst)
 		this_inst.post_ready()
 	
-func remove_unit_from_board(top_corner: Vector2, size: Vector2) -> void:
+func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
 	var rect := Rect2(top_corner, size)
 	for u in unit_parent.get_children():
 		if rect.has_point(u.position):
