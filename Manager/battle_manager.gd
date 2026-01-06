@@ -115,18 +115,18 @@ func update_tiles():
 			enemies_tiles[tile.x][tile.y].append(unit)
  
 func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vectors : Array, faction : bool) -> void:
-	var unit_group : Array = []
+	#var unit_group : Array = []
 	for unit_pos : Vector2 in placement_vectors:
 		var this_inst = unit_ref.related_unit.instantiate()
 		# This assumes the board tiles are square
 		this_inst.position = unit_pos * board_tiles.cellHeight + start_position
 		this_inst.faction = faction
 		unit_parent.add_child(this_inst)
-		unit_group.append(this_inst)
+		#unit_group.append(this_inst)
 		this_inst.post_ready()
 	
-func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
-	var rect := Rect2(top_corner, size)
+func remove_unit_from_board(top_corner: Vector2i, size: Vector2, offset: Vector2) -> void:
+	var rect := Rect2(top_corner * board_tiles.cellHeight + Vector2i(offset), size * board_tiles.cellHeight)
 	for u in unit_parent.get_children():
 		if rect.has_point(u.position):
 			u.queue_free()

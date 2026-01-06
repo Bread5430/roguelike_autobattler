@@ -39,7 +39,7 @@ func _create_grid():
 		var gridCellNode : BoardSlot = GRID_CELL.instantiate()
 		gridCellNode.custom_minimum_size = Vector2(cellWidth, cellHeight)
 		gridCellNode.set_board_position(Vector2(i % width, int(i / width)))
-		add_child(gridCellNode.duplicate())
+		add_child(gridCellNode)
 
 func _remove_grid():
 	for node in get_children():

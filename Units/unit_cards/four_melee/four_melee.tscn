@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://dmg5gte6hspxu"]
 
 [ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_2qpfd"]
-[ext_resource type="Texture2D" uid="uid://c4ehc12h5y6vo" path="res://Units/unit_cards/four_melee/4_Melee.png" id="2_bxvrx"]
+[ext_resource type="Texture2D" uid="uid://c4ehc12h5y6vo" path="res://Assets/CardSprites/4_Melee.png" id="2_bxvrx"]
 [ext_resource type="Script" uid="uid://dn2oragnui52v" path="res://Units/unit_cards/four_melee/four_melee.gd" id="2_kinok"]
-[ext_resource type="PackedScene" uid="uid://cpeerva01chph" path="res://Units/melee_unit_template/MeleeUnitTemplate.tscn" id="3_3wqow"]
+[ext_resource type="PackedScene" uid="uid://cpeerva01chph" path="res://Units/unit_scenes/melee_unit_template/MeleeUnitTemplate.tscn" id="3_3wqow"]
 
 [node name="Four_Melee" instance=ExtResource("1_2qpfd")]
 texture = ExtResource("2_bxvrx")
