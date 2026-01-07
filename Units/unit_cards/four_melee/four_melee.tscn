@@ -11,3 +11,4 @@ script = ExtResource("2_kinok")
 num_units = 4
 placement_size = Vector2(1, 4)
 related_unit = ExtResource("3_3wqow")
+item_name = "four_melee"

@@ -75,8 +75,18 @@ func _input(_event: InputEvent):
 		var mouse_tile_int = Vector2i(objectCells[0].board_position)
 		var removed_unit_info = get_unit_at_tile(mouse_tile_int)
 		if removed_unit_info:
+			# Create an instance of the unit for access/use
+			var item_inst = removed_unit_info[0].instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+			item_inst.setup_unit()
+			
+			# Update other other nodes about removal
 			remove_from_board(removed_unit_info[1], removed_unit_info[2])
-		
+			inventory.add_item(item_inst.item_name, 1)
+			
+			# Set next unit to be placed to be the removed one
+			curr_unit = removed_unit_info[0]
+			curr_unit_inst = item_inst
+			
 		_reset_highlight(objectCells)
 		# TODO: Set current unit to reference of removed unit
 		#curr_unit = unit_board_space_map[top_corner.x][top_corner.y]

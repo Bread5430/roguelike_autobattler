@@ -76,7 +76,7 @@ func remove_item (itemID : String, count: int) -> bool:
 func get_slot_to_add (itemID : String) -> InventorySlot:
 	var item = ITEM_NAME.item_lookup(itemID)
 	for slot in slots:
-		if slot.item_name == itemID and slot.quantity < item.max_stack_size:
+		if slot.item_name == itemID:# and slot.quantity < item.max_stack_size: # Accessing Item properties requires instantiation - not sure if necesary
 			return slot
   
 	for slot in slots:
