@@ -77,6 +77,7 @@ func _input(_event: InputEvent):
 		if removed_unit_info:
 			remove_from_board(removed_unit_info[1], removed_unit_info[2])
 		
+		_reset_highlight(objectCells)
 		# TODO: Set current unit to reference of removed unit
 		#curr_unit = unit_board_space_map[top_corner.x][top_corner.y]
 
@@ -124,7 +125,7 @@ func remove_from_board(top_corner: Vector2i, size: Vector2) -> void:
 	for cell in _get_object_cells():
 		cell.full = false
 
-	battle_manager.remove_unit_from_board(top_corner, size, objectCells[0].position)
+	battle_manager.remove_unit_from_board(top_corner, size)
 
 ### Internode Communication Methods
 func set_current_item(slot : InventorySlot):

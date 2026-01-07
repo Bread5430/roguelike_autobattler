@@ -125,10 +125,10 @@ func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vect
 		#unit_group.append(this_inst)
 		this_inst.post_ready()
 	
-func remove_unit_from_board(top_corner: Vector2i, size: Vector2, offset: Vector2) -> void:
-	var rect := Rect2(top_corner * board_tiles.cellHeight + Vector2i(offset), size * board_tiles.cellHeight)
+func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
+	var rect := Rect2(top_corner * board_tiles.cellHeight, size * board_tiles.cellHeight)
 	for u in unit_parent.get_children():
-		if rect.has_point(u.position):
+		if rect.has_point(u.global_position):
 			u.queue_free()
 
 
