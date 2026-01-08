@@ -1,0 +1,15 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://djcoc6b7xedah"
+valid=false
+
+[deps]
+
+source_file="res://Data/formations.csv"
+
+[params]
+
+compress=true
+delimiter=0
