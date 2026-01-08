@@ -71,7 +71,7 @@ func _input(_event: InputEvent):
 		if curr_unit and isValid:
 			_place_unit()
 	elif Input.is_action_just_pressed("rightClick") and deployment_mode:
-		# TODO: Get starting position of the unit, and its rotation state
+
 		var mouse_tile_int = Vector2i(objectCells[0].board_position)
 		var removed_unit_info = get_unit_at_tile(mouse_tile_int)
 		if removed_unit_info:
@@ -88,8 +88,7 @@ func _input(_event: InputEvent):
 			curr_unit_inst = item_inst
 			
 		_reset_highlight(objectCells)
-		# TODO: Set current unit to reference of removed unit
-		#curr_unit = unit_board_space_map[top_corner.x][top_corner.y]
+
 
 	elif Input.is_action_just_pressed("rotatePlacement"):
 		rotated_placement = !rotated_placement
@@ -122,10 +121,14 @@ func check_cell():
 				_reset_highlight(objectCells)
 			objectCells = _get_object_cells()
 			isValid = _check_and_highlight_cells(objectCells)
+		else:
+			if objectCells.size() > 0:
+				_reset_highlight(objectCells)
+			objectCells = [new_target]
+			new_target.change_color(Color.YELLOW)
 
 
 func remove_from_board(top_corner: Vector2i, size: Vector2) -> void:
-
 
 	for x in size.x:
 		for y in size.y:
@@ -162,7 +165,7 @@ func _on_end_prep_pressed() -> void:
 	
 	
 #### Helper Methods
-func _check_and_highlight_cells(cells: Array) -> bool:
+func _check_and_highlight_cells(cells: Array) -> bool:	
 	var valid = true
 
 	# cell count check - prevents placing units on the edges of the board
@@ -200,6 +203,8 @@ func _place_unit():
 		curr_unit_inst = null
 		if selector_rect_debug:
 			selector_rect = Rect2(0,0,0,0)
+		
+		objectCells.clear()
 	else:
 		# Visually mark that you cannot keep placing here
 		_check_and_highlight_cells(objectCells)
@@ -238,10 +243,10 @@ func _get_object_cells() -> Array:
 	else:
 		if rotated_placement:
 			unit_rect = Rect2(curr_unit_inst.global_position - Vector2(unit_board.cellWidth / 2, unit_board.cellHeight / 2), \
-			curr_unit_inst.rotated_placement_size * Vector2(unit_board.cellWidth, unit_board.cellHeight) - Vector2(unit_board.cellWidth / 2, unit_board.cellHeight / 2))
+				curr_unit_inst.rotated_placement_size * Vector2(unit_board.cellWidth, unit_board.cellHeight) - Vector2(unit_board.cellWidth / 2, unit_board.cellHeight / 2))
 		else:
 			unit_rect = Rect2(curr_unit_inst.global_position - Vector2(unit_board.cellWidth / 2, unit_board.cellHeight / 2), \
-			curr_unit_inst.placement_size * Vector2(unit_board.cellWidth, unit_board.cellHeight) - Vector2(unit_board.cellWidth / 2, unit_board.cellHeight / 2))
+				curr_unit_inst.placement_size * Vector2(unit_board.cellWidth, unit_board.cellHeight) - Vector2(unit_board.cellWidth / 2, unit_board.cellHeight / 2))
 			
 	# Store for debugging
 	if selector_rect_debug:
