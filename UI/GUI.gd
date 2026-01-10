@@ -65,7 +65,7 @@ func _process(_delta):
 		queue_redraw()
 
 
-func _input(_event: InputEvent):
+func _unhandled_input(_event: InputEvent):
 	# Allow placement only if we are currently in deployment mode
 	if Input.is_action_just_pressed("leftClick") and deployment_mode:
 		if curr_unit and isValid:
