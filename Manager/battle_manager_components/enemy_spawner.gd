@@ -42,11 +42,10 @@ func get_enemy_spawns(stage: int, difficulty: String) -> Array:
 	var all_spawn_positions: Array = []
 	var seen_groups = {}
 	
-	for spawn_str in formation:
+	for parsed in formation:
 		# Parse the formation string to determine what to spawn
-		var parsed := parse_spawn_string(spawn_str)
 		if parsed.is_empty():
-			push_warning("Malformed Spawn String %s" % spawn_str)
+			push_warning("Malformed Formation")
 			continue
 			
 		var spawn_pos := Vector2i(parsed["x"], parsed["y"]) + grid_size
@@ -110,32 +109,6 @@ func get_predef_objectives(current_stage: int, enemy_positions: Array, objective
 
 
 # Utility Functions
-
-func parse_spawn_string(s: String) -> Dictionary:
-	var regex = RegEx.new()
-	# Updated regex to include optional string parameter at the end
-	# The string can contain any characters except closing bracket
-	regex.compile(r"\[(\d+),(\d+),(\d+),(\d+),(\d+),(\d+)(?:,([^\]]+))?\]")
-
-	var result = regex.search(s)
-	if result:
-		var parsed_data = {
-			"x": result.get_string(1).to_int(),
-			"y": result.get_string(2).to_int(),
-			"w": result.get_string(3).to_int(),
-			"h": result.get_string(4).to_int(),
-			"role": result.get_string(5).to_int(),
-			"group": result.get_string(6).to_int(),
-		}
-		
-		# Add optional string parameter if present
-		if result.get_string(7) != "":
-			parsed_data["exact_type"] = result.get_string(7)
-		
-		return parsed_data
-		
-	return {}
-
 
 func get_unit_by_role_cached(code: int) -> Array:
 	""" TODO: Performance test to see if caching actually makes a difference
