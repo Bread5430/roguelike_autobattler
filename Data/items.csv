@@ -1,0 +1,7 @@
+Name,Path,Roles
+four_melee,res://Units/unit_cards/four_melee/four_melee.tscn,SWARM|TANK
+chaff_swarm,res://Units/unit_cards/chaff_swarm/chaff_swarm.tscn,SWARM
+one_ranged,res://Units/unit_cards/one_ranged/one_ranged.tscn,CARRY
+splash_unit,res://Units/unit_cards/splash_unit/splash_unit.tscn,CLEAR
+,,
+,,
