@@ -32,14 +32,14 @@ func _ready():
 
 func _input(event):
 	# Mouse wheel zoom 
-	if Input.is_action_just_released("scroll_up"):
+	if event.is_action_pressed("scroll_up"):
 		zoom_camera(-camera_scroll_speed)
-	elif Input.is_action_just_released("scroll_down"):
+	elif event.is_action_pressed("scroll_down"):
 		zoom_camera(camera_scroll_speed)
 			
-	if enable_mouse_pan and Input.is_action_just_pressed("middle_mouse"):
+	if enable_mouse_pan and event.is_action_pressed("middle_mouse"):
 		start_pan()
-	elif Input.is_action_just_released("middle_mouse"): # Stop panning when button released
+	elif event.is_action_released("middle_mouse"): # Stop panning when button released
 		stop_pan()
 		
 	# Handle mouse motion for panning

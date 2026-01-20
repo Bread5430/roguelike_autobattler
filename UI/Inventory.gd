@@ -34,9 +34,11 @@ func post_ready():
 	for i in starter_items.size():
 		add_item(starter_items[i],starter_items_count[i])
 
-func _process (delta):
+func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("inventory") and can_open_inventory:
 		toggle_window(!visible)
+		accept_event()
+
 
 func toggle_window (open : bool):
 	visible = open

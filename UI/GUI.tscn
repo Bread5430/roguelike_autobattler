@@ -24,6 +24,7 @@ columns = 10
 rows = 10
 
 [node name="SpellBar" type="GridContainer" parent="."]
+visible = false
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
@@ -36,7 +37,7 @@ offset_right = 719.0
 offset_bottom = 480.0
 text = "End Preperation Phase"
 
-[node name="Passthrough_Helper" type="Node" parent="."]
+[node name="Passthough_Helper" type="Node" parent="."]
 script = ExtResource("3_dl5f7")
 
 [connection signal="pressed" from="End_Prep" to="." method="_on_end_prep_pressed"]

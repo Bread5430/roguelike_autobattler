@@ -64,13 +64,16 @@ func _process(_delta):
 		check_cell()
 		queue_redraw()
 
+func _input(event: InputEvent):
+	if is_mouse_over_ui_element(get_viewport().get_mouse_position()):
+		return
 
-func _unhandled_input(_event: InputEvent):
 	# Allow placement only if we are currently in deployment mode
-	if Input.is_action_just_pressed("leftClick") and deployment_mode:
+	if event.is_action_pressed("leftClick") and deployment_mode:
+		print("input")
 		if curr_unit and isValid:
 			_place_unit()
-	elif Input.is_action_just_pressed("rightClick") and deployment_mode:
+	elif event.is_action_pressed("rightClick") and deployment_mode:
 
 		var mouse_tile_int = Vector2i(objectCells[0].board_position)
 		var removed_unit_info = get_unit_at_tile(mouse_tile_int)
@@ -90,7 +93,7 @@ func _unhandled_input(_event: InputEvent):
 		_reset_highlight(objectCells)
 
 
-	elif Input.is_action_just_pressed("rotatePlacement"):
+	elif event.is_action_pressed("rotatePlacement"):
 		rotated_placement = !rotated_placement
 		
 		# Force cell check to be recomputed
@@ -157,6 +160,8 @@ func start_prep_phase():
 
 func _on_end_prep_pressed() -> void:
 	# Assuming we are entering the battle phase
+	print("button")
+
 	deployment_mode = false
 	end_prep.hide()
 	end_prep.disabled = true
@@ -262,3 +267,31 @@ func get_unit_at_tile(tile: Vector2i): # Returns PackedScene unit ref, left corn
 	if tile.x >= 0 and tile.x < unit_board_width and tile.y >= 0 and tile.y < unit_board_height:
 		return unit_board_space_map[tile.x][tile.y]
 	return null
+
+func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
+	"""
+	This is needed because input will trigger before the "pressed" signal is preocessed
+	Check if mouse is over interactive UI elements (not the board).
+	Returns true if over UI, false if over board/game area.
+	"""
+	# Check inventory window
+	if inventory and inventory.visible:
+		var inv_rect = inventory.get_global_rect()
+		if inv_rect.has_point(mouse_pos):
+			return true
+	
+	# Check spell bar
+	if spell_bar and spell_bar.visible:
+		var spell_rect = spell_bar.get_global_rect()
+		if spell_rect.has_point(mouse_pos):
+			return true
+	
+	# Check end prep button
+	if end_prep and end_prep.visible:
+		var button_rect = end_prep.get_global_rect()
+		if button_rect.has_point(mouse_pos):
+			return true
+	
+	# Add other UI elements here as needed
+	
+	return false

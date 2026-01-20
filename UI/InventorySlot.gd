@@ -69,3 +69,5 @@ func _on_pressed():
 		
 	parent_inventory.toggle_window(false)
 	parent_inventory.set_current_item(self)
+	
+	accept_event()

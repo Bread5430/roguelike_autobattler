@@ -4,7 +4,7 @@ extends Node
 
 @export var target_gui_node: Control  # Drag your GUI node here in the Inspector
 @export var auto_setup_on_ready := true
-@export var debug_print := false
+@export var debug_print := true
 
 # Control types that should remain interactive (STOP)
 var interactive_control_types := [
