@@ -69,7 +69,7 @@ func _draw():
 func _process(_delta):
 	if casting_mode:
 		if casting_slot and is_instance_valid(casting_slot.spell_inst):
-			casting_slot.spell_inst.preview(get_global_mouse_position())
+			casting_slot.spell_inst.preview(_get_world_mouse_position())
 		queue_redraw()
 	elif post_ready_check:
 		check_cell()
@@ -82,7 +82,7 @@ func _input(event: InputEvent):
 	if casting_mode:
 		if event.is_action_pressed("leftClick"):
 			if not is_mouse_over_ui_element(mouse_pos) and casting_slot and is_instance_valid(casting_slot.spell_inst):
-				casting_slot.spell_inst.cast(get_global_mouse_position())
+				casting_slot.spell_inst.cast(_get_world_mouse_position())
 				spell_bar.remove_spell_at(casting_slot)
 			_exit_casting_mode()
 			return
@@ -214,6 +214,11 @@ func _exit_casting_mode() -> void:
 		casting_slot.spell_inst.clear_preview()
 	casting_mode = false
 	casting_slot = null
+
+## Convert viewport/screen mouse position to world position (accounts for camera pan and zoom).
+func _get_world_mouse_position() -> Vector2:
+	var vp := get_viewport()
+	return vp.get_canvas_transform().affine_inverse() * vp.get_mouse_position()
 	
 #### Helper Methods
 func _check_and_highlight_cells(cells: Array) -> bool:	
