@@ -62,13 +62,14 @@ func end_battle():
 
 func set_unit_start_stop(stopped : bool):
 	for i in unit_parent.get_children():
-		i.set_start_stop(stopped)
+		if i is Base_Unit:
+			i.set_start_stop(stopped)
 
 func check_only_faction_units_alive(faction : bool):
 	for i in unit_parent.get_children():
-		if i.faction != faction:
+		if i is Base_Unit and i.faction != faction:
 			return false
-	return true 
+	return true
 
 # Triggers after both the manager and all its children have entered the scene
 func _ready():
@@ -106,6 +107,8 @@ func update_tiles():
 			enemies_tiles[x][y].clear()
 			
 	for unit in unit_parent.get_children():
+		if not unit is Base_Unit:
+			continue
 		# Convert position to tile position
 		var tile = world_to_grid(unit.position)
 		# If unit is an allied unit
@@ -128,7 +131,7 @@ func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vect
 func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
 	var rect := Rect2(top_corner * board_tiles.cellHeight, size * board_tiles.cellHeight)
 	for u in unit_parent.get_children():
-		if rect.has_point(u.global_position):
+		if u is Base_Unit and rect.has_point(u.global_position):
 			u.queue_free()
 
 

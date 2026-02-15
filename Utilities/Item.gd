@@ -24,3 +24,6 @@ func on_select():
 
 func get_slot_cost() -> Vector2:
 	return Vector2(unit_slots, spell_slots)
+
+#func get_texture() -> Texture2D:
+#	return texture

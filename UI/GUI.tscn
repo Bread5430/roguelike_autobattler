@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://dy1rgpvj3afyd"]
+[gd_scene load_steps=5 format=3 uid="uid://dy1rgpvj3afyd"]
 
 [ext_resource type="Script" uid="uid://bysfs5te4mpkk" path="res://UI/GUI.gd" id="1_u7efx"]
 [ext_resource type="Script" uid="uid://csmfu6ekj5t6l" path="res://UI/passthrough_helper.gd" id="3_dl5f7"]
+[ext_resource type="Script" uid="uid://c8kbfjmvgua2b" path="res://UI/spell_bar.gd" id="3_n3xue"]
 [ext_resource type="PackedScene" uid="uid://klgd83iitkqd" path="res://UI/Inventory.tscn" id="4_n3xue"]
 
 [node name="Gui" type="Control"]
@@ -28,6 +29,7 @@ visible = false
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
+script = ExtResource("3_n3xue")
 
 [node name="End_Prep" type="Button" parent="."]
 layout_mode = 0

@@ -9,9 +9,12 @@ var selector_rect : Rect2
 @export var battle_manager : Control
 var inventory : Inventory
 var unit_board : GridContainer
-@onready var spell_bar : GridContainer = $SpellBar
+@onready var spell_bar : SpellBar = $SpellBar
 @onready var end_prep : Button = $End_Prep
 
+#### CASTING MODE (battle)
+var casting_mode : bool = false
+var casting_slot : SpellBarSlot
 
 #### UNIT PLACEMENT VARS
 var unit_board_height : int
@@ -49,6 +52,10 @@ func post_ready():
 
 	# Needed to prevent process from running too soon
 	post_ready_check = true
+
+	spell_bar.battle_manager = battle_manager
+	spell_bar.spell_slot_clicked.connect(_on_spell_slot_clicked)
+	spell_bar.spell_slot_right_clicked.connect(_on_spell_slot_right_clicked)
 	
 	# Propagate downwards
 	for i in get_children():
@@ -60,38 +67,55 @@ func _draw():
 		draw_rect(selector_rect, Color.RED, false)
 
 func _process(_delta):
-	if post_ready_check:
+	if casting_mode:
+		if casting_slot and is_instance_valid(casting_slot.spell_inst):
+			casting_slot.spell_inst.preview(get_global_mouse_position())
+		queue_redraw()
+	elif post_ready_check:
 		check_cell()
 		queue_redraw()
 
 func _input(event: InputEvent):
-	if is_mouse_over_ui_element(get_viewport().get_mouse_position()):
+	var mouse_pos := get_viewport().get_mouse_position()
+
+	# Casting mode: confirm cast or cancel
+	if casting_mode:
+		if event.is_action_pressed("leftClick"):
+			if not is_mouse_over_ui_element(mouse_pos) and casting_slot and is_instance_valid(casting_slot.spell_inst):
+				casting_slot.spell_inst.cast(get_global_mouse_position())
+				spell_bar.remove_spell_at(casting_slot)
+			_exit_casting_mode()
+			return
+		if event.is_action_pressed("rightClick") or event.is_action_pressed("ui_cancel"):
+			_exit_casting_mode()
+			return
+		return
+
+	if is_mouse_over_ui_element(mouse_pos):
 		return
 
 	# Allow placement only if we are currently in deployment mode
 	if event.is_action_pressed("leftClick") and deployment_mode:
-		print("input")
 		if curr_unit and isValid:
 			_place_unit()
 	elif event.is_action_pressed("rightClick") and deployment_mode:
-
-		var mouse_tile_int = Vector2i(objectCells[0].board_position)
-		var removed_unit_info = get_unit_at_tile(mouse_tile_int)
-		if removed_unit_info:
-			# Create an instance of the unit for access/use
-			var item_inst = removed_unit_info[0].instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
-			item_inst.setup_unit()
-			
-			# Update other other nodes about removal
-			remove_from_board(removed_unit_info[1], removed_unit_info[2])
-			inventory.add_item(item_inst.item_name, 1)
-			
-			# Set next unit to be placed to be the removed one
-			curr_unit = removed_unit_info[0]
-			curr_unit_inst = item_inst
-			
-		_reset_highlight(objectCells)
-
+		if objectCells.size() > 0:
+			var mouse_tile_int = Vector2i(objectCells[0].board_position)
+			var removed_unit_info = get_unit_at_tile(mouse_tile_int)
+			if removed_unit_info:
+				# Create an instance of the unit for access/use
+				var item_inst = removed_unit_info[0].instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+				item_inst.setup_unit()
+				
+				# Update other other nodes about removal
+				remove_from_board(removed_unit_info[1], removed_unit_info[2])
+				inventory.add_item(item_inst.item_name, 1)
+				
+				# Set next unit to be placed to be the removed one
+				curr_unit = removed_unit_info[0]
+				curr_unit_inst = item_inst
+				
+			_reset_highlight(objectCells)
 
 	elif event.is_action_pressed("rotatePlacement"):
 		rotated_placement = !rotated_placement
@@ -147,8 +171,16 @@ func remove_from_board(top_corner: Vector2i, size: Vector2) -> void:
 func set_current_item(slot : InventorySlot):
 	curr_inv_slot = slot
 	
-	curr_unit = slot.item
-	curr_unit_inst = slot.item_inst
+	if slot.item_inst is Unit_Card:
+		curr_unit = slot.item
+		curr_unit_inst = slot.item_inst
+	elif slot.item_inst is Spell_Card:
+		# In deployment mode only: add spell to spell bar and consume one from inventory
+		if deployment_mode:
+			var added := spell_bar.add_spell(slot.item_inst as Spell_Card, slot.item_name)
+			if added:
+				slot.remove_item(1)
+		# In other modes: do nothing when clicking a spell
 
 func start_prep_phase():
 	deployment_mode = true
@@ -159,15 +191,29 @@ func start_prep_phase():
 	
 
 func _on_end_prep_pressed() -> void:
-	# Assuming we are entering the battle phase
-	print("button")
-
 	deployment_mode = false
 	end_prep.hide()
 	end_prep.disabled = true
 	toggle_inventory(false)
 	preperation_ended.emit()
-	
+
+func _on_spell_slot_clicked(slot: SpellBarSlot) -> void:
+	# In battle mode: enter casting mode (only if slot has a spell)
+	if not deployment_mode and not slot.is_empty() and slot.spell_inst:
+		casting_mode = true
+		casting_slot = slot
+
+func _on_spell_slot_right_clicked(slot: SpellBarSlot) -> void:
+	# In deployment mode: return spell to inventory
+	if deployment_mode and not slot.is_empty():
+		inventory.add_item(slot.item_name, 1)
+		spell_bar.remove_spell_at(slot)
+
+func _exit_casting_mode() -> void:
+	if casting_slot and is_instance_valid(casting_slot.spell_inst):
+		casting_slot.spell_inst.clear_preview()
+	casting_mode = false
+	casting_slot = null
 	
 #### Helper Methods
 func _check_and_highlight_cells(cells: Array) -> bool:	

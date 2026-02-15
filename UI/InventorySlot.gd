@@ -23,7 +23,12 @@ func set_item (itemID : String, new_item : PackedScene, count : int):
 	item_name = itemID
 	item = new_item
 	item_inst = item.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
-	item_inst.setup_unit()
+	
+	
+	if item_inst is Unit_Card:
+		item_inst.setup_unit()
+	elif item_inst is Spell_Card:
+		item_inst.setup_spell()
 	#add_child(item_inst)
 	quantity = count
 	

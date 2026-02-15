@@ -5,8 +5,9 @@ This is a Godot 4.4 2D roguelike autobattler game. Core components:
 - **GameStateManager** (`Manager/game_state_manager.gd`): Top-level state machine (MAP_EXPLORATION, BATTLE_PREPARATION, BATTLE_ACTIVE, etc.)
 - **BattleManager** (`Manager/battle_manager.gd`): Handles battle logic, unit spawning, flow generation
 - **MapManager** (`Map_Gen/map_manager.gd`): Generates procedural map graphs of connected battle nodes
-- **GUI** (`UI/GUI.gd`): Manages unit placement, inventory, spell bar during battles
+- **GUI** (`UI/GUI.gd`): Manages unit placement, inventory, spell bar, and casting mode during battles
 - **Units**: `Base_Unit.gd` (CharacterBody2D with FSM), `Base_Squad.gd` (Node2D grouping units)
+- **Spells**: `Base_Spell.gd` (preview/cast/clear_preview), spell bar (`UI/spell_bar.gd`), `SpellBarSlot`, spell cards in inventory
 
 ## Key Patterns
 - **Autoloads**: `ITEM_NAME` and `FORMATION_MAP` load CSV data (`Data/items.csv`, `Data/formations.csv`) into global lookup maps
@@ -14,11 +15,12 @@ This is a Godot 4.4 2D roguelike autobattler game. Core components:
 - **Signals**: Inter-component communication (e.g., `battle_ended` from BattleManager to GameStateManager)
 - **Grid-based Placement**: Units placed on `BoardUI` (GridContainer of `BoardSlot` panels) using formation vectors from `unit_card.gd`
 - **Roles & Bitmasks**: Unit roles (CARRY, SWARM, CLEAR, TANK) as bitflags in `ITEM_NAME.gd` for filtering
+- **Unit_Parent and non-units**: `BattleManager`’s `Unit_Parent` can contain non-unit nodes (e.g. spell preview indicators like `SpellPreviewCircle`). All battle logic that iterates `unit_parent.get_children()` must filter to `Base_Unit` (e.g. `if i is Base_Unit`) before using `faction`, `set_start_stop`, or tile updates.
 
 ## Data Flow
 1. Map exploration: Player selects nodes in `MapManager`
-2. Battle prep: `GUI` enables deployment mode, places units from inventory using `FORMATION_MAP`
-3. Battle active: `BattleManager` spawns enemies, runs flow simulation, updates units
+2. Battle prep: `GUI` enables deployment mode; places units from inventory using `FORMATION_MAP`; spells from inventory (click) go to `SpellBar`; right-click spell bar slot returns spell to inventory
+3. Battle active: `BattleManager` spawns enemies, runs flow simulation, updates units; spell bar click enters casting mode (preview under mouse), click to cast or right-click/Escape to cancel
 4. Post-battle: Return to map, update progress
 
 ## Conventions
@@ -36,5 +38,5 @@ This is a Godot 4.4 2D roguelike autobattler game. Core components:
 ## Examples
 - Adding unit: Create scene inheriting `Base_Unit.tscn`, add to `items.csv`, reference in `unit_card` scene
 - New formation: Add rows to `formations.csv` with X,Y,W,H,Role,Group
-- State transition: Emit signal from manager, connect in `game_state_manager.gd` `_ready()`</content>
-<parameter name="filePath">c:\Users\wange\Documents\Godot\roguelike_autobattler\.github\copilot-instructions.md
+- State transition: Emit signal from manager, connect in `game_state_manager.gd` `_ready()`
+- Adding spell: Create scene with script extending `Base_Spell` (implement `preview(world_pos)`, `cast(world_pos)`, `clear_preview()`), create spell card scene with `Spell_Card` and `related_spell_effect`, add to `items.csv`
