@@ -46,6 +46,7 @@ func _remove_grid():
 		node.queue_free()
 
 func post_ready():
+	set_mouse_filter(Control.MOUSE_FILTER_IGNORE)
 	for i in get_children():
 		if i.has_method("post_ready"):
 			i.post_ready()

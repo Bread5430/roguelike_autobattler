@@ -21,6 +21,9 @@ var enemies_tiles : Array[Array]
 var allies_tiles : Array[Array]
 
 signal battle_ended(victory : bool)
+signal unit_selected(unit: Base_Unit)
+
+const UNIT_PICK_RADIUS := 80.0
 
 func setup_battle(battle_params : Dictionary):
 	"""Generate enemies for the current battle"""
@@ -83,7 +86,7 @@ func _ready():
 			enemies_tiles[x].append([])
 	
 func post_ready():
-	
+	set_mouse_filter(Control.MOUSE_FILTER_IGNORE)
 	for node in get_children():
 		if node.has_method("post_ready"):
 			node.post_ready()
@@ -133,6 +136,27 @@ func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
 	for u in unit_parent.get_children():
 		if u is Base_Unit and rect.has_point(u.global_position):
 			u.queue_free()
+
+
+## Called by InputCoordinator for game-area clicks in BATTLE_ACTIVE.
+## Converts event position to world (camera transform) and finds unit under cursor.
+func handle_unit_click(event: InputEvent) -> void:
+	if not event is InputEventMouseButton:
+		return
+	var vp := get_viewport()
+	var world_pos = vp.get_canvas_transform().affine_inverse() * event.position
+	var best_unit: Base_Unit = null
+	var best_dist := INF
+	for child in unit_parent.get_children():
+		if not child is Base_Unit:
+			continue
+		var u := child as Base_Unit
+		var d = world_pos.distance_to(u.global_position)
+		if d <= UNIT_PICK_RADIUS and d < best_dist:
+			best_dist = d
+			best_unit = u
+	if best_unit:
+		unit_selected.emit(best_unit)
 
 
 func _on_manager_update_timeout():

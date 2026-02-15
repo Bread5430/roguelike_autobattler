@@ -31,20 +31,24 @@ func _ready():
 		self.limit_bottom = limit_bottom
 
 func _input(event):
-	# Mouse wheel zoom 
+	# Only consume zoom/pan so left/right click can reach InputCoordinator as unhandled.
 	if event.is_action_pressed("scroll_up"):
 		zoom_camera(-camera_scroll_speed)
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("scroll_down"):
 		zoom_camera(camera_scroll_speed)
-			
+		get_viewport().set_input_as_handled()
+
 	if enable_mouse_pan and event.is_action_pressed("middle_mouse"):
 		start_pan()
-	elif event.is_action_released("middle_mouse"): # Stop panning when button released
+		get_viewport().set_input_as_handled()
+	elif event.is_action_released("middle_mouse"):
 		stop_pan()
-		
-	# Handle mouse motion for panning
+		get_viewport().set_input_as_handled()
+
 	if is_panning and event is InputEventMouseMotion:
 		update_pan()
+		get_viewport().set_input_as_handled()
 
 
 func start_pan():

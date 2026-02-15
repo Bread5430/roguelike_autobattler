@@ -75,55 +75,67 @@ func _process(_delta):
 		check_cell()
 		queue_redraw()
 
+## Casting mode only. Runs for every input so we always can confirm/cancel cast.
 func _input(event: InputEvent):
+	if not casting_mode:
+		return
 	var mouse_pos := get_viewport().get_mouse_position()
-
-	# Casting mode: confirm cast or cancel
-	if casting_mode:
-		if event.is_action_pressed("leftClick"):
-			if not is_mouse_over_ui_element(mouse_pos) and casting_slot and is_instance_valid(casting_slot.spell_inst):
-				casting_slot.spell_inst.cast(_get_world_mouse_position())
-				spell_bar.remove_spell_at(casting_slot)
-			_exit_casting_mode()
-			return
-		if event.is_action_pressed("rightClick") or event.is_action_pressed("ui_cancel"):
-			_exit_casting_mode()
-			return
+	if event.is_action_pressed("leftClick"):
+		if not is_mouse_over_ui_element(mouse_pos) and casting_slot and is_instance_valid(casting_slot.spell_inst):
+			casting_slot.spell_inst.cast(_get_world_mouse_position())
+			spell_bar.remove_spell_at(casting_slot)
+		_exit_casting_mode()
+		return
+	if event.is_action_pressed("rightClick") or event.is_action_pressed("ui_cancel"):
+		_exit_casting_mode()
 		return
 
-	if is_mouse_over_ui_element(mouse_pos):
-		return
-
-	# Allow placement only if we are currently in deployment mode
-	if event.is_action_pressed("leftClick") and deployment_mode:
-		if curr_unit and isValid:
-			_place_unit()
-	elif event.is_action_pressed("rightClick") and deployment_mode:
-		if objectCells.size() > 0:
-			var mouse_tile_int = Vector2i(objectCells[0].board_position)
-			var removed_unit_info = get_unit_at_tile(mouse_tile_int)
-			if removed_unit_info:
-				# Create an instance of the unit for access/use
-				var item_inst = removed_unit_info[0].instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
-				item_inst.setup_unit()
-				
-				# Update other other nodes about removal
-				remove_from_board(removed_unit_info[1], removed_unit_info[2])
-				inventory.add_item(item_inst.item_name, 1)
-				
-				# Set next unit to be placed to be the removed one
-				curr_unit = removed_unit_info[0]
-				curr_unit_inst = item_inst
-				
-			_reset_highlight(objectCells)
-
-	elif event.is_action_pressed("rotatePlacement"):
+## Only runs when no Control has accepted the event (e.g. keyboard when no button focused).
+func _unhandled_input(event: InputEvent):
+	if event.is_action_pressed("rotatePlacement"):
 		rotated_placement = !rotated_placement
-		
-		# Force cell check to be recomputed
 		targetCell = null
 		check_cell()
-	
+		accept_event()
+
+## Placement and removal are handled by InputCoordinator via handle_game_area_click().
+## This is no longer used for game-area clicks (root Gui uses MOUSE_FILTER_IGNORE).
+func _gui_input(_event: InputEvent):
+	pass
+
+## Called by InputCoordinator for game-area clicks in BATTLE_PREPARATION.
+## Uses transformed (camera) coordinates so placement works with pan/zoom.
+func handle_game_area_click(event: InputEvent):
+	if not deployment_mode or not event is InputEventMouseButton:
+		return
+	var mb := event as InputEventMouseButton
+	if not mb.pressed:
+		return
+	var vp := get_viewport()
+	var world_pos = vp.get_canvas_transform().affine_inverse() * event.position
+	var anchor_cell := _get_cell_at_world_position(world_pos)
+	if not anchor_cell:
+		return
+	if mb.button_index == MOUSE_BUTTON_LEFT:
+		targetCell = anchor_cell
+		objectCells = _get_object_cells_for_anchor(anchor_cell)
+		isValid = _check_and_highlight_cells(objectCells)
+		if curr_unit and isValid:
+			_place_unit()
+	elif mb.button_index == MOUSE_BUTTON_RIGHT:
+		var mouse_tile_int := Vector2i(anchor_cell.board_position)
+		var removed_unit_info = get_unit_at_tile(mouse_tile_int)
+		if removed_unit_info:
+			var top_corner = removed_unit_info[1]
+			var size = removed_unit_info[2]
+			var cells_to_reset := _get_cells_in_rect(top_corner, size)
+			var item_inst = removed_unit_info[0].instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+			item_inst.setup_unit()
+			remove_from_board(top_corner, size)
+			inventory.add_item(item_inst.item_name, 1)
+			curr_unit = removed_unit_info[0]
+			curr_unit_inst = item_inst
+			_reset_highlight(cells_to_reset)
 
 func toggle_inventory(can_use_inventory : bool):
 	if can_use_inventory == true:
@@ -134,12 +146,10 @@ func toggle_inventory(can_use_inventory : bool):
 		inventory.toggle_window(false)
 
 func check_cell():
-	
-	#var mouse_pos = get_viewport().get_mouse_position()
-	var mouse_pos = Vector2(DisplayServer.mouse_get_position()) - unit_board.global_position
-	curr_mouse_tile = mouse_pos / Vector2(unit_board.cellWidth, unit_board.cellHeight)
-	
-	var new_target = _get_target_cell()
+	# Use world position so hover works with camera pan/zoom.
+	var world_mouse := _get_world_mouse_position()
+	curr_mouse_tile = (world_mouse - unit_board.global_position) / Vector2(unit_board.cellWidth, unit_board.cellHeight)
+	var new_target := _get_cell_at_world_position(world_mouse)
 	if new_target and new_target != targetCell:
 		targetCell = new_target
 		if curr_unit_inst:
@@ -292,37 +302,74 @@ func place_on_board(top_corner: Vector2, size: Vector2, unit_ref: PackedScene) -
 		for y in size.y:
 			unit_board_space_map[top_corner.x + x][top_corner.y + y] = [unit_ref,top_corner, size]
 
-func _get_target_cell():
-	for cell: Control in unit_board.get_children():
-		if cell.mouse_over == true:
-			return cell
-	return null
+## Returns the BoardSlot at the given world position (transformed coords; works with pan/zoom).
+func _get_cell_at_world_position(world_pos: Vector2) -> BoardSlot:
+	var local := world_pos - unit_board.global_position
+	var tile_x := int(local.x / unit_board.cellWidth)
+	var tile_y := int(local.y / unit_board.cellHeight)
+	if tile_x < 0 or tile_x >= unit_board_width or tile_y < 0 or tile_y >= unit_board_height:
+		return null
+	var idx := tile_x + tile_y * unit_board_width
+	var children := unit_board.get_children()
+	if idx >= children.size():
+		return null
+	var cell = children[idx]
+	return cell as BoardSlot if cell is BoardSlot else null
 
 func _reset_highlight(cells : Array):
 	for cell: Control in cells:
 		cell.change_color(Color(0.5, 0.5, 0.5, 0.5))
 
 func _get_object_cells() -> Array:
-	var cells = []
-	# Size the rectangle to be a bit smaller than 
-	var unit_rect : Rect2
+	if targetCell:
+		return _get_object_cells_for_anchor(targetCell)
+	return []
+
+## Returns cells that would be covered by placing current unit with top-left at anchor_cell.
+## Uses world-space rect so it works with camera pan/zoom.
+func _get_object_cells_for_anchor(anchor_cell: BoardSlot) -> Array:
+	var cells: Array = []
+	var unit_rect: Rect2
 	if curr_unit_inst == null:
 		unit_rect = Rect2(Vector2.ZERO, Vector2.ZERO)
 	else:
+		var origin := anchor_cell.global_position
+		var cell_size := Vector2(unit_board.cellWidth, unit_board.cellHeight)
 		if rotated_placement:
-			unit_rect = Rect2(curr_unit_inst.global_position - Vector2(unit_board.cellWidth / 2, unit_board.cellHeight / 2), \
-				curr_unit_inst.rotated_placement_size * Vector2(unit_board.cellWidth, unit_board.cellHeight) - Vector2(unit_board.cellWidth / 2, unit_board.cellHeight / 2))
+			unit_rect = Rect2(origin, curr_unit_inst.rotated_placement_size * cell_size)
 		else:
-			unit_rect = Rect2(curr_unit_inst.global_position - Vector2(unit_board.cellWidth / 2, unit_board.cellHeight / 2), \
-				curr_unit_inst.placement_size * Vector2(unit_board.cellWidth, unit_board.cellHeight) - Vector2(unit_board.cellWidth / 2, unit_board.cellHeight / 2))
-			
-	# Store for debugging
+			unit_rect = Rect2(origin, curr_unit_inst.placement_size * cell_size)
 	if selector_rect_debug:
 		selector_rect = unit_rect
-		
-	for cell: Control in unit_board.get_children():
-		if cell.get_global_rect().intersects(unit_rect):
+	for cell in unit_board.get_children():
+		if cell is Control and cell.get_global_rect().intersects(unit_rect):
 			cells.append(cell)
+	# Top-left first (for _place_unit which uses objectCells[0] as origin).
+	cells.sort_custom(func(a, b): return _cell_order(a, b) < 0)
+	return cells
+
+
+func _cell_order(a: Control, b: Control) -> int:
+	var pa := (a as BoardSlot).board_position
+	var pb := (b as BoardSlot).board_position
+	if pa.y != pb.y:
+		return int(pa.y - pb.y)
+	return int(pa.x - pb.x)
+
+## Returns BoardSlots in the grid rect [top_corner, top_corner+size) (for reset after removal).
+func _get_cells_in_rect(top_corner: Vector2i, size: Vector2) -> Array:
+	var cells: Array = []
+	for dx in int(size.x):
+		for dy in int(size.y):
+			var tx := top_corner.x + dx
+			var ty := top_corner.y + dy
+			if tx >= 0 and tx < unit_board_width and ty >= 0 and ty < unit_board_height:
+				var idx := tx + ty * unit_board_width
+				var children := unit_board.get_children()
+				if idx < children.size():
+					var c = children[idx]
+					if c is BoardSlot:
+						cells.append(c)
 	return cells
 
 

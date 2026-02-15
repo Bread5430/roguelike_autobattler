@@ -17,6 +17,7 @@ func change_color(color:Color):
 
 
 func _ready():
+	set_mouse_filter(Control.MOUSE_FILTER_IGNORE)
 	cell_rect = get_global_rect()
 	change_color(Color(0.5, 0.5, 0.5, 0.5))
 
