@@ -183,6 +183,7 @@ func set_current_item(slot : InventorySlot):
 		# In other modes: do nothing when clicking a spell
 
 func start_prep_phase():
+	_clear_placement_grid()
 	deployment_mode = true
 	toggle_inventory(true)
 	end_prep.show()
@@ -219,6 +220,17 @@ func _exit_casting_mode() -> void:
 func _get_world_mouse_position() -> Vector2:
 	var vp := get_viewport()
 	return vp.get_canvas_transform().affine_inverse() * vp.get_mouse_position()
+
+## Clear the placement grid and BoardSlot state so the next deployment starts fresh.
+func _clear_placement_grid() -> void:
+	for i in unit_board_width:
+		for j in unit_board_height:
+			unit_board_space_map[i][j] = null
+	var default_slot_color := Color(0.5, 0.5, 0.5, 0.5)
+	for cell in unit_board.get_children():
+		if cell is BoardSlot:
+			cell.full = false
+			cell.change_color(default_slot_color)
 	
 #### Helper Methods
 func _check_and_highlight_cells(cells: Array) -> bool:	
