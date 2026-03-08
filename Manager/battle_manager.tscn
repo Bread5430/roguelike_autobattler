@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://b2hkuu4ohgbnk"]
+[gd_scene load_steps=9 format=3 uid="uid://b2hkuu4ohgbnk"]
 
 [ext_resource type="Script" uid="uid://cuad6lpso0q62" path="res://Manager/battle_manager.gd" id="1_c6fe6"]
 [ext_resource type="Script" uid="uid://dxavhucjkx8u3" path="res://Manager/battle_manager_components/TargetManager.gd" id="2_7x82o"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://cx6oj4k7ftyrd" path="res://Manager/battle_manager_components/BoardUI.tscn" id="3_0kdsf"]
 [ext_resource type="Script" uid="uid://hqlphn02kabu" path="res://Manager/battle_manager_components/FlowGen.gd" id="6_ksii2"]
 [ext_resource type="Script" uid="uid://cuj7pk5iu8qbi" path="res://Manager/battle_manager_components/proj_pool.gd" id="7_0kdsf"]
+[ext_resource type="Script" uid="uid://c13q3sdjmbq53" path="res://Manager/Spell_Manager.gd" id="8_vbtom"]
 [ext_resource type="Script" uid="uid://bqo443bjdc1tg" path="res://Manager/battle_manager_components/enemy_spawner.gd" id="9_tj47k"]
 
 [node name="BattleManager" type="Control" groups=["BATTLEMANAGER"]]
@@ -44,6 +45,9 @@ script = ExtResource("9_tj47k")
 
 [node name="Proj_Pool" type="Node" parent="."]
 script = ExtResource("7_0kdsf")
+
+[node name="Spell_Manager" type="Node" parent="."]
+script = ExtResource("8_vbtom")
 
 [connection signal="timeout" from="flow_visualizer/Redraw_Timer" to="flow_visualizer" method="_on_redraw_timer_timeout"]
 [connection signal="timeout" from="Manager_Update" to="." method="_on_manager_update_timeout"]

@@ -15,3 +15,8 @@ func cast(_world_pos: Vector2) -> void:
 ## Call when entering casting mode to create preview; call when exiting to remove it.
 func clear_preview() -> void:
 	pass
+
+
+## Ask the battle_manager for active modifiers at the current cast location, then apply these to the spell
+func _apply_modifiers(cast_location : Vector2, modifiable_attributes : Dictionary) -> void:
+	pass

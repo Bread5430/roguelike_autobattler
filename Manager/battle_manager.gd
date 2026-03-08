@@ -14,6 +14,7 @@ var tile_map_size : Vector2i
 @onready var enemy_spawner = $Enemy_Spawner
 @onready var manager_timer = $Manager_Update
 @onready var flow_visualizer = $flow_visualizer
+@onready var spell_manager = $Spell_Manager
 @onready var proj_pool = $Proj_Pool
 #@onready var viewport = $Viewport
 
@@ -158,6 +159,8 @@ func handle_unit_click(event: InputEvent) -> void:
 	if best_unit:
 		unit_selected.emit(best_unit)
 
+func get_spell_modification(location : Vector2, modifiable_attributes : Dictionary):
+	spell_manager.spell_modification(location, modifiable_attributes)
 
 func _on_manager_update_timeout():
 	# Check if we can end the battle

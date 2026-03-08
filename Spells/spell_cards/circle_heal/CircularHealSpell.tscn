@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bucikrcwflw35"]
+
+[ext_resource type="Script" uid="uid://ctijsv2blji0j" path="res://Spells/spell_cards/circle_aoe/CircularAoESpell.gd" id="1_3saed"]
+
+[node name="CircularAoESpell" type="Node"]
+script = ExtResource("1_3saed")
+damage = -25

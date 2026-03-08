@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://cejl5pq760mbs"]
+
+[ext_resource type="Texture2D" uid="uid://ce4wm1kjqfhom" path="res://Assets/CardSprites/circle_aoe_spell.png" id="1_h0b5u"]
+[ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2_8g4wi"]
+[ext_resource type="PackedScene" uid="uid://bqx5mcircaoe1" path="res://Spells/spell_cards/circle_aoe/CircularAoESpell.tscn" id="3_47hg2"]
+
+[node name="CircularHealSpellcard" type="Sprite2D"]
+texture = ExtResource("1_h0b5u")
+script = ExtResource("2_8g4wi")
+related_spell_effect = ExtResource("3_47hg2")
+mana_cost = 5
+cooldown = 10
+item_name = "circular_heal"
+max_stack_size = 1
+spell_slots = 1
+metadata/_custom_type_script = "uid://d2esp2apkum71"

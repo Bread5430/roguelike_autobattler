@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://ce4wm1kjqfhom" path="res://Assets/CardSprites/circle_aoe_spell.png" id="1_d7boa"]
 [ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2_nitdn"]
-[ext_resource type="PackedScene" uid="uid://bqx5mcircaoe1" path="res://Spells/spell_effects/circle_aoe/CircularAoESpell.tscn" id="3_i5u5j"]
+[ext_resource type="PackedScene" uid="uid://bqx5mcircaoe1" path="res://Spells/spell_cards/circle_aoe/CircularAoESpell.tscn" id="3_i5u5j"]
 
 [node name="CircularAoeSpellcard" type="Sprite2D"]
 texture = ExtResource("1_d7boa")
