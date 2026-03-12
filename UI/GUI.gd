@@ -11,6 +11,7 @@ var inventory : Inventory
 var unit_board : GridContainer
 @onready var spell_bar : SpellBar = $SpellBar
 @onready var end_prep : Button = $End_Prep
+@onready var tactical_cursor = $TacticalCursor
 
 #### CASTING MODE (battle)
 var casting_mode : bool = false
@@ -73,6 +74,7 @@ func _process(_delta):
 		queue_redraw()
 	elif post_ready_check:
 		check_cell()
+		_update_tactical_cursor()
 		queue_redraw()
 
 ## Casting mode only. Runs for every input so we always can confirm/cancel cast.
@@ -377,6 +379,16 @@ func get_unit_at_tile(tile: Vector2i): # Returns PackedScene unit ref, left corn
 	if tile.x >= 0 and tile.x < unit_board_width and tile.y >= 0 and tile.y < unit_board_height:
 		return unit_board_space_map[tile.x][tile.y]
 	return null
+
+func _update_tactical_cursor() -> void:
+	if not battle_manager or not battle_manager.visible or not tactical_cursor:
+		return
+	if is_mouse_over_ui_element(get_viewport().get_mouse_position()):
+		tactical_cursor.show_unit(null)
+		return
+	var world_mouse := _get_world_mouse_position()
+	var unit = battle_manager.get_unit_under_cursor(world_mouse)
+	tactical_cursor.show_unit(unit)
 
 func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 	"""

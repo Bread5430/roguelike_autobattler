@@ -10,8 +10,9 @@ func do_attack():
 	queue_redraw()
 	
 	# Projectile is purely cosmetic, dmg is done now
-	target_unit.take_damage(damage * unit.dmg_dealt_mult)
-	
+	var amount := int(damage * unit.dmg_dealt_mult)
+	target_unit.take_damage(amount)
+	unit.add_damage_dealt(amount)
 	super()
 
 func _draw():

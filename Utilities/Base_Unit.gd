@@ -13,6 +13,7 @@ var unit_name : String
 @export var max_hp : int
 @onready var curr_hp : int = max_hp
 
+var total_damage_dealt : int = 0
 var dmg_dealt_mult : float = 1.0
 var dmg_taken_mult : float = 1.0
 
@@ -44,3 +45,20 @@ func post_ready():
 
 func set_start_stop(stopped_state : bool):
 	state_machine.round_start_check = stopped_state
+
+## Call when this unit deals damage (for tactical cursor / stats).
+func add_damage_dealt(amount: int) -> void:
+	total_damage_dealt += amount
+
+## Returns attack stats from first Attack_Base child, or empty dict if none.
+func get_attack_stats() -> Dictionary:
+	for c in get_children():
+		if c is Attack_Base:
+			var atk: Attack_Base = c
+			var timer := atk.get_node_or_null("Attack_CD") as Timer
+			var reload_time: float = timer.wait_time if timer else 0.0
+			return {
+				"damage": atk.damage,
+				"reload_time": reload_time
+			}
+	return {}
