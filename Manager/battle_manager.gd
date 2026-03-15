@@ -145,21 +145,12 @@ func handle_unit_click(event: InputEvent) -> void:
 	if not event is InputEventMouseButton:
 		return
 	var vp := get_viewport()
-	var world_pos = vp.get_canvas_transform().affine_inverse() * event.position
-	var best_unit: Base_Unit = null
-	var best_dist := INF
-	for child in unit_parent.get_children():
-		if not child is Base_Unit:
-			continue
-		var u := child as Base_Unit
-		var d = world_pos.distance_to(u.global_position)
-		if d <= UNIT_PICK_RADIUS and d < best_dist:
-			best_dist = d
-			best_unit = u
-	if best_unit:
-		unit_selected.emit(best_unit)
+	var world_pos : Vector2 = vp.get_canvas_transform().affine_inverse() * event.position
+	var unit := get_unit_under_cursor(world_pos)
+	if unit:
+		unit_selected.emit(unit)
 
-## Returns the unit under the given world position (for tactical cursor hover).
+## Returns the unit under the given world position (only used on click).
 func get_unit_under_cursor(world_pos: Vector2) -> Base_Unit:
 	var best_unit: Base_Unit = null
 	var best_dist := INF

@@ -39,4 +39,7 @@ starter_items_count = Array[int]([3, 3, 3, 3, 2])
 [node name="SpellBar" parent="UICanvas/Gui" index="1"]
 visible = true
 
+[node name="TacticalCursor" parent="UICanvas/Gui" index="4"]
+layout_mode = 1
+
 [editable path="UICanvas/Gui"]

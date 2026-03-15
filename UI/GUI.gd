@@ -57,7 +57,11 @@ func post_ready():
 	spell_bar.battle_manager = battle_manager
 	spell_bar.spell_slot_clicked.connect(_on_spell_slot_clicked)
 	spell_bar.spell_slot_right_clicked.connect(_on_spell_slot_right_clicked)
-	
+	if battle_manager.has_signal("unit_selected"):
+		battle_manager.unit_selected.connect(_on_unit_selected)
+	if battle_manager.has_signal("battle_ended"):
+		battle_manager.battle_ended.connect(_on_battle_ended_clear_selection)
+
 	# Propagate downwards
 	for i in get_children():
 		if i.has_method("post_ready"):
@@ -114,7 +118,13 @@ func handle_game_area_click(event: InputEvent):
 	if not mb.pressed:
 		return
 	var vp := get_viewport()
-	var world_pos = vp.get_canvas_transform().affine_inverse() * event.position
+	var world_pos : Vector2 = vp.get_canvas_transform().affine_inverse() * event.position
+	# Left click on a placed unit: show unit stats panel (no placement).
+	if mb.button_index == MOUSE_BUTTON_LEFT and battle_manager and tactical_cursor:
+		var unit = battle_manager.get_unit_under_cursor(world_pos)
+		if unit:
+			tactical_cursor.set_selected_unit(unit)
+			return
 	var anchor_cell := _get_cell_at_world_position(world_pos)
 	if not anchor_cell:
 		return
@@ -381,14 +391,21 @@ func get_unit_at_tile(tile: Vector2i): # Returns PackedScene unit ref, left corn
 	return null
 
 func _update_tactical_cursor() -> void:
-	if not battle_manager or not battle_manager.visible or not tactical_cursor:
+	if not battle_manager or not tactical_cursor:
 		return
-	if is_mouse_over_ui_element(get_viewport().get_mouse_position()):
-		tactical_cursor.show_unit(null)
-		return
-	var world_mouse := _get_world_mouse_position()
-	var unit = battle_manager.get_unit_under_cursor(world_mouse)
-	tactical_cursor.show_unit(unit)
+	# Selected unit panel only visible during battle; clear when on map.
+	if not battle_manager.visible:
+		tactical_cursor.set_selected_unit(null)
+
+
+func _on_unit_selected(unit: Base_Unit) -> void:
+	if tactical_cursor:
+		tactical_cursor.set_selected_unit(unit)
+
+
+func _on_battle_ended_clear_selection(_victory: bool) -> void:
+	if tactical_cursor:
+		tactical_cursor.set_selected_unit(null)
 
 func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 	"""

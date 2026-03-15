@@ -1,71 +1,67 @@
-## Tactical cursor tooltip: shows live unit stats on hover during deployment and combat.
+## Selected unit panel (bottom-right); updates only on click, unit death, or combat end.
 extends Control
 
-const OFFSET := Vector2(24, 24)
+# Selected unit panel (fixed bottom-right)
+@onready var _selected_panel: PanelContainer = $SelectedUnitPanel
+@onready var _selected_sprite: TextureRect = $SelectedUnitPanel/HBoxContainer/UnitSprite
+@onready var _selected_label_hp: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelHP
+@onready var _selected_label_damage: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelDamage
+@onready var _selected_label_reload: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelReload
+@onready var _selected_label_speed: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelSpeed
+@onready var _selected_label_total_dmg: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelTotalDamage
 
-@onready var _panel: PanelContainer = $PanelContainer
-@onready var _vbox: VBoxContainer = $PanelContainer/VBoxContainer
-@onready var _label_hp: Label = $PanelContainer/VBoxContainer/LabelHP
-@onready var _label_damage: Label = $PanelContainer/VBoxContainer/LabelDamage
-@onready var _label_reload: Label = $PanelContainer/VBoxContainer/LabelReload
-@onready var _label_speed: Label = $PanelContainer/VBoxContainer/LabelSpeed
-@onready var _label_total_dmg: Label = $PanelContainer/VBoxContainer/LabelTotalDamage
-
-var _current_unit: Base_Unit
+var _selected_unit: Base_Unit
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	visible = false
+	_selected_panel.visible = false
 
 
 func _process(_delta: float) -> void:
-	if not visible:
+	if _selected_unit == null:
 		return
-	_clamp_to_viewport()
+	if not is_instance_valid(_selected_unit) or _selected_unit.curr_hp <= 0:
+		set_selected_unit(null)
+	else:
+		_refresh_selected_panel_labels()
 
 
-## Show stats for unit; pass null to hide.
-func show_unit(unit: Base_Unit) -> void:
-	_current_unit = unit
+## Set only on click, or when unit dies / combat ends. Pass null to hide.
+func set_selected_unit(unit: Base_Unit) -> void:
+	_selected_unit = unit
 	if not unit or not is_instance_valid(unit):
-		visible = false
+		_selected_panel.visible = false
 		return
-	visible = true
-	_update_labels()
+	_selected_panel.visible = true
+	_selected_sprite.texture = _get_unit_sprite_texture(unit)
+	_refresh_selected_panel_labels()
 
 
-func _update_labels() -> void:
-	if not _current_unit or not is_instance_valid(_current_unit):
+func _get_unit_sprite_texture(unit: Base_Unit) -> Texture2D:
+	if not unit or not is_instance_valid(unit):
+		return null
+	var sprite: AnimatedSprite2D = unit.get_node_or_null("AnimatedSprite2D")
+	if not sprite or not sprite.sprite_frames:
+		return null
+	var anim := sprite.animation
+	if anim.is_empty():
+		return null
+	return sprite.sprite_frames.get_frame_texture(anim, sprite.frame)
+
+
+func _refresh_selected_panel_labels() -> void:
+	if not _selected_unit or not is_instance_valid(_selected_unit):
 		return
-	var u: Base_Unit = _current_unit
-	_label_hp.text = "HP: %d / %d" % [u.curr_hp, u.max_hp]
-	_label_speed.text = "Movement: %d" % [int(u.move_speed)]
-	_label_total_dmg.text = "Damage dealt: %d" % u.total_damage_dealt
-
+	var u: Base_Unit = _selected_unit
+	_selected_label_hp.text = "HP: %d / %d" % [u.curr_hp, u.max_hp]
+	_selected_label_speed.text = "Movement: %d" % [int(u.move_speed)]
+	_selected_label_total_dmg.text = "Damage dealt: %d" % u.total_damage_dealt
 	var atk := u.get_attack_stats()
 	if atk.is_empty():
-		_label_damage.text = "Damage/shot: —"
-		_label_reload.text = "Reload: —"
+		_selected_label_damage.text = "Damage/shot: —"
+		_selected_label_reload.text = "Reload: —"
 	else:
 		var effective_dmg := int(atk.damage * u.dmg_dealt_mult)
-		_label_damage.text = "Damage/shot: %d" % effective_dmg
-		_label_reload.text = "Reload: %.2fs" % atk.reload_time
-
-
-func _clamp_to_viewport() -> void:
-	var vp := get_viewport()
-	var mouse := vp.get_mouse_position()
-	var size := _panel.size
-	var vp_rect := Rect2(Vector2.ZERO, vp.get_visible_rect().size)
-	var pos := mouse + OFFSET
-	# Keep tooltip on screen
-	if pos.x + size.x > vp_rect.end.x:
-		pos.x = vp_rect.end.x - size.x
-	if pos.y + size.y > vp_rect.end.y:
-		pos.y = vp_rect.end.y - size.y
-	if pos.x < vp_rect.position.x:
-		pos.x = vp_rect.position.x
-	if pos.y < vp_rect.position.y:
-		pos.y = vp_rect.position.y
-	position = pos
+		_selected_label_damage.text = "Damage/shot: %d" % effective_dmg
+		_selected_label_reload.text = "Reload: %.2fs" % atk.reload_time

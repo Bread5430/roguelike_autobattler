@@ -4,37 +4,60 @@
 
 [node name="TacticalCursor" type="Control"]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_tactical")
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="SelectedUnitPanel" type="PanelContainer" parent="."]
+visible = false
 layout_mode = 1
-anchors_preset = 0
-offset_right = 180.0
-offset_bottom = 120.0
-custom_minimum_size = Vector2(160, 100)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -140.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
 theme_override_constants/separation = 4
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="SelectedUnitPanel"]
 layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="UnitSprite" type="TextureRect" parent="SelectedUnitPanel/HBoxContainer"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+stretch_mode = 5
+expand_mode = 1
+
+[node name="StatsVBox" type="VBoxContainer" parent="SelectedUnitPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 2
 
-[node name="LabelHP" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="SelectedLabelHP" type="Label" parent="SelectedUnitPanel/HBoxContainer/StatsVBox"]
 layout_mode = 2
 text = "HP: — / —"
 
-[node name="LabelDamage" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="SelectedLabelDamage" type="Label" parent="SelectedUnitPanel/HBoxContainer/StatsVBox"]
 layout_mode = 2
 text = "Damage/shot: —"
 
-[node name="LabelReload" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="SelectedLabelReload" type="Label" parent="SelectedUnitPanel/HBoxContainer/StatsVBox"]
 layout_mode = 2
 text = "Reload: —"
 
-[node name="LabelSpeed" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="SelectedLabelSpeed" type="Label" parent="SelectedUnitPanel/HBoxContainer/StatsVBox"]
 layout_mode = 2
 text = "Movement: —"
 
-[node name="LabelTotalDamage" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="SelectedLabelTotalDamage" type="Label" parent="SelectedUnitPanel/HBoxContainer/StatsVBox"]
 layout_mode = 2
 text = "Damage dealt: —"
