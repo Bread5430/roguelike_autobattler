@@ -3,6 +3,7 @@ extends Camera2D
 @export_group("Camera Controls")
 @export var camera_move_speed : int = 500
 @export var camera_default_size : Vector2 = Vector2(1920, 1080)
+@export var default_zoom : Vector2 = Vector2.ONE  # Zoom level used on map return and at startup
 @export var camera_max_zoom: float = 2.0  # Zoom out (smaller numbers = more zoomed out)
 @export var camera_min_zoom: float = 0.5  # Zoom in (larger numbers = more zoomed in)
 @export var camera_scroll_speed : float = 0.2
@@ -21,7 +22,7 @@ var pan_start_camera_pos : Vector2 = Vector2.ZERO
 @export var enable_limits : bool = true
 
 func _ready():
-	zoom = Vector2.ONE
+	zoom = default_zoom
 	
 	# Set camera limits if enabled
 	if enable_limits:
@@ -122,7 +123,12 @@ func post_ready():
 			i.post_ready()
 
 func reset_zoom():
-	pass
-	
+	"""Reset zoom to default so the map view is consistent after combat."""
+	zoom = default_zoom
+
+func center_on(world_pos: Vector2) -> void:
+	"""Center the camera on a world position. Call when returning to map so the view is on the map."""
+	position = world_pos
+
 func enable_zoom():
 	pass

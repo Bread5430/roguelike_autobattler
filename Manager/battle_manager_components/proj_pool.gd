@@ -228,6 +228,15 @@ func _deactivate_projectile(projectile: Node) -> void:
 # UTILITY METHODS
 # ============================================================================
 
+func return_all_active() -> void:
+	"""Return every active projectile to the pool. Use when combat ends so projectiles don't linger."""
+	for scene_path in pools.keys():
+		var pool = pools[scene_path]
+		var active_copy: Array = pool["active"].duplicate()
+		for projectile in active_copy:
+			if is_instance_valid(projectile):
+				return_to_pool(projectile)
+
 func clean_up() -> void:
 	"""Remove all children and reset pools"""
 	if debug_mode:

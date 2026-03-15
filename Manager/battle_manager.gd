@@ -39,11 +39,11 @@ func setup_battle(battle_params : Dictionary):
 
 	
 func clear_battlefield():
-	"""Clear all units from the battlefield"""
-
+	"""Clear all units from the battlefield and return active projectiles so they don't linger."""
+	if proj_pool and proj_pool.has_method("return_all_active"):
+		proj_pool.return_all_active()
 	for child in unit_parent.get_children():
 		child.queue_free()
-		
 	for x in tile_map_size.x:
 		for y in tile_map_size.y:
 			allies_tiles[x][y].clear()

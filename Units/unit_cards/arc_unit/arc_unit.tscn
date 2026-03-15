@@ -1,0 +1,14 @@
+[gd_scene load_steps=5 format=3 uid="uid://carcunitcard01"]
+
+[ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_card"]
+[ext_resource type="Texture2D" uid="uid://dduabfim1mu2t" path="res://Assets/CardSprites/one_ranged.png" id="2_tex"]
+[ext_resource type="Script" path="res://Units/unit_cards/arc_unit/arc_unit.gd" id="3_script"]
+[ext_resource type="PackedScene" path="res://Units/unit_scenes/arc_template/ArcUnitTemplate.tscn" id="4_unit"]
+
+[node name="Arc_Unit" instance=ExtResource("1_card")]
+texture = ExtResource("2_tex")
+script = ExtResource("3_script")
+num_units = 1
+placement_size = Vector2(2, 2)
+related_unit = ExtResource("4_unit")
+item_name = "arc_unit"

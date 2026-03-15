@@ -461,6 +461,9 @@ func handle_node_click(click_global_position: Vector2):
 # PUBLIC INTERFACE
 # =============================================================================
 
+func get_camera_center_position() -> Vector2:
+	return global_position
+
 func regenerate_map():
 	"""Regenerate the entire map"""
 	completed_nodes.clear()

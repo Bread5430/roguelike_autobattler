@@ -82,6 +82,9 @@ func enable_map_interaction():
 	battle_manager.set_process(false)
 	battle_manager.hide()
 	
+	# Center camera on map (player/current node) and reset zoom so the view is correct after combat
+	var center : Vector2 = map_generator.get_camera_center_position()
+	viewport.center_on(center)
 	viewport.reset_zoom()
 	
 	print("Map exploration enabled. Available nodes: %d" % map_generator.get_available_nodes().size())
