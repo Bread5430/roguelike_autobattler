@@ -8,8 +8,11 @@ const STRIKE_DURATION := 0.1
 #@onready var col_shape: CollisionShape2D = $CollisionShape2D
 @onready var hitbox_timer: Timer = $HitboxActiveTimer
 
+var _arc_range: float = 0.0
+
 func _ready() -> void:
 	# Start disabled; never use pool or lifetime
+	sprite.hide()
 	monitoring = false
 	if col_shape:
 		col_shape.disabled = true
@@ -37,18 +40,27 @@ func set_capsule_size(arc_range: float, arc_angle_deg: float) -> void:
 	var cap: CapsuleShape2D = col_shape.shape
 	# Capsule axis is along local Y in Godot; we rotate so length runs forward
 	# height = length along axis, radius = half-width
+	
+	# Give arc slightly more range due to size constraints
+	_arc_range = arc_range * 1.2
 	var half_angle_rad := deg_to_rad(arc_angle_deg * 0.5)
 	cap.height = arc_range
 	cap.radius = arc_range * tan(half_angle_rad) * 0.5
-	# Capsule axis is local Y; center it so it extends in front of the unit after rotation
-	position = Vector2(0, arc_range * 0.5)
+	# Keep this node at the parent's origin; we reposition it per-strike based on facing.
+	position = Vector2.ZERO
 
 ## Align hitbox to facing and enable for STRIKE_DURATION. Call from arc_attack.do_attack().
 func align_and_strike(facing_direction: Vector2) -> void:
-	rotation = facing_direction.angle()
+	# CapsuleShape2D's main axis is local +Y (vertical). Subtract 90° so the capsule points along facing_direction.
+	rotation = facing_direction.angle() - (PI * 0.5)
+	# Also move the hitbox forward in the strike direction (offset must be updated explicitly).
+	if is_instance_valid(parent_unit) and parent_unit is Node2D:
+		global_position = parent_unit.global_position + facing_direction.normalized() * (_arc_range * 0.75)
 	monitoring = true
 	if col_shape:
 		col_shape.disabled = false
+		
+	sprite.show()
 	hitbox_timer.start(STRIKE_DURATION)
 
 func _on_body_entered(body: Node2D) -> void:
@@ -62,5 +74,6 @@ func _on_lifetime_timeout() -> void:
 
 func _on_hitbox_active_timeout() -> void:
 	monitoring = false
+	sprite.hide()
 	if col_shape:
 		col_shape.disabled = true
