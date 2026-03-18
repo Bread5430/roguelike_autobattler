@@ -38,6 +38,11 @@ var rotated_placement : bool = false
 
 signal preperation_ended
 
+## Items committed for the current battle so we can refund them when battle ends.
+## - Units are inferred from unit_board_space_map (one entry per placed unit).
+## - Spells are tracked because they can be cast/removed during battle.
+var _committed_spell_item_names: Array[String] = []
+
 func post_ready():
 	inventory = get_node("Inventory")
 	unit_board = battle_manager.get_node("BoardUI")
@@ -60,7 +65,7 @@ func post_ready():
 	if battle_manager.has_signal("unit_selected"):
 		battle_manager.unit_selected.connect(_on_unit_selected)
 	if battle_manager.has_signal("battle_ended"):
-		battle_manager.battle_ended.connect(_on_battle_ended_clear_selection)
+		battle_manager.battle_ended.connect(_on_battle_ended)
 
 	# Propagate downwards
 	for i in get_children():
@@ -130,9 +135,17 @@ func handle_game_area_click(event: InputEvent):
 		return
 	if mb.button_index == MOUSE_BUTTON_LEFT:
 		targetCell = anchor_cell
+		# If no unit is selected (or we just ran out), don't attempt placement math.
+		if curr_unit_inst == null or curr_unit == null:
+			if objectCells.size() > 0:
+				_reset_highlight(objectCells)
+			objectCells = [anchor_cell]
+			anchor_cell.change_color(Color.YELLOW)
+			isValid = false
+			return
 		objectCells = _get_object_cells_for_anchor(anchor_cell)
 		isValid = _check_and_highlight_cells(objectCells)
-		if curr_unit and isValid:
+		if isValid:
 			_place_unit()
 	elif mb.button_index == MOUSE_BUTTON_RIGHT:
 		var mouse_tile_int := Vector2i(anchor_cell.board_position)
@@ -201,11 +214,13 @@ func set_current_item(slot : InventorySlot):
 		if deployment_mode:
 			var added := spell_bar.add_spell(slot.item_inst as Spell_Card, slot.item_name)
 			if added:
+				_committed_spell_item_names.append(slot.item_name)
 				slot.remove_item(1)
 		# In other modes: do nothing when clicking a spell
 
 func start_prep_phase():
 	_clear_placement_grid()
+	_committed_spell_item_names.clear()
 	deployment_mode = true
 	toggle_inventory(true)
 	end_prep.show()
@@ -230,6 +245,8 @@ func _on_spell_slot_right_clicked(slot: SpellBarSlot) -> void:
 	# In deployment mode: return spell to inventory
 	if deployment_mode and not slot.is_empty():
 		inventory.add_item(slot.item_name, 1)
+		# Remove one committed instance (if present) since it was un-equipped.
+		_committed_spell_item_names.erase(slot.item_name)
 		spell_bar.remove_spell_at(slot)
 
 func _exit_casting_mode() -> void:
@@ -256,6 +273,9 @@ func _clear_placement_grid() -> void:
 	
 #### Helper Methods
 func _check_and_highlight_cells(cells: Array) -> bool:	
+	if curr_unit_inst == null:
+		# No selected unit (or ran out). Nothing to validate/place.
+		return false
 	var valid = true
 
 	# cell count check - prevents placing units on the edges of the board
@@ -406,6 +426,51 @@ func _on_unit_selected(unit: Base_Unit) -> void:
 func _on_battle_ended_clear_selection(_victory: bool) -> void:
 	if tactical_cursor:
 		tactical_cursor.set_selected_unit(null)
+
+func _on_battle_ended(victory: bool) -> void:
+	_refund_items_after_battle()
+	_on_battle_ended_clear_selection(victory)
+
+func _refund_items_after_battle() -> void:
+	# Refund spells that were equipped for this battle (even if they were cast/removed during battle).
+	if inventory and spell_bar:
+		for item_name in _committed_spell_item_names:
+			inventory.add_item(item_name, 1)
+		_committed_spell_item_names.clear()
+		for slot in spell_bar.slots:
+			if slot and not slot.is_empty():
+				spell_bar.remove_spell_at(slot)
+
+	# Refund deployed units back to inventory and reset the placement grid.
+	if inventory:
+		var counts_by_scene: Dictionary = {} # PackedScene -> int
+		for x in unit_board_width:
+			for y in unit_board_height:
+				var entry = unit_board_space_map[x][y]
+				if entry == null:
+					continue
+				# entry = [unit_ref, top_corner, size]
+				var unit_ref: PackedScene = entry[0]
+				var top_corner: Vector2i = entry[1]
+				if top_corner.x != x or top_corner.y != y:
+					continue # only count once per placed unit
+				counts_by_scene[unit_ref] = int(counts_by_scene.get(unit_ref, 0)) + 1
+
+		for unit_ref in counts_by_scene.keys():
+			var count := int(counts_by_scene[unit_ref])
+			if count <= 0:
+				continue
+			var item_inst = (unit_ref as PackedScene).instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+			if item_inst and item_inst.has_method("setup_unit"):
+				item_inst.setup_unit()
+			if item_inst and "item_name" in item_inst:
+				inventory.add_item(item_inst.item_name, count)
+			if item_inst:
+				item_inst.queue_free()
+
+	_clear_placement_grid()
+	deployment_mode = false
+	_exit_casting_mode()
 
 func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 	"""
