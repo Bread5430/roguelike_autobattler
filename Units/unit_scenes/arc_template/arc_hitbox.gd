@@ -9,11 +9,14 @@ const STRIKE_DURATION := 0.1
 @onready var hitbox_timer: Timer = $HitboxActiveTimer
 
 var _arc_range: float = 0.0
+var _sprite_rot_base: float = 0.0
 
 func _ready() -> void:
 	# Start disabled; never use pool or lifetime
 	sprite.hide()
 	monitoring = false
+	_sprite_rot_base = sprite.rotation
+	
 	if col_shape:
 		col_shape.disabled = true
 	# Disable base Lifetime so it never fires
@@ -61,6 +64,10 @@ func align_and_strike(facing_direction: Vector2) -> void:
 		col_shape.disabled = false
 		
 	sprite.show()
+	# Visual-only flip: keep the hitbox/collision orientation working, but flip the firing animation.
+	sprite.rotation = _sprite_rot_base + PI
+	sprite.play("fire")
+	animation.play("fire")
 	hitbox_timer.start(STRIKE_DURATION)
 
 func _on_body_entered(body: Node2D) -> void:
@@ -74,6 +81,5 @@ func _on_lifetime_timeout() -> void:
 
 func _on_hitbox_active_timeout() -> void:
 	monitoring = false
-	sprite.hide()
 	if col_shape:
 		col_shape.disabled = true

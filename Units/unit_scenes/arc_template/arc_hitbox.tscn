@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://oygnqkjx2k53"]
+[gd_scene load_steps=13 format=3 uid="uid://oygnqkjx2k53"]
 
 [ext_resource type="PackedScene" uid="uid://ds2ntigtworxc" path="res://Utilities/Base_projectile.tscn" id="1_base"]
 [ext_resource type="Script" uid="uid://cocv7uh3471y4" path="res://Units/unit_scenes/arc_template/arc_hitbox.gd" id="2_script"]
@@ -35,8 +35,8 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_k0cip")
 }],
-"loop": true,
-"name": &"default",
+"loop": false,
+"name": &"fire",
 "speed": 12.0
 }]
 
@@ -44,20 +44,57 @@ animations = [{
 radius = 30.0
 height = 80.0
 
+[sub_resource type="Animation" id="Animation_l0ysk"]
+resource_name = "fire"
+length = 0.3
+tracks/0/type = "method"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimatedSprite2D")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.3),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"hide"
+}]
+}
+
+[sub_resource type="Animation" id="Animation_h4rr4"]
+length = 0.001
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_h4rr4"]
+_data = {
+&"RESET": SubResource("Animation_h4rr4"),
+&"fire": SubResource("Animation_l0ysk")
+}
+
 [node name="Arc_Hitbox" instance=ExtResource("1_base")]
 monitoring = false
 script = ExtResource("2_script")
 
 [node name="AnimatedSprite2D" parent="." index="0"]
-position = Vector2(-5.44231e-07, -35.9049)
+position = Vector2(-1.59066e-05, -40.1487)
 rotation = -1.5708
-scale = Vector2(2.22379, 1.84084)
+scale = Vector2(2.48903, 1.84084)
 sprite_frames = SubResource("SpriteFrames_i5nyl")
+animation = &"attack"
 
 [node name="CollisionShape2D" parent="." index="1"]
 position = Vector2(0, -40)
 shape = SubResource("CapsuleShape2D_arc")
 disabled = true
+
+[node name="AnimationPlayer" parent="." index="2"]
+libraries = {
+&"": SubResource("AnimationLibrary_h4rr4")
+}
+
+[node name="Lifetime" parent="." index="3"]
+one_shot = true
+autostart = false
 
 [node name="HitboxActiveTimer" type="Timer" parent="." index="4"]
 wait_time = 0.1
