@@ -4,6 +4,7 @@ extends Control
 # Selected unit panel (fixed bottom-right)
 @onready var _selected_panel: PanelContainer = $SelectedUnitPanel
 @onready var _selected_sprite: TextureRect = $SelectedUnitPanel/HBoxContainer/UnitSprite
+@onready var _selected_label_display_name: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelDisplayName
 @onready var _selected_label_hp: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelHP
 @onready var _selected_label_damage: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelDamage
 @onready var _selected_label_reload: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelReload
@@ -50,10 +51,22 @@ func _get_unit_sprite_texture(unit: Base_Unit) -> Texture2D:
 	return sprite.sprite_frames.get_frame_texture(anim, sprite.frame)
 
 
+func _get_unit_display_name(u: Base_Unit) -> String:
+	if u.unit_name != "":
+		return u.unit_name
+	if UNIT_GLOSSARY.has_entry(u.unit_glossary_id):
+		var e := UNIT_GLOSSARY.get_entry(u.unit_glossary_id)
+		var dn := str(e.get("display_name", ""))
+		if dn != "":
+			return dn
+	return u.name
+
+
 func _refresh_selected_panel_labels() -> void:
 	if not _selected_unit or not is_instance_valid(_selected_unit):
 		return
 	var u: Base_Unit = _selected_unit
+	_selected_label_display_name.text = _get_unit_display_name(u)
 	_selected_label_hp.text = "HP: %d / %d" % [u.curr_hp, u.max_hp]
 	_selected_label_speed.text = "Movement: %d" % [int(u.move_speed)]
 	_selected_label_total_dmg.text = "Damage dealt: %d" % u.total_damage_dealt
