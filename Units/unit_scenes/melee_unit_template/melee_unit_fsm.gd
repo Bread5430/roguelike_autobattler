@@ -42,7 +42,9 @@ func _get_transition() -> int:
 		states.local_march:
 			if melee_atk.in_range():
 				set_state(states.attack)
-			else:
+			# Stay in local_march while still in the same tile but not yet in melee range.
+			# Otherwise we oscillate march <-> local_march every frame (flow vs direct move).
+			elif not target_movement.in_same_tile():
 				set_state(states.march)
 		
 		states.attack:

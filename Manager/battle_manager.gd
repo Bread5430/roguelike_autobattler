@@ -24,7 +24,7 @@ var allies_tiles : Array[Array]
 signal battle_ended(victory : bool)
 signal unit_selected(unit: Base_Unit)
 
-const UNIT_PICK_RADIUS := 80.0
+const UNIT_PICK_RADIUS := 20.0
 
 func setup_battle(battle_params : Dictionary):
 	"""Generate enemies for the current battle"""
