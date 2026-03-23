@@ -62,6 +62,6 @@ func _refresh_selected_panel_labels() -> void:
 		_selected_label_damage.text = "Damage/shot: —"
 		_selected_label_reload.text = "Reload: —"
 	else:
-		var effective_dmg := int(atk.damage * u.dmg_dealt_mult)
+		var effective_dmg := int(u.get_attack_damage() * u.dmg_dealt_mult)
 		_selected_label_damage.text = "Damage/shot: %d" % effective_dmg
 		_selected_label_reload.text = "Reload: %.2fs" % atk.reload_time

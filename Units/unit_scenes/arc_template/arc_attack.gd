@@ -31,6 +31,6 @@ func _get_facing_direction() -> Vector2:
 
 func do_attack() -> void:
 	if _arc_hitbox:
-		_arc_hitbox.setup_for_arc(unit, not unit.faction, damage)
+		_arc_hitbox.setup_for_arc(unit, not unit.faction, get_strike_damage())
 		_arc_hitbox.align_and_strike(_get_facing_direction())
 	super()

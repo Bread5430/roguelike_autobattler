@@ -95,8 +95,10 @@ _data = {
 }
 
 [node name="ArcUnitTemplate" instance=ExtResource("1_base")]
+unit_glossary_id = "arc_template"
 max_hp = 10
 base_speed = 100
+base_damage = 2
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)
@@ -118,7 +120,6 @@ script = ExtResource("3_fsm")
 script = ExtResource("5_arc_script")
 arc_angle_deg = 90.0
 attack_range = 120
-damage = 2
 
 [node name="Arc_Hitbox" parent="Arc_Attack" index="1" instance=ExtResource("6_hitbox")]
 

@@ -10,7 +10,8 @@ This is a Godot 4.4 2D roguelike autobattler game. Core components:
 - **Spells**: `Base_Spell.gd` (preview/cast/clear_preview), spell bar (`UI/spell_bar.gd`), `SpellBarSlot`, spell cards in inventory
 
 ## Key Patterns
-- **Autoloads**: `ITEM_NAME` and `FORMATION_MAP` load CSV data (`Data/items.csv`, `Data/formations.csv`) into global lookup maps
+- **Autoloads**: `ITEM_NAME` and `FORMATION_MAP` load CSV data (`Data/items.csv`, `Data/formations.csv`) into global lookup maps; **`UNIT_GLOSSARY`** (`LookUps/unit_glossary.gd`) loads `Data/units_glossary.csv` (per-template stats: max HP, move speed, damage, display name, blurb)
+- **Unit glossary**: Each unit template root sets `@export var unit_glossary_id` on `Base_Unit` to a row id in `units_glossary.csv`. `Base_Unit._ready()` applies CSV values over scene defaults. Outgoing damage uses `Attack_Base.get_strike_damage()` (reads `Base_Unit.get_attack_damage()` × `dmg_dealt_mult` at fire time), not a damage field on the attack node
 - **post_ready()**: Custom initialization method called after `_ready()` to ensure scene setup (e.g., `GUI.gd` lines 35-50)
 - **Signals**: Inter-component communication (e.g., `battle_ended` from BattleManager to GameStateManager)
 - **Grid-based Placement**: Units placed on `BoardUI` (GridContainer of `BoardSlot` panels) using formation vectors from `unit_card.gd`
@@ -33,10 +34,10 @@ This is a Godot 4.4 2D roguelike autobattler game. Core components:
 - **Run**: Open in Godot editor, play main scene (`UI/main_menu.tscn`)
 - **Export**: Use Godot's built-in export for platforms
 - **Testing**: Use `enemy_spawn_test.tscn` for isolated battle testing
-- **Data Editing**: Modify CSVs, restart autoloads to reload
+- **Data Editing**: Modify CSVs, restart autoloads to reload (including `units_glossary.csv` for unit combat stats and glossary text)
 
 ## Examples
-- Adding unit: Create scene inheriting `Base_Unit.tscn`, add to `items.csv`, reference in `unit_card` scene
+- Adding unit: Create scene inheriting `Base_Unit.tscn`, set `unit_glossary_id` and add a row to `Data/units_glossary.csv`, add to `items.csv`, reference in `unit_card` scene
 - New formation: Add rows to `formations.csv` with X,Y,W,H,Role,Group
 - State transition: Emit signal from manager, connect in `game_state_manager.gd` `_ready()`
 - Adding spell: Create scene with script extending `Base_Spell` (implement `preview(world_pos)`, `cast(world_pos)`, `clear_preview()`), create spell card scene with `Spell_Card` and `related_spell_effect`, add to `items.csv`

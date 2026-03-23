@@ -1,0 +1,7 @@
+unit_id,display_name,max_hp,movement_speed,damage,explanation_blurb
+melee_template,Frontline Fighter,10,40,2,Standard melee unit that closes distance and strikes in a short arc.
+basic_chaff,Chaff Swarm,2,60,2,Fragile but fast filler units meant to clog the battlefield.
+ranged_template,Ranged Skirmisher,5,35,1,Keeps distance and plinks targets from afar.
+splash_template,Splash Artillery,5,100,1,Lobs physical projectiles that splash on impact.
+arc_template,Arc Cleaver,10,100,2,Sweeps a wide arc in front of the unit to hit multiple foes.
+arc_launcher,Arc Launcher,5,35,1,Fires an arc-shaped strike at the end of an aiming line.

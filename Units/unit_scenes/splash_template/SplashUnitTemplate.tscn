@@ -97,8 +97,10 @@ _data = {
 
 [node name="SplashUnitTemplate" instance=ExtResource("1_om312")]
 script = ExtResource("2_6m7fj")
+unit_glossary_id = "splash_template"
 max_hp = 5
 base_speed = 100
+base_damage = 1
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)
@@ -122,7 +124,6 @@ proj_scene = ExtResource("7_6m7fj")
 speed = 50
 lifetime_val = 1.0
 attack_range = 200
-damage = 1
 
 [node name="Attack_CD" parent="Ranged_Attack" index="0"]
 wait_time = 0.5

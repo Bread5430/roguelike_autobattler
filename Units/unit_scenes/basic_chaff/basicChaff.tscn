@@ -94,8 +94,10 @@ _data = {
 }
 
 [node name="basicChaff" instance=ExtResource("1_hlbew")]
+unit_glossary_id = "basic_chaff"
 max_hp = 2
 base_speed = 60
+base_damage = 2
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)
@@ -116,4 +118,3 @@ script = ExtResource("3_bqw64")
 [node name="Melee_Attack" parent="." index="5" instance=ExtResource("4_x8yey")]
 script = ExtResource("5_omu1k")
 attack_range = 30
-damage = 2

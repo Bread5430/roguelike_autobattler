@@ -94,8 +94,10 @@ _data = {
 }
 
 [node name="RangedUnitTemplate" instance=ExtResource("1_4obhc")]
+unit_glossary_id = "ranged_template"
 max_hp = 5
 base_speed = 35
+base_damage = 1
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)
@@ -116,7 +118,6 @@ script = ExtResource("3_044i3")
 [node name="Ranged_Attack" parent="." index="5" instance=ExtResource("4_le515")]
 script = ExtResource("5_spjok")
 attack_range = 200
-damage = 1
 
 [node name="Attack_CD" parent="Ranged_Attack" index="0"]
 wait_time = 0.5

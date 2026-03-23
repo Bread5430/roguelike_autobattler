@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 ITEM_NAME="*res://LookUps/ITEM_NAME.gd"
 FORMATION_MAP="*res://LookUps/FORMATION_MAP.gd"
+UNIT_GLOSSARY="*res://LookUps/unit_glossary.gd"
 
 [display]
 

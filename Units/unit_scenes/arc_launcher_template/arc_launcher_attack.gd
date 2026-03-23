@@ -50,7 +50,7 @@ func do_attack() -> void:
 
 	# Enable the arc hitbox at the line end.
 	if _arc_hitbox:
-		_arc_hitbox.setup_for_arc(unit, not unit.faction, damage)
+		_arc_hitbox.setup_for_arc(unit, not unit.faction, get_strike_damage())
 		_arc_hitbox.set_capsule_size(arc_distance, arc_angle_deg)
 		_arc_hitbox.align_and_strike_at(facing, end_pos)
 

@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" uid="uid://oygnqkjx2k53" path="res://Units/unit_scenes/arc_template/arc_hitbox.tscn" id="3_o84vo"]
 
 [node name="ArcLauncherUnitTemplate" instance=ExtResource("1_v3f1o")]
+unit_glossary_id = "arc_launcher"
+base_damage = 1
 
 [node name="Ranged_Attack" parent="." index="5"]
 script = ExtResource("2_xu6uc")

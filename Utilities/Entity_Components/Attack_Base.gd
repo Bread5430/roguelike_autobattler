@@ -8,7 +8,6 @@ var target_cmp
 
 ###### Internal Variables
 @export var attack_range : int
-@export var damage : int
 var target_unit : Base_Unit = null
 var can_attack = true
 
@@ -47,6 +46,15 @@ func do_attack() -> void:
 func post_ready() -> void:
 	unit = get_parent()
 	target_cmp = unit.target_move
+
+
+## Damage for this strike: parent unit's damage stat times dealt multiplier (queried at fire time).
+func get_strike_damage() -> int:
+	if unit is Base_Unit:
+		var u: Base_Unit = unit
+		return int(u.get_attack_damage() * u.dmg_dealt_mult)
+	return 0
+
 
 func _on_attack_cd_timeout():
 	can_attack = true

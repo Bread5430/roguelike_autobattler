@@ -94,8 +94,10 @@ _data = {
 }
 
 [node name="MeleeUnitTemplate" instance=ExtResource("1_g2lu5")]
+unit_glossary_id = "melee_template"
 max_hp = 10
 base_speed = 40
+base_damage = 2
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)
@@ -116,4 +118,3 @@ script = ExtResource("2_hcx1d")
 [node name="Melee_Attack" parent="." index="5" instance=ExtResource("4_7836s")]
 script = ExtResource("5_tgfs3")
 attack_range = 30
-damage = 2

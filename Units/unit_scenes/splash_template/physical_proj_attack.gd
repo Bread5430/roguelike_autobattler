@@ -17,7 +17,7 @@ func do_attack():
 	new_projectile.setup(get_parent(), self.global_position, not get_parent().faction)
 	
 	new_projectile.set_properties_via_spawner({
-		"damage" : damage,
+		"damage" : get_strike_damage(),
 		"speed" : speed,
 		"lifetime_val" : lifetime_val,
 	})

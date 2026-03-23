@@ -1,7 +1,7 @@
 extends Attack_Base
 
 func do_attack():
-	var amount := int(damage * unit.dmg_dealt_mult)
+	var amount := get_strike_damage()
 	target_unit.take_damage(amount)
 	unit.add_damage_dealt(amount)
 	super()
