@@ -54,15 +54,24 @@ func set_capsule_size(arc_range: float, arc_angle_deg: float) -> void:
 
 ## Align hitbox to facing and enable for STRIKE_DURATION. Call from arc_attack.do_attack().
 func align_and_strike(facing_direction: Vector2) -> void:
+	# Preserve original arc-unit behavior: the hitbox is positioned in front of the unit.
+	if not (is_instance_valid(parent_unit) and parent_unit is Node2D):
+		return
+	if facing_direction.length_squared() > 0.0001:
+		facing_direction = facing_direction.normalized()
+	var origin_world_pos : Vector2 = parent_unit.global_position
+	align_and_strike_at(facing_direction, origin_world_pos)
+
+## Align hitbox to facing and enable for STRIKE_DURATION at a specific world position.
+## Used by arc_launcher so the arc fires at the end of the aiming line.
+func align_and_strike_at(facing_direction: Vector2, origin_world_pos: Vector2) -> void:
 	# CapsuleShape2D's main axis is local +Y (vertical). Subtract 90° so the capsule points along facing_direction.
 	rotation = facing_direction.angle() - (PI * 0.5)
-	# Also move the hitbox forward in the strike direction (offset must be updated explicitly).
-	if is_instance_valid(parent_unit) and parent_unit is Node2D:
-		global_position = parent_unit.global_position + facing_direction.normalized() * (_arc_range * 0.75)
+	global_position = origin_world_pos + facing_direction * (_arc_range * 0.75)
 	monitoring = true
 	if col_shape:
 		col_shape.disabled = false
-		
+
 	sprite.show()
 	# Visual-only flip: keep the hitbox/collision orientation working, but flip the firing animation.
 	sprite.rotation = _sprite_rot_base + PI

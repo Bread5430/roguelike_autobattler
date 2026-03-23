@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://76jnmtu17ep"]
+
+[ext_resource type="PackedScene" uid="uid://dntchg7qjone2" path="res://Units/unit_scenes/ranged_unit_template/RangedUnitTemplate.tscn" id="1_v3f1o"]
+[ext_resource type="Script" uid="uid://dp8ywdexp7euy" path="res://Units/unit_scenes/arc_launcher_template/arc_launcher_attack.gd" id="2_xu6uc"]
+[ext_resource type="PackedScene" uid="uid://oygnqkjx2k53" path="res://Units/unit_scenes/arc_template/arc_hitbox.tscn" id="3_o84vo"]
+
+[node name="ArcLauncherUnitTemplate" instance=ExtResource("1_v3f1o")]
+
+[node name="Ranged_Attack" parent="." index="5"]
+script = ExtResource("2_xu6uc")
+arc_angle_deg = 90.0
+arc_distance = 60.0
+
+[node name="Arc_Hitbox" parent="Ranged_Attack" index="2" instance=ExtResource("3_o84vo")]
+
+[editable path="Ranged_Attack"]

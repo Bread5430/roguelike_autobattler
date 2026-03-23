@@ -98,7 +98,7 @@ _data = {
 [node name="SplashUnitTemplate" instance=ExtResource("1_om312")]
 script = ExtResource("2_6m7fj")
 max_hp = 5
-base_speed = 35
+base_speed = 100
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)
