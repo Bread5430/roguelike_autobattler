@@ -125,8 +125,7 @@ func handle_game_area_click(event: InputEvent):
 	var mb := event as InputEventMouseButton
 	if not mb.pressed:
 		return
-	var vp := get_viewport()
-	var world_pos : Vector2 = vp.get_canvas_transform().affine_inverse() * event.position
+	var world_pos : Vector2 = get_viewport().get_canvas_transform().affine_inverse() * event.position
 	# Left click on a placed unit: show unit stats panel (no placement).
 	if mb.button_index == MOUSE_BUTTON_LEFT and battle_manager and tactical_cursor:
 		var unit = battle_manager.get_unit_under_cursor(world_pos)
@@ -164,6 +163,8 @@ func handle_game_area_click(event: InputEvent):
 			curr_unit = removed_unit_info[0]
 			curr_unit_inst = item_inst
 			_reset_highlight(cells_to_reset)
+			# Force a placement validity recalculation with this new unit
+			isValid = _check_and_highlight_cells(objectCells)
 
 func toggle_inventory(can_use_inventory : bool):
 	if can_use_inventory == true:
@@ -194,13 +195,13 @@ func check_cell():
 
 
 func remove_from_board(top_corner: Vector2i, size: Vector2) -> void:
-
 	for x in size.x:
 		for y in size.y:
 			unit_board_space_map[top_corner.x + x][top_corner.y + y] = null
 
 	# Reset cells' full flag
-	for cell in _get_object_cells():
+	var reset_cells := _get_object_cells()
+	for cell in reset_cells:
 		cell.full = false
 
 	battle_manager.remove_unit_from_board(top_corner, size)
@@ -291,7 +292,8 @@ func _check_and_highlight_cells(cells: Array) -> bool:
 	var valid = true
 
 	# cell count check - prevents placing units on the edges of the board
-	var expected_count = int(curr_unit_inst.placement_size.x) * int(curr_unit_inst.placement_size.y)
+	var active_size: Vector2 = curr_unit_inst.rotated_placement_size if rotated_placement else curr_unit_inst.placement_size
+	var expected_count = int(active_size.x) * int(active_size.y)
 	if expected_count != cells.size():
 		valid = false
 
@@ -301,7 +303,6 @@ func _check_and_highlight_cells(cells: Array) -> bool:
 			valid = false
 		else:
 			cell.change_color(Color.GREEN)
-
 	return valid
 
 func _place_unit():

@@ -133,9 +133,17 @@ func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vect
 		this_inst.post_ready()
 	
 func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
-	var rect := Rect2(top_corner * board_tiles.cellHeight, size * board_tiles.cellHeight)
 	for u in unit_parent.get_children():
-		if u is Base_Unit and rect.has_point(u.global_position):
+		if not u is Base_Unit:
+			continue
+		var unit_pos := (u as Base_Unit).position
+		var unit_tile := Vector2i(
+			int(unit_pos.x / board_tiles.cellHeight),
+			int(unit_pos.y / board_tiles.cellHeight)
+		)
+		var in_x := unit_tile.x >= top_corner.x and unit_tile.x < top_corner.x + int(size.x)
+		var in_y := unit_tile.y >= top_corner.y and unit_tile.y < top_corner.y + int(size.y)
+		if in_x and in_y:
 			u.queue_free()
 
 

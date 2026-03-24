@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_pns42"]
 [ext_resource type="Texture2D" uid="uid://hrh8osfwvxt" path="res://Assets/CardSprites/splash_unit.png" id="2_8unv2"]
-[ext_resource type="Script" uid="uid://cny4ix6f5chl8" path="res://Units/unit_cards/one_ranged/one_ranged.gd" id="3_h4bdn"]
+[ext_resource type="Script" path="res://Units/unit_cards/splash_unit/splash_unit.gd" id="3_h4bdn"]
 [ext_resource type="PackedScene" uid="uid://dlkx6a5ss8152" path="res://Units/unit_scenes/splash_template/SplashUnitTemplate.tscn" id="4_8unv2"]
 
 [node name="Splash_Unit" instance=ExtResource("1_pns42")]
