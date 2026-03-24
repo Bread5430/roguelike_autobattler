@@ -12,6 +12,8 @@ var unit_board : GridContainer
 @onready var spell_bar : SpellBar = $SpellBar
 @onready var end_prep : Button = $End_Prep
 @onready var tactical_cursor = $TacticalCursor
+@onready var item_details_card: ItemDetailsCard = $ItemDetailsCard
+var item_details_builder := ItemDetailsBuilder.new()
 
 #### CASTING MODE (battle)
 var casting_mode : bool = false
@@ -60,6 +62,7 @@ func post_ready():
 	post_ready_check = true
 
 	spell_bar.battle_manager = battle_manager
+	inventory.inspect_requested.connect(_on_inventory_inspect_requested)
 	spell_bar.spell_slot_clicked.connect(_on_spell_slot_clicked)
 	spell_bar.spell_slot_right_clicked.connect(_on_spell_slot_right_clicked)
 	if battle_manager.has_signal("unit_selected"):
@@ -248,6 +251,15 @@ func _on_spell_slot_right_clicked(slot: SpellBarSlot) -> void:
 		# Remove one committed instance (if present) since it was un-equipped.
 		_committed_spell_item_names.erase(slot.item_name)
 		spell_bar.remove_spell_at(slot)
+
+func _on_inventory_inspect_requested(item_inst: Item, item_name: String, source_global_pos: Vector2) -> void:
+	if item_inst == null:
+		return
+	if item_details_card.visible:
+		item_details_card.hide_details()
+		return
+	var payload := item_details_builder.build_payload(item_inst, item_name)
+	item_details_card.show_details(payload, source_global_pos)
 
 func _exit_casting_mode() -> void:
 	if casting_slot and is_instance_valid(casting_slot.spell_inst):

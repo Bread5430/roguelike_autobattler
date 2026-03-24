@@ -14,6 +14,7 @@ This is a Godot 4.4 2D roguelike autobattler game. Core components:
 - **Unit glossary**: Each unit template root sets `@export var unit_glossary_id` on `Base_Unit` to a row id in `units_glossary.csv`. `Base_Unit._ready()` applies CSV values over scene defaults. Outgoing damage uses `Attack_Base.get_strike_damage()` (reads `Base_Unit.get_attack_damage()` × `dmg_dealt_mult` at fire time), not a damage field on the attack node
 - **post_ready()**: Custom initialization method called after `_ready()` to ensure scene setup (e.g., `GUI.gd` lines 35-50)
 - **Signals**: Inter-component communication (e.g., `battle_ended` from BattleManager to GameStateManager)
+- **Item inspection**: Inventory right-click emits inspect requests (`inspect_requested(item_inst, item_name, source_global_pos)`), `GUI` builds payloads via `UI/item_details_builder.gd`, and renders the popup with `UI/ItemDetailsCard.tscn`; this contract is reusable for future shop slots.
 - **Grid-based Placement**: Units placed on `BoardUI` (GridContainer of `BoardSlot` panels) using formation vectors from `unit_card.gd`
 - **Roles & Bitmasks**: Unit roles (CARRY, SWARM, CLEAR, TANK) as bitflags in `ITEM_NAME.gd` for filtering
 - **Unit_Parent and non-units**: `BattleManager`’s `Unit_Parent` can contain non-unit nodes (e.g. spell preview indicators like `SpellPreviewCircle`). All battle logic that iterates `unit_parent.get_children()` must filter to `Base_Unit` (e.g. `if i is Base_Unit`) before using `faction`, `set_start_stop`, or tile updates.
@@ -21,6 +22,7 @@ This is a Godot 4.4 2D roguelike autobattler game. Core components:
 ## Data Flow
 1. Map exploration: Player selects nodes in `MapManager`
 2. Battle prep: `GUI` enables deployment mode; places units from inventory using `FORMATION_MAP`; spells from inventory (click) go to `SpellBar`; right-click spell bar slot returns spell to inventory
+   - Inventory right-click opens item details card (unit: glossary stats/blurb + deployment info; spell: cooldown + mana cost)
 3. Battle active: `BattleManager` spawns enemies, runs flow simulation, updates units; spell bar click enters casting mode (preview under mouse), click to cast or right-click/Escape to cancel
 4. Post-battle: Return to map, update progress
 

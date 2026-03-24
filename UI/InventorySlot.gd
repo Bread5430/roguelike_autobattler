@@ -1,6 +1,8 @@
 extends Button
 class_name InventorySlot
 
+signal slot_right_clicked(slot: InventorySlot, source_global_pos: Vector2)
+
 var parent_inventory : Inventory
 var item : PackedScene
 var item_name : String
@@ -75,4 +77,18 @@ func _on_pressed():
 	parent_inventory.toggle_window(false)
 	parent_inventory.set_current_item(self)
 	
+	accept_event()
+
+func _gui_input(event: InputEvent) -> void:
+	if not event is InputEventMouseButton:
+		return
+	var mb := event as InputEventMouseButton
+	if not mb.pressed:
+		return
+	if mb.button_index != MOUSE_BUTTON_RIGHT:
+		return
+	if item == null or item_inst == null:
+		return
+	var source_global_pos := get_global_rect().get_center()
+	slot_right_clicked.emit(self, source_global_pos)
 	accept_event()

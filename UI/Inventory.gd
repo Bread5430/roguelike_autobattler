@@ -1,6 +1,7 @@
 extends Control
 
 class_name Inventory
+signal inspect_requested(item_inst: Item, item_name: String, source_global_pos: Vector2)
 
 var slots : Array[InventorySlot]
 
@@ -23,6 +24,7 @@ func _ready():
 		var new_slot = slot_autoload.instantiate()
 		slots.append(new_slot)
 		new_slot.set_item("", null, 0)
+		new_slot.slot_right_clicked.connect(_on_slot_right_clicked)
 		inventory_grid.add_child(new_slot)
 
 func post_ready():
@@ -106,3 +108,8 @@ func get_number_of_item (itemID : String) -> int:
 func set_current_item(slot : InventorySlot):
 	# Pass the item up to the GUI
 	get_parent().set_current_item(slot)
+
+func _on_slot_right_clicked(slot: InventorySlot, source_global_pos: Vector2) -> void:
+	if slot == null or slot.item_inst == null:
+		return
+	inspect_requested.emit(slot.item_inst, slot.item_name, source_global_pos)

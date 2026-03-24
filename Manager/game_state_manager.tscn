@@ -39,4 +39,7 @@ starter_items_count = Array[int]([3, 3, 3, 3, 2, 2, 2])
 [node name="SpellBar" parent="UICanvas/Gui" index="1"]
 visible = true
 
+[node name="ItemDetailsCard" parent="UICanvas/Gui" index="5"]
+anchors_preset = 0
+
 [editable path="UICanvas/Gui"]
