@@ -3,6 +3,8 @@ class_name MapNode
 
 
 var id: int
+## Grid cell index when using grid-based map generation; (-1, -1) if unused.
+var grid_cell: Vector2i = Vector2i(-1, -1)
 var connections: Array[MapNode] = []
 var node_type: String = "normal"  # normal, start, end, boss, shop, etc.
 var difficulty: String = "easy"

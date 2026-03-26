@@ -5,10 +5,10 @@ extends Node2D
 
 @export_group("Map Generation")
 @export var map_size := DisplayServer.window_get_size()
-@export var node_count := 20
-@export var min_node_distance := 80.0
-@export var max_connections_per_node := 3
-@export var connection_distance_threshold := 200.0
+@export_subgroup("Grid")
+@export var grid_columns := 5
+@export var grid_rows := 4
+@export_range(0.0, 1.0) var grid_cell_fill_chance := 0.9
 
 @export_group("Visual Settings")
 @export var node_radius := 15.0
@@ -68,7 +68,8 @@ func generate_map():
 	print("Generating map graph...")
 
 	generate_nodes()
-	connect_nearest_neighbors()
+	connect_grid_neighbors()
+	ensure_reachability_bridges()
 	identify_start_end_nodes()
 	calculate_difficulty_progression()
 	update_node_availability()
@@ -77,151 +78,82 @@ func generate_map():
 	queue_redraw()
 
 func generate_nodes():
-	"""Generate randomly global_positioned nodes with minimum distance constraints"""
+	"""Place nodes on an N×M grid: each cell has a chance to spawn one node at a random point inside the cell."""
 	nodes.clear()
-	
-	for i in range(node_count):
-		var attempts = 0
-		var max_attempts = 100
-		var valid_global_position = false
-		var new_global_position: Vector2
-		
-		while not valid_global_position and attempts < max_attempts:
-			new_global_position = Vector2(
-				randf_range(node_radius, map_size.x - node_radius),
-				randf_range(node_radius, map_size.y - node_radius)
-			)
-			
-			valid_global_position = true
-			for existing_node in nodes:
-				if new_global_position.distance_to(existing_node.global_position) < min_node_distance:
-					valid_global_position = false
-					break
-			
-			attempts += 1
-		
-		if valid_global_position:
-			var node = MapNode.new(i, new_global_position)
-			nodes.append(node)
-		else:
-			push_warning("Could not place node %d after %d attempts" % [i, max_attempts])
-
-func connect_nearest_neighbors():
-	"""Connect each node to its nearest neighbors, ensuring full connectivity"""
-	connections.clear()
-	
-	# Phase 1: Connect each node to nearest neighbors within threshold
-	for node in nodes:
-		# Find nearest neighbors
-		var distances: Array = []
-		for other_node in nodes:
-			if other_node != node:
-				var distance = node.global_position.distance_to(other_node.global_position)
-				if distance <= connection_distance_threshold:
-					distances.append({"node": other_node, "distance": distance})
-		
-		# Sort by distance
-		distances.sort_custom(func(a, b): return a.distance < b.distance)
-		
-		# Connect to closest neighbors (up to max_connections_per_node)
-		var connections_made = 0
-		for neighbor_data in distances:
-			if connections_made >= max_connections_per_node:
-				break
-			
-			var neighbor = neighbor_data.node
-			
-			# Check if connection already exists
-			if not node_is_connected(node, neighbor):
-				create_connection(node, neighbor)
-				connections_made += 1
-	
-	# Phase 2: Ensure all nodes have at least one connection
-	for node in nodes:
-		if node.connections.is_empty():
-			# Find closest node
-			var closest_node = null
-			var min_distance = INF
-			
-			for other_node in nodes:
-				if other_node != node:
-					var distance = node.global_position.distance_to(other_node.global_position)
-					if distance < min_distance:
-						min_distance = distance
-						closest_node = other_node
-			
-			if closest_node:
-				create_connection(node, closest_node)
-				print("Connected isolated node %d to nearest node" % node.id)
-	
-	# Phase 3: Ensure full graph connectivity using Union-Find
-	ensure_graph_connectivity()
-
-func ensure_graph_connectivity():
-	"""Ensure the entire graph is connected by finding and connecting disconnected components"""
-	if nodes.is_empty():
-		return
-	
-	# Find all connected components using BFS
-	var components: Array[Array] = []
-	var visited_nodes: Array[MapNode] = []
-	
-	for node in nodes:
-		if node in visited_nodes:
-			continue
-		
-		# BFS to find all nodes in this component
-		var component: Array[MapNode] = []
-		var queue: Array[MapNode] = [node]
-		
-		while not queue.is_empty():
-			var current = queue.pop_front()
-			if current in visited_nodes:
+	var cols := maxi(1, grid_columns)
+	var rows := maxi(1, grid_rows)
+	var cell_w := map_size.x / float(cols)
+	var cell_h := map_size.y / float(rows)
+	var next_id := 0
+	for gy in range(rows):
+		for gx in range(cols):
+			if randf() > grid_cell_fill_chance:
 				continue
-			
-			visited_nodes.append(current)
-			component.append(current)
-			
-			for connected_node in current.connections:
-				if connected_node not in visited_nodes:
-					queue.append(connected_node)
-		
-		components.append(component)
-	
-	# If we have multiple components, connect them
-	if components.size() > 1:
-		print("Found %d disconnected components, connecting them..." % components.size())
-		
-		# Connect each component to the next one
-		for i in range(components.size() - 1):
-			var component1 = components[i]
-			var component2 = components[i + 1]
-			
-			# Find the two closest nodes between components
-			var closest_pair = find_closest_nodes_between_components(component1, component2)
-			
-			if closest_pair:
-				create_connection(closest_pair.node1, closest_pair.node2)
-				print("Connected component %d to component %d" % [i, i + 1])
+			var min_x := gx * cell_w + node_radius
+			var max_x := (gx + 1) * cell_w - node_radius
+			var min_y := gy * cell_h + node_radius
+			var max_y := (gy + 1) * cell_h - node_radius
+			if max_x <= min_x or max_y <= min_y:
+				continue
+			var pos := Vector2(randf_range(min_x, max_x), randf_range(min_y, max_y))
+			var node := MapNode.new(next_id, pos)
+			node.grid_cell = Vector2i(gx, gy)
+			nodes.append(node)
+			next_id += 1
 
-func find_closest_nodes_between_components(component1: Array, component2: Array) -> Dictionary:
-	"""Find the two closest nodes between two components"""
-	var min_distance = INF
-	var closest_node1 = null
-	var closest_node2 = null
-	
-	for node1 in component1:
-		for node2 in component2:
-			var distance = node1.global_position.distance_to(node2.global_position)
-			if distance < min_distance:
-				min_distance = distance
-				closest_node1 = node1
-				closest_node2 = node2
-	
-	if closest_node1 and closest_node2:
-		return {"node1": closest_node1, "node2": closest_node2, "distance": min_distance}
-	
-	return {}
+func connect_grid_neighbors():
+	"""Connect every pair of nodes whose grid cells are within one step (8-neighborhood, Chebyshev distance 1)."""
+	connections.clear()
+	var cell_to_node: Dictionary = {}
+	for node in nodes:
+		cell_to_node[node.grid_cell] = node
+	for node in nodes:
+		for dx in range(-1, 2):
+			for dy in range(-1, 2):
+				if dx == 0 and dy == 0:
+					continue
+				var neighbor_cell := node.grid_cell + Vector2i(dx, dy)
+				if not cell_to_node.has(neighbor_cell):
+					continue
+				var other: MapNode = cell_to_node[neighbor_cell]
+				if not node_is_connected(node, other):
+					create_connection(node, other)
+
+func _bfs_reachable_from(start: MapNode) -> Array[MapNode]:
+	var visited: Array[MapNode] = []
+	var queue: Array[MapNode] = [start]
+	while not queue.is_empty():
+		var n: MapNode = queue.pop_front()
+		if n in visited:
+			continue
+		visited.append(n)
+		for c in n.connections:
+			if c not in visited:
+				queue.append(c)
+	return visited
+
+func ensure_reachability_bridges():
+	"""If the graph is disconnected, repeatedly connect an unreachable node to the closest reachable node."""
+	if nodes.size() <= 1:
+		return
+	var visited := _bfs_reachable_from(nodes[0])
+	while visited.size() < nodes.size():
+		var best_u: MapNode = null
+		var best_v: MapNode = null
+		var best_d := INF
+		for u in nodes:
+			if u in visited:
+				continue
+			for v in visited:
+				var d := u.global_position.distance_to(v.global_position)
+				if d < best_d:
+					best_d = d
+					best_u = u
+					best_v = v
+		if best_u and best_v and not node_is_connected(best_u, best_v):
+			create_connection(best_u, best_v)
+			print("Connected unreachable node %d to closest reachable node %d" % [best_u.id, best_v.id])
+		visited = _bfs_reachable_from(nodes[0])
 
 func node_is_connected(node1: MapNode, node2: MapNode) -> bool:
 	"""Check if two nodes are already connected"""
