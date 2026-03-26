@@ -2,8 +2,8 @@
 
 [ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_card"]
 [ext_resource type="Texture2D" uid="uid://dduabfim1mu2t" path="res://Assets/CardSprites/one_ranged.png" id="2_tex"]
-[ext_resource type="Script" uid="uid://dhuc4xvtqbmt4" path="res://Units/unit_cards/arc_unit/arc_launcher.gd" id="3_script"]
-[ext_resource type="PackedScene" path="res://Units/unit_scenes/arc_launcher_template/ArcLauncherUnitTemplate.tscn" id="4_unit"]
+[ext_resource type="Script" uid="uid://dhuc4xvtqbmt4" path="res://Units/unit_cards/arc_launcher/arc_launcher.gd" id="3_script"]
+[ext_resource type="PackedScene" uid="uid://76jnmtu17ep" path="res://Units/unit_scenes/arc_launcher_template/ArcLauncherUnitTemplate.tscn" id="4_unit"]
 
 [node name="Arc_Launcher" instance=ExtResource("1_card")]
 texture = ExtResource("2_tex")

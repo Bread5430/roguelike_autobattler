@@ -162,8 +162,9 @@ func handle_game_area_click(event: InputEvent):
 			inventory.add_item(item_inst.item_name, 1)
 			curr_unit = removed_unit_info[0]
 			curr_unit_inst = item_inst
-			_reset_highlight(cells_to_reset)
+			
 			# Force a placement validity recalculation with this new unit
+			_reset_highlight(cells_to_reset)
 			isValid = _check_and_highlight_cells(objectCells)
 
 func toggle_inventory(can_use_inventory : bool):
@@ -181,15 +182,13 @@ func check_cell():
 	var new_target := _get_cell_at_world_position(world_mouse)
 	if new_target and new_target != targetCell:
 		targetCell = new_target
+		if objectCells.size() > 0:
+			_reset_highlight(objectCells)
 		if curr_unit_inst:
 			curr_unit_inst.global_position = targetCell.global_position + curr_unit_inst.texture.get_size() * curr_unit_inst.scale / 2
-			if objectCells.size() > 0:
-				_reset_highlight(objectCells)
 			objectCells = _get_object_cells()
 			isValid = _check_and_highlight_cells(objectCells)
 		else:
-			if objectCells.size() > 0:
-				_reset_highlight(objectCells)
 			objectCells = [new_target]
 			new_target.change_color(Color.YELLOW)
 
