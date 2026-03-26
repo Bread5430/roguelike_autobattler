@@ -41,11 +41,8 @@ func post_ready():
 	start_new_campaign()
 
 func connect_systems():
-	if gui.has_signal("preperation_ended"):
-		gui.preperation_ended.connect(_end_prep_phase)
-	if battle_manager.has_signal("battle_ended"):
-		battle_manager.battle_ended.connect(_on_battle_ended)
-	
+	gui.preperation_ended.connect(_end_prep_phase)
+	battle_manager.battle_ended.connect(_on_battle_ended)
 	map_generator.selected_node.connect(_on_map_node_selected)
 	
 
@@ -215,7 +212,7 @@ func award_battle_rewards():
 	var rewards = calculate_battle_rewards()
 	print("Battle rewards: %s" % str(rewards))
 	
-	# Implement your reward system here
+	# TODO: Implement your reward system here
 	# e.g., add gold, experience, new units, etc.
 
 func calculate_battle_rewards() -> Dictionary:
@@ -227,11 +224,11 @@ func calculate_battle_rewards() -> Dictionary:
 	
 	# Scale by difficulty
 	match current_battle_node.difficulty:
-		"easy":
+		"light":
 			base_rewards.gold *= 1
 		"medium":
 			base_rewards.gold *= 1.5
-		"hard":
+		"heavy":
 			base_rewards.gold *= 2
 	
 	# Scale by stage
@@ -254,7 +251,7 @@ func handle_campaign_completion():
 func show_campaign_victory():
 	"""Show campaign victory screen"""
 	print("Showing campaign victory screen")
-	# Implement your victory screen UI here
+	# TODO: Implement your victory screen UI here
 
 
 # =============================================================================

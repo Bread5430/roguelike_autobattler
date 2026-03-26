@@ -44,10 +44,7 @@ func clear_battlefield():
 		proj_pool.return_all_active()
 	for child in unit_parent.get_children():
 		child.queue_free()
-	for x in tile_map_size.x:
-		for y in tile_map_size.y:
-			allies_tiles[x][y].clear()
-			enemies_tiles[x][y].clear()
+	_clear_unit_tile_grids()
 
 func start_battle():
 	manager_timer.start()
@@ -103,12 +100,15 @@ func world_to_grid(pos: Vector2) -> Vector2i:
 func grid_to_world(coord: Vector2i) -> Vector2:
 	return coord * tile_size
 
-func update_tiles():
-	# Clear the allies and enemies tiles
+# Clear the allies and enemies tiles
+func _clear_unit_tile_grids():
 	for x in tile_map_size.x:
 		for y in tile_map_size.y:
 			allies_tiles[x][y].clear()
 			enemies_tiles[x][y].clear()
+
+func update_tiles():
+	_clear_unit_tile_grids()
 			
 	for unit in unit_parent.get_children():
 		if not unit is Base_Unit:
@@ -183,6 +183,7 @@ func _on_manager_update_timeout():
 		return
 	
 	if check_only_faction_units_alive(true):  # if only enemy units alive at end - you lose
+		# TODO: make the player lose the game
 		end_battle()
 		return
 	

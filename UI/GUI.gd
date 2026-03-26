@@ -80,14 +80,15 @@ func _draw():
 		draw_rect(selector_rect, Color.RED, false)
 
 func _process(_delta):
-	if casting_mode:
-		if casting_slot and is_instance_valid(casting_slot.spell_inst):
-			casting_slot.spell_inst.preview(_get_world_mouse_position())
-		queue_redraw()
-	elif post_ready_check:
+	if post_ready_check:
 		check_cell()
 		_update_tactical_cursor()
 		queue_redraw()
+
+		if casting_mode:
+			if casting_slot and is_instance_valid(casting_slot.spell_inst):
+				casting_slot.spell_inst.preview(_get_world_mouse_position())
+			queue_redraw()
 
 ## Casting mode only. Runs for every input so we always can confirm/cancel cast.
 func _input(event: InputEvent):
@@ -309,14 +310,11 @@ func _place_unit():
 		cell.full = true
 	
 	var grid_pos : Vector2 = objectCells[0].board_position
+	var unit_size = curr_unit_inst.rotated_placement_size if rotated_placement else curr_unit_inst.placement_size
+	var unit_vec = curr_unit_inst.rotated_vectors if rotated_placement else curr_unit_inst.placement_vectors
 
-	if rotated_placement:
-		place_on_board(grid_pos, curr_unit_inst.rotated_placement_size, curr_unit)
-		battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, curr_unit_inst.rotated_vectors, true)
-	else:
-		place_on_board(grid_pos, curr_unit_inst.placement_size, curr_unit)
-		battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, curr_unit_inst.placement_vectors, true)
-
+	place_on_board(grid_pos, unit_size, curr_unit)
+	battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, unit_vec, true)
 	_reset_highlight(objectCells)
 
 	# Allow the player to keep placing this unit as long as there still are cards left
