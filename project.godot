@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 ITEM_NAME="*res://LookUps/ITEM_NAME.gd"
 FORMATION_MAP="*res://LookUps/FORMATION_MAP.gd"
 UNIT_GLOSSARY="*res://LookUps/unit_glossary.gd"
+STATUS_EFFECT_DATA="*res://LookUps/status_effect_data.gd"
 
 [display]
 

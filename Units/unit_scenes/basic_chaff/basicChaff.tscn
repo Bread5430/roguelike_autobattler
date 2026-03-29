@@ -1,10 +1,10 @@
 [gd_scene load_steps=17 format=3 uid="uid://b3ot57ll4pmh3"]
 
 [ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_hlbew"]
-[ext_resource type="Texture2D" uid="uid://ce1bfpxqrdj" path="res://Units/melee_unit_template/basic_unit_sprites.png" id="2_5l3bg"]
-[ext_resource type="Script" uid="uid://bvp0uxwt0r3lf" path="res://Units/melee_unit_template/melee_unit_fsm.gd" id="3_bqw64"]
+[ext_resource type="Texture2D" uid="uid://ce1bfpxqrdj" path="res://Assets/UnitSprites/basic_unit_sprites.png" id="2_5l3bg"]
+[ext_resource type="Script" uid="uid://bvp0uxwt0r3lf" path="res://Units/unit_scenes/melee_unit_template/melee_unit_fsm.gd" id="3_bqw64"]
 [ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_x8yey"]
-[ext_resource type="Script" uid="uid://bqv2g0eqmyue" path="res://Units/melee_unit_template/basic_melee.gd" id="5_omu1k"]
+[ext_resource type="Script" uid="uid://bqv2g0eqmyue" path="res://Units/unit_scenes/melee_unit_template/basic_melee.gd" id="5_omu1k"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rfhwj"]
 atlas = ExtResource("2_5l3bg")
@@ -96,8 +96,8 @@ _data = {
 [node name="basicChaff" instance=ExtResource("1_hlbew")]
 unit_glossary_id = "basic_chaff"
 max_hp = 2
-base_speed = 60
 base_damage = 2
+base_speed = 60
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)

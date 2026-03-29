@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c5jow1fj0h5ep"]
+
+[ext_resource type="Script" uid="uid://d2jj854j5sjdh" path="res://Spells/spell_cards/ramping_dot/dot_ramp_spell.gd" id="1_63aws"]
+
+[node name="DotRampSpell" type="Node"]
+script = ExtResource("1_63aws")

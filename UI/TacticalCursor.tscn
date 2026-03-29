@@ -11,6 +11,20 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_tactical")
 
+[node name="StatusPopupContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 180.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 4
+mouse_filter = 2
+
 [node name="SelectedUnitPanel" type="PanelContainer" parent="."]
 visible = false
 layout_mode = 1

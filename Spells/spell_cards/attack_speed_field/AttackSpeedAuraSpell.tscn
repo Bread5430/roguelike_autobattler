@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://3lops5afhio4"]
+
+[ext_resource type="Script" uid="uid://rlwo1kk6s6w3" path="res://Spells/spell_cards/attack_speed_field/attack_speed_aura_spell.gd" id="1_m8jg5"]
+
+[node name="AttackSpeedAuraSpell" type="Node"]
+script = ExtResource("1_m8jg5")

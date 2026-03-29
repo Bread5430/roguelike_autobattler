@@ -31,6 +31,13 @@ var dmg_taken_mult : float = 1.0
 @export var spawn_position : Vector2
 @export var faction : bool
 
+## --- Status effects ---
+signal status_effect_popup(effect_id: StringName, event_type: StringName, stacks: int, remaining_seconds: float, icon: Texture2D)
+
+var _status_effect_instances: Dictionary = {} ## String -> StatusEffectInstance
+## Cached Attack_Base timer wait_time before status modifiers (per Attack_Base instance id).
+var _base_attack_cd_wait: Dictionary = {} ## int -> float
+
 
 func _ready() -> void:
 	_sync_from_glossary()
@@ -53,15 +60,20 @@ func _sync_from_glossary() -> void:
 		unit_name = dn
 
 
-func _physics_process(_delta):
+func _physics_process(delta: float) -> void:
+	_process_status_effects(delta)
 	move_and_slide()
 	
 func movement():
 	velocity = move_vec.normalized() * move_speed
 	
 
-func take_damage(damage: int):
-	curr_hp -= damage * dmg_taken_mult
+## If [param apply_taken_mult] is false, damage ignores [member dmg_taken_mult] (e.g. DoT ticks).
+func take_damage(damage: int, apply_taken_mult: bool = true) -> void:
+	var amt := float(damage)
+	if apply_taken_mult:
+		amt *= dmg_taken_mult
+	curr_hp -= int(amt)
 
 	if curr_hp <= 0:
 		state_machine.set_state(state_machine.states.dead)
@@ -70,6 +82,8 @@ func post_ready():
 	for node in get_children():
 		if node.has_method("post_ready"):
 			node.post_ready()
+	_ensure_attack_cd_cache()
+	_recompute_status_stat_modifiers()
 
 func set_start_stop(stopped_state : bool):
 	state_machine.round_start_check = stopped_state
@@ -94,3 +108,101 @@ func get_attack_stats() -> Dictionary:
 				"reload_time": reload_time
 			}
 	return {}
+
+
+func apply_status_effect(
+	def: StatusEffectDef,
+	stack_key: String,
+	stacks_add: int = 1,
+	duration_override_seconds: float = -1.0,
+	_source_unit: Base_Unit = null,
+	_params: Dictionary = {}
+) -> void:
+	if def == null:
+		return
+	var dur := def.default_duration
+	if duration_override_seconds > 0.0:
+		dur = duration_override_seconds
+	var key := _status_instance_key(def.effect_id, stack_key)
+	if _status_effect_instances.has(key):
+		var inst: StatusEffectInstance = _status_effect_instances[key]
+		var prev_stacks := inst.stacks
+		inst.stacks = mini(inst.stacks + stacks_add, def.max_stacks)
+		inst.remaining_time = dur
+		_recompute_status_stat_modifiers()
+		if inst.stacks > prev_stacks:
+			status_effect_popup.emit(def.effect_id, &"stacked", inst.stacks, inst.remaining_time, def.icon)
+	else:
+		var inst2 := StatusEffectInstance.new(def, stack_key, stacks_add, dur)
+		_status_effect_instances[key] = inst2
+		_recompute_status_stat_modifiers()
+		status_effect_popup.emit(def.effect_id, &"applied", inst2.stacks, inst2.remaining_time, def.icon)
+
+
+func remove_status_effect(effect_id: StringName, stack_key: String) -> void:
+	var key := _status_instance_key(effect_id, stack_key)
+	if not _status_effect_instances.has(key):
+		return
+	var inst: StatusEffectInstance = _status_effect_instances[key]
+	var tex: Texture2D = inst.def.icon if inst.def else null
+	_status_effect_instances.erase(key)
+	_recompute_status_stat_modifiers()
+	status_effect_popup.emit(effect_id, &"expired", 0, 0.0, tex)
+
+
+func _status_instance_key(effect_id: StringName, stack_key: String) -> String:
+	return "%s::%s" % [str(effect_id), stack_key]
+
+
+func _ensure_attack_cd_cache() -> void:
+	for c in get_children():
+		if c is Attack_Base:
+			var atk: Attack_Base = c
+			var tid := atk.get_instance_id()
+			if not _base_attack_cd_wait.has(tid) and atk.attack_cd:
+				_base_attack_cd_wait[tid] = atk.attack_cd.wait_time
+
+
+func _recompute_status_stat_modifiers() -> void:
+	_ensure_attack_cd_cache()
+	var dmg_t: float = 1.0
+	var move_m: float = 1.0
+	var atk_m: float = 1.0
+	for key in _status_effect_instances:
+		var inst: StatusEffectInstance = _status_effect_instances[key]
+		if inst.def == null:
+			continue
+		dmg_t *= inst.def.get_dmg_taken_mult_for_stacks(inst.stacks)
+		move_m *= inst.def.get_move_speed_mult_for_stacks(inst.stacks)
+		atk_m *= inst.def.get_attack_speed_mult_for_stacks(inst.stacks)
+	dmg_taken_mult = dmg_t
+	move_speed = float(base_speed) * move_m
+	if atk_m <= 0.001:
+		atk_m = 1.0
+	for c in get_children():
+		if c is Attack_Base:
+			var atk: Attack_Base = c
+			var tid := atk.get_instance_id()
+			var base_w: float = float(_base_attack_cd_wait.get(tid, atk.attack_cd.wait_time if atk.attack_cd else 1.0))
+			if atk.attack_cd:
+				atk.attack_cd.wait_time = base_w / atk_m
+
+
+func _process_status_effects(delta: float) -> void:
+	if _status_effect_instances.is_empty():
+		return
+	var to_remove: Array[String] = []
+	for key in _status_effect_instances:
+		var inst: StatusEffectInstance = _status_effect_instances[key]
+		if inst.def:
+			inst.def.process_instance(inst, self, delta)
+		inst.remaining_time -= delta
+		if inst.remaining_time <= 0.0:
+			to_remove.append(key)
+	for key in to_remove:
+		var inst: StatusEffectInstance = _status_effect_instances[key]
+		var eid: StringName = inst.def.effect_id if inst.def else &""
+		var tex: Texture2D = inst.def.icon if inst.def else null
+		_status_effect_instances.erase(key)
+		_recompute_status_stat_modifiers()
+		status_effect_popup.emit(eid, &"expired", 0, 0.0, tex)

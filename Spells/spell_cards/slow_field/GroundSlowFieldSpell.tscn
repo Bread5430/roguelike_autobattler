@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bbxvgcv1dodwa"]
+
+[ext_resource type="Script" uid="uid://dhpo1klrfcpio" path="res://Spells/spell_cards/slow_field/ground_slow_field_spell.gd" id="1_spell"]
+
+[node name="GroundSlowFieldSpell" type="Node"]
+script = ExtResource("1_spell")

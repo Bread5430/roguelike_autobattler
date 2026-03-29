@@ -10,6 +10,7 @@ extends Control
 @onready var _selected_label_reload: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelReload
 @onready var _selected_label_speed: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelSpeed
 @onready var _selected_label_total_dmg: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelTotalDamage
+@onready var _status_popup_container: VBoxContainer = $StatusPopupContainer
 
 var _selected_unit: Base_Unit
 
@@ -30,6 +31,9 @@ func _process(_delta: float) -> void:
 
 ## Set only on click, or when unit dies / combat ends. Pass null to hide.
 func set_selected_unit(unit: Base_Unit) -> void:
+	if _selected_unit and is_instance_valid(_selected_unit):
+		if _selected_unit.status_effect_popup.is_connected(_on_selected_unit_status_popup):
+			_selected_unit.status_effect_popup.disconnect(_on_selected_unit_status_popup)
 	_selected_unit = unit
 	if not unit or not is_instance_valid(unit):
 		_selected_panel.visible = false
@@ -37,6 +41,61 @@ func set_selected_unit(unit: Base_Unit) -> void:
 	_selected_panel.visible = true
 	_selected_sprite.texture = _get_unit_sprite_texture(unit)
 	_refresh_selected_panel_labels()
+	unit.status_effect_popup.connect(_on_selected_unit_status_popup)
+
+
+func _on_selected_unit_status_popup(
+	effect_id: StringName,
+	event_type: StringName,
+	stacks: int,
+	remaining_seconds: float,
+	icon: Texture2D
+) -> void:
+	var text := _format_status_popup_text(effect_id, event_type, stacks, remaining_seconds)
+	_spawn_status_popup_row(text, icon)
+
+
+func _format_status_popup_text(
+	effect_id: StringName,
+	event_type: StringName,
+	stacks: int,
+	remaining_seconds: float
+) -> String:
+	var disp := STATUS_EFFECT_DATA.get_display_name(effect_id)
+	match event_type:
+		&"applied", &"stacked":
+			return "%s +%d (%.1fs)" % [disp, stacks, remaining_seconds]
+		&"expired":
+			return "%s expired" % disp
+	return disp
+
+
+func _spawn_status_popup_row(text: String, icon: Texture2D) -> void:
+	if not _status_popup_container:
+		return
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if icon:
+		var tex_rect := TextureRect.new()
+		tex_rect.texture = icon
+		tex_rect.custom_minimum_size = Vector2(20, 20)
+		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(tex_rect)
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row.add_child(lbl)
+	row.modulate = Color(1, 1, 0.85, 1)
+	_status_popup_container.add_child(row)
+	_status_popup_container.move_child(row, 0)
+	var tw := create_tween()
+	tw.tween_interval(1.0)
+	tw.tween_property(row, "modulate:a", 0.0, 0.75)
+	tw.tween_callback(func(): row.queue_free())
 
 
 func _get_unit_sprite_texture(unit: Base_Unit) -> Texture2D:

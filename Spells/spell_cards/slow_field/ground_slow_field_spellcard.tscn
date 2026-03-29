@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://dmx3d2w2vwgs0"]
+
+[ext_resource type="Texture2D" uid="uid://bw2fvh5x4dddk" path="res://Assets/CardSprites/slow_spell.png" id="1_02s5l"]
+[ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2_card"]
+
+[node name="GroundSlowFieldSpellcard" type="Sprite2D"]
+texture = ExtResource("1_02s5l")
+script = ExtResource("2_card")

@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://dvca3lott4l05"]
+
+[ext_resource type="Texture2D" uid="uid://dir4fb0lvi5c6" path="res://Assets/CardSprites/dot_spell.png" id="1_fiyj3"]
+[ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2_card"]
+
+[node name="DotRampSpellcard" type="Sprite2D"]
+texture = ExtResource("1_fiyj3")
+script = ExtResource("2_card")
