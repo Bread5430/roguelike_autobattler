@@ -1,8 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://dvca3lott4l05"]
+[gd_scene load_steps=4 format=3 uid="uid://dvca3lott4l05"]
 
 [ext_resource type="Texture2D" uid="uid://dir4fb0lvi5c6" path="res://Assets/CardSprites/dot_spell.png" id="1_fiyj3"]
 [ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2_card"]
+[ext_resource type="PackedScene" uid="uid://c5jow1fj0h5ep" path="res://Spells/spell_cards/ramping_dot/DotRampSpell.tscn" id="3_spell"]
 
 [node name="DotRampSpellcard" type="Sprite2D"]
 texture = ExtResource("1_fiyj3")
 script = ExtResource("2_card")
+related_spell_effect = ExtResource("3_spell")
+mana_cost = 10
+cooldown = 5
+item_name = "dot_ramp"
+max_stack_size = 1
+spell_slots = 1
+metadata/_custom_type_script = "uid://d2esp2apkum71"

@@ -1,8 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://dmx3d2w2vwgs0"]
+[gd_scene load_steps=4 format=3 uid="uid://dmx3d2w2vwgs0"]
 
 [ext_resource type="Texture2D" uid="uid://bw2fvh5x4dddk" path="res://Assets/CardSprites/slow_spell.png" id="1_02s5l"]
 [ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2_card"]
+[ext_resource type="PackedScene" uid="uid://bbxvgcv1dodwa" path="res://Spells/spell_cards/slow_field/GroundSlowFieldSpell.tscn" id="3_spell"]
 
 [node name="GroundSlowFieldSpellcard" type="Sprite2D"]
 texture = ExtResource("1_02s5l")
 script = ExtResource("2_card")
+related_spell_effect = ExtResource("3_spell")
+mana_cost = 10
+cooldown = 5
+item_name = "ground_slow_field"
+max_stack_size = 1
+spell_slots = 1
+metadata/_custom_type_script = "uid://d2esp2apkum71"

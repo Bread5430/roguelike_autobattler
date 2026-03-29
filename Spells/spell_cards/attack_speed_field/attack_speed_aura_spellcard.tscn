@@ -1,8 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://delvnj6bxpblu"]
+[gd_scene load_steps=4 format=3 uid="uid://delvnj6bxpblu"]
 
 [ext_resource type="Texture2D" uid="uid://cj0xfvmp5paul" path="res://Assets/CardSprites/attack_speed_field.png" id="1_tkc70"]
 [ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2_card"]
+[ext_resource type="PackedScene" uid="uid://3lops5afhio4" path="res://Spells/spell_cards/attack_speed_field/AttackSpeedAuraSpell.tscn" id="3_spell"]
 
 [node name="AttackSpeedAuraSpellcard" type="Sprite2D"]
 texture = ExtResource("1_tkc70")
 script = ExtResource("2_card")
+related_spell_effect = ExtResource("3_spell")
+mana_cost = 10
+cooldown = 5
+item_name = "attack_speed_aura"
+max_stack_size = 1
+spell_slots = 1
+metadata/_custom_type_script = "uid://d2esp2apkum71"
