@@ -50,17 +50,17 @@ func on_spawned() -> void:
 	# Override this in child classes for custom setup
 
 # called by unit's attack node to pass its information
-func setup(parent_unit : Base_Unit, spawn_position: Vector2, tgt_faction : bool, spawn_direction: Vector2 = Vector2.ZERO, spawn_speed: float = -1.0) -> void:
+func setup(parent_unit_inst : Base_Unit, spawn_position: Vector2, tgt_faction : bool, spawn_direction: Vector2 = Vector2.ZERO, spawn_speed: float = -1.0) -> void:
 	"""Setup projectile parameters after spawning"""
-	self.parent_unit = parent_unit
-	parent_dmg_mult = parent_unit.dmg_dealt_mult
+	self.parent_unit = parent_unit_inst
+	parent_dmg_mult = parent_unit_inst.dmg_dealt_mult
 	target_faction = tgt_faction
 	
 	global_position = spawn_position
 	direction = spawn_direction.normalized()
 	
 	if spawn_speed > 0:
-		speed += spawn_speed
+		speed += int(spawn_speed)
 	
 	# Rotate sprite to face direction
 	rotation = direction.angle()
