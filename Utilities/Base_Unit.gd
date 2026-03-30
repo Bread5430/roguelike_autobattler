@@ -32,8 +32,6 @@ var dmg_taken_mult : float = 1.0
 @export var faction : bool
 
 ## --- Status effects ---
-signal status_effect_popup(effect_id: StringName, event_type: StringName, stacks: int, remaining_seconds: float, icon: Texture2D)
-
 var _status_effect_instances: Dictionary = {} ## String -> StatusEffectInstance
 ## Cached Attack_Base timer wait_time before status modifiers (per Attack_Base instance id).
 var _base_attack_cd_wait: Dictionary = {} ## int -> float
@@ -126,28 +124,60 @@ func apply_status_effect(
 	var key := _status_instance_key(def.effect_id, stack_key)
 	if _status_effect_instances.has(key):
 		var inst: StatusEffectInstance = _status_effect_instances[key]
-		var prev_stacks := inst.stacks
 		inst.stacks = mini(inst.stacks + stacks_add, def.max_stacks)
 		inst.remaining_time = dur
+		inst.reference_duration = dur
 		_recompute_status_stat_modifiers()
-		if inst.stacks > prev_stacks:
-			status_effect_popup.emit(def.effect_id, &"stacked", inst.stacks, inst.remaining_time, def.icon)
 	else:
 		var inst2 := StatusEffectInstance.new(def, stack_key, stacks_add, dur)
 		_status_effect_instances[key] = inst2
 		_recompute_status_stat_modifiers()
-		status_effect_popup.emit(def.effect_id, &"applied", inst2.stacks, inst2.remaining_time, def.icon)
+
+
+## One dictionary per active instance: [code]instance_key[/code], [code]display_name[/code], [code]stacks[/code], [code]remaining[/code], [code]duration_fraction[/code], [code]icon[/code].
+func get_active_status_effects_for_ui() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for key in _status_effect_instances:
+		var inst: StatusEffectInstance = _status_effect_instances[key]
+		if inst.def == null:
+			continue
+		var disp := str(inst.def.display_name).strip_edges()
+		if disp.is_empty():
+			disp = STATUS_EFFECT_DATA.get_display_name(inst.def.effect_id)
+		var ref_dur: float = inst.reference_duration
+		var frac: float = 1.0
+		if ref_dur > 0.001:
+			frac = clampf(inst.remaining_time / ref_dur, 0.0, 1.0)
+		out.append({
+			"instance_key": key,
+			"display_name": disp,
+			"stacks": inst.stacks,
+			"remaining": inst.remaining_time,
+			"duration_fraction": frac,
+			"icon": _get_status_effect_icon(inst),
+		})
+	return out
+
+
+func _get_status_effect_icon(inst: StatusEffectInstance) -> Texture2D:
+	if inst.def and inst.def.icon:
+		return inst.def.icon
+	if inst.def:
+		var row := STATUS_EFFECT_DATA.get_entry(str(inst.def.effect_id))
+		var p := str(row.get("icon_path", "")).strip_edges()
+		if p != "" and ResourceLoader.exists(p):
+			var res: Resource = load(p)
+			if res is Texture2D:
+				return res as Texture2D
+	return null
 
 
 func remove_status_effect(effect_id: StringName, stack_key: String) -> void:
 	var key := _status_instance_key(effect_id, stack_key)
 	if not _status_effect_instances.has(key):
 		return
-	var inst: StatusEffectInstance = _status_effect_instances[key]
-	var tex: Texture2D = inst.def.icon if inst.def else null
 	_status_effect_instances.erase(key)
 	_recompute_status_stat_modifiers()
-	status_effect_popup.emit(effect_id, &"expired", 0, 0.0, tex)
 
 
 func _status_instance_key(effect_id: StringName, stack_key: String) -> String:
@@ -200,9 +230,5 @@ func _process_status_effects(delta: float) -> void:
 		if inst.remaining_time <= 0.0:
 			to_remove.append(key)
 	for key in to_remove:
-		var inst: StatusEffectInstance = _status_effect_instances[key]
-		var eid: StringName = inst.def.effect_id if inst.def else &""
-		var tex: Texture2D = inst.def.icon if inst.def else null
 		_status_effect_instances.erase(key)
 		_recompute_status_stat_modifiers()
-		status_effect_popup.emit(eid, &"expired", 0, 0.0, tex)

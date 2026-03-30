@@ -7,6 +7,8 @@ var def: StatusEffectDef
 var stack_key: String = ""
 var stacks: int = 1
 var remaining_time: float = 0.0
+## Last applied segment duration (used for UI remaining fraction).
+var reference_duration: float = 0.0
 ## Accumulator for periodic ticks (DoT).
 var tick_accumulator: float = 0.0
 ## Effect-specific data (e.g. ticks_done for ramp DoT).
@@ -18,6 +20,7 @@ func _init(p_def: StatusEffectDef, p_stack_key: String, p_stacks: int, p_duratio
 	stack_key = p_stack_key
 	stacks = p_stacks
 	remaining_time = p_duration
+	reference_duration = p_duration
 
 
 func get_instance_key() -> String:

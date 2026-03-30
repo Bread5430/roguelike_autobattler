@@ -1,18 +1,21 @@
 ## Selected unit panel (bottom-right); updates only on click, unit death, or combat end.
 extends Control
 
+const STATUS_EFFECT_BOX_SCENE := preload("res://UI/StatusEffectBox.tscn")
+
 # Selected unit panel (fixed bottom-right)
-@onready var _selected_panel: PanelContainer = $SelectedUnitPanel
-@onready var _selected_sprite: TextureRect = $SelectedUnitPanel/HBoxContainer/UnitSprite
-@onready var _selected_label_display_name: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelDisplayName
-@onready var _selected_label_hp: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelHP
-@onready var _selected_label_damage: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelDamage
-@onready var _selected_label_reload: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelReload
-@onready var _selected_label_speed: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelSpeed
-@onready var _selected_label_total_dmg: Label = $SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelTotalDamage
-@onready var _status_popup_container: VBoxContainer = $StatusPopupContainer
+@onready var _selected_panel: PanelContainer = $TacticalCursorStack/SelectedUnitPanel
+@onready var _status_row: HBoxContainer = $TacticalCursorStack/StatusEffectsRow
+@onready var _selected_sprite: TextureRect = $TacticalCursorStack/SelectedUnitPanel/HBoxContainer/UnitSprite
+@onready var _selected_label_display_name: Label = $TacticalCursorStack/SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelDisplayName
+@onready var _selected_label_hp: Label = $TacticalCursorStack/SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelHP
+@onready var _selected_label_damage: Label = $TacticalCursorStack/SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelDamage
+@onready var _selected_label_reload: Label = $TacticalCursorStack/SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelReload
+@onready var _selected_label_speed: Label = $TacticalCursorStack/SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelSpeed
+@onready var _selected_label_total_dmg: Label = $TacticalCursorStack/SelectedUnitPanel/HBoxContainer/StatsVBox/SelectedLabelTotalDamage
 
 var _selected_unit: Base_Unit
+var _status_boxes: Dictionary = {} ## String -> StatusEffectBox
 
 
 func _ready() -> void:
@@ -31,71 +34,48 @@ func _process(_delta: float) -> void:
 
 ## Set only on click, or when unit dies / combat ends. Pass null to hide.
 func set_selected_unit(unit: Base_Unit) -> void:
-	if _selected_unit and is_instance_valid(_selected_unit):
-		if _selected_unit.status_effect_popup.is_connected(_on_selected_unit_status_popup):
-			_selected_unit.status_effect_popup.disconnect(_on_selected_unit_status_popup)
 	_selected_unit = unit
 	if not unit or not is_instance_valid(unit):
 		_selected_panel.visible = false
+		_clear_status_effect_boxes()
 		return
 	_selected_panel.visible = true
 	_selected_sprite.texture = _get_unit_sprite_texture(unit)
 	_refresh_selected_panel_labels()
-	unit.status_effect_popup.connect(_on_selected_unit_status_popup)
 
 
-func _on_selected_unit_status_popup(
-	effect_id: StringName,
-	event_type: StringName,
-	stacks: int,
-	remaining_seconds: float,
-	icon: Texture2D
-) -> void:
-	var text := _format_status_popup_text(effect_id, event_type, stacks, remaining_seconds)
-	_spawn_status_popup_row(text, icon)
+func _clear_status_effect_boxes() -> void:
+	for c in _status_row.get_children():
+		c.queue_free()
+	_status_boxes.clear()
 
 
-func _format_status_popup_text(
-	effect_id: StringName,
-	event_type: StringName,
-	stacks: int,
-	remaining_seconds: float
-) -> String:
-	var disp := STATUS_EFFECT_DATA.get_display_name(effect_id)
-	match event_type:
-		&"applied", &"stacked":
-			return "%s +%d (%.1fs)" % [disp, stacks, remaining_seconds]
-		&"expired":
-			return "%s expired" % disp
-	return disp
-
-
-func _spawn_status_popup_row(text: String, icon: Texture2D) -> void:
-	if not _status_popup_container:
+func _refresh_status_effect_boxes(rows: Array[Dictionary]) -> void:
+	if rows.is_empty():
+		_clear_status_effect_boxes()
 		return
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if icon:
-		var tex_rect := TextureRect.new()
-		tex_rect.texture = icon
-		tex_rect.custom_minimum_size = Vector2(20, 20)
-		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		row.add_child(tex_rect)
-	var lbl := Label.new()
-	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", 11)
-	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	row.add_child(lbl)
-	row.modulate = Color(1, 1, 0.85, 1)
-	_status_popup_container.add_child(row)
-	_status_popup_container.move_child(row, 0)
-	var tw := create_tween()
-	tw.tween_interval(1.0)
-	tw.tween_property(row, "modulate:a", 0.0, 0.75)
-	tw.tween_callback(func(): row.queue_free())
+	var keys_present: Dictionary = {}
+	for r in rows:
+		var key: String = str(r.get("instance_key", ""))
+		if key.is_empty():
+			continue
+		keys_present[key] = true
+		var box: StatusEffectBox
+		if _status_boxes.has(key):
+			box = _status_boxes[key]
+		else:
+			box = STATUS_EFFECT_BOX_SCENE.instantiate() as StatusEffectBox
+			_status_row.add_child(box)
+			_status_boxes[key] = box
+		box.set_effect(r)
+	var to_remove: Array[String] = []
+	for k in _status_boxes.keys():
+		if not keys_present.has(k):
+			to_remove.append(k)
+	for k in to_remove:
+		var n: Node = _status_boxes[k]
+		_status_boxes.erase(k)
+		n.queue_free()
 
 
 func _get_unit_sprite_texture(unit: Base_Unit) -> Texture2D:
@@ -137,3 +117,5 @@ func _refresh_selected_panel_labels() -> void:
 		var effective_dmg := int(u.get_attack_damage() * u.dmg_dealt_mult)
 		_selected_label_damage.text = "Damage/shot: %d" % effective_dmg
 		_selected_label_reload.text = "Reload: %.2fs" % atk.reload_time
+	var status_rows := u.get_active_status_effects_for_ui()
+	_refresh_status_effect_boxes(status_rows)

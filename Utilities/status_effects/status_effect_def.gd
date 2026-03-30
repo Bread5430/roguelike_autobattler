@@ -4,7 +4,7 @@ class_name StatusEffectDef
 ## Unique id used for stacking keys and UI.
 @export var effect_id: StringName = &""
 @export var display_name: String = ""
-## Shown next to status text in [TacticalCursor] popups; assign in factory or in the inspector for .tres defs.
+## Optional icon for UI; assign in factory or in the inspector for .tres defs.
 @export var icon: Texture2D
 @export var default_duration: float = 3.0
 @export var max_stacks: int = 10

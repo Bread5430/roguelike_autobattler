@@ -1,0 +1,53 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8statusbox01"]
+
+[ext_resource type="Script" path="res://UI/status_effect_box.gd" id="1_box"]
+
+[node name="StatusEffectBox" type="Control"]
+custom_minimum_size = Vector2(38, 38)
+mouse_filter = 2
+script = ExtResource("1_box")
+
+[node name="IconRoot" type="Control" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Icon" type="TextureRect" parent="IconRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="DurationHighlight" type="ColorRect" parent="IconRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.45, 0.78, 1, 0.48)
+mouse_filter = 2
+
+[node name="StackLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -24.0
+offset_top = -2.0
+offset_right = 2.0
+offset_bottom = 14.0
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+horizontal_alignment = 2
+vertical_alignment = 0
+mouse_filter = 2
