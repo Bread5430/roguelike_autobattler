@@ -41,4 +41,7 @@ rows = 5
 [node name="SpellBar" parent="UICanvas/Gui" index="1"]
 visible = true
 
+[node name="TacticalCursor" parent="UICanvas/Gui" index="4"]
+mouse_filter = 2
+
 [editable path="UICanvas/Gui"]
