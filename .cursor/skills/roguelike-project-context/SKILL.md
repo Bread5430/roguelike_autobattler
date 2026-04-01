@@ -25,6 +25,15 @@ From the **workspace root**, read only what you need:
 | `.cursor/docs/feature-recipes.md` | Step-by-step: new unit, formation, state hook, spell |
 | `.cursor/docs/input-coordination-plan.md` | InputCoordinator, `handle_game_area_click`, `handle_unit_click`, mouse_filter, viewport handling, Passthrough_Helper |
 
+### Features index (subsystem docs)
+
+Dense summaries of specific features or subsystems: `.cursor/docs/systems/<name>.md`. Add a row when creating or registering a doc (see `chat-to-system-doc` skill); remove the placeholder row when the first real entry exists.
+
+| Path | Read when |
+|------|-----------|
+| `.cursor/docs/systems/tactical-cursor-unit-stats.md` | TacticalCursor, `TacticalCursorStack`, `StatusEffectsRow`, `StatusEffectBox`, selected unit panel, `get_active_status_effects_for_ui`, `get_unit_under_cursor`, deployment click-to-select stats, `total_damage_dealt`, health bar on `Base_Unit`, End Prep button layout |
+| `.cursor/docs/systems/status-effects.md` | `StatusEffectDef`, `apply_status_effect`, `STATUS_EFFECT_DATA`, `status_effects.csv`, DoT/aura/slow spells, stacking, `get_active_status_effects_for_ui` |
+
 ## Usage
 
 1. Infer which topic(s) apply (e.g. "placement broken" → `patterns.md` + `input-coordination-plan.md`).
