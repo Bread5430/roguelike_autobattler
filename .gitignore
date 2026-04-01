@@ -2,3 +2,4 @@
 .godot/
 .github/
 *.tmp
+addons/godot-git-plugin/
