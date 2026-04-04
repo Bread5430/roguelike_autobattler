@@ -1,37 +1,37 @@
-[gd_scene load_steps=17 format=3 uid="uid://b3ot57ll4pmh3"]
+[gd_scene load_steps=17 format=3 uid="uid://57ajvaf7rm52"]
 
-[ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_hlbew"]
-[ext_resource type="Texture2D" uid="uid://ce1bfpxqrdj" path="res://Assets/UnitSprites/basic_unit_sprites.png" id="2_5l3bg"]
-[ext_resource type="Script" uid="uid://bvp0uxwt0r3lf" path="res://Units/unit_scenes/melee_unit_template/melee_unit_fsm.gd" id="3_bqw64"]
-[ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_x8yey"]
-[ext_resource type="Script" uid="uid://u1kypg7x4hux" path="res://Units/unit_scenes/basic_chaff/vulnurability_melee.gd" id="5_htjjy"]
+[ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_il8d0"]
+[ext_resource type="Texture2D" uid="uid://ce1bfpxqrdj" path="res://Assets/UnitSprites/basic_unit_sprites.png" id="2_nh15e"]
+[ext_resource type="Script" uid="uid://dh4tqvn6emwhy" path="res://Units/unit_scenes/ranged_unit_template/ranged_unit_fsm.gd" id="3_pgjkd"]
+[ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_khtmn"]
+[ext_resource type="Script" uid="uid://bfh0eex83r6af" path="res://Units/unit_scenes/ranged_unit_template/basic_ranged.gd" id="5_od4rn"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rfhwj"]
-atlas = ExtResource("2_5l3bg")
+atlas = ExtResource("2_nh15e")
 region = Rect2(0, 96, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_qs8ai"]
-atlas = ExtResource("2_5l3bg")
+atlas = ExtResource("2_nh15e")
 region = Rect2(32, 96, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_i15nn"]
-atlas = ExtResource("2_5l3bg")
+atlas = ExtResource("2_nh15e")
 region = Rect2(64, 96, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_yv4ua"]
-atlas = ExtResource("2_5l3bg")
+atlas = ExtResource("2_nh15e")
 region = Rect2(0, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_yppgq"]
-atlas = ExtResource("2_5l3bg")
+atlas = ExtResource("2_nh15e")
 region = Rect2(32, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_s1bkl"]
-atlas = ExtResource("2_5l3bg")
+atlas = ExtResource("2_nh15e")
 region = Rect2(64, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_g6t6x"]
-atlas = ExtResource("2_5l3bg")
+atlas = ExtResource("2_nh15e")
 region = Rect2(96, 0, 32, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_louiq"]
@@ -93,11 +93,11 @@ _data = {
 &"dead": SubResource("Animation_rbyda")
 }
 
-[node name="basicChaff" instance=ExtResource("1_hlbew")]
-unit_glossary_id = "basic_chaff"
-max_hp = 2
-base_damage = 2
-base_speed = 60
+[node name="Sniper_Unit" instance=ExtResource("1_il8d0")]
+unit_glossary_id = "sniper_unit"
+max_hp = 5
+base_damage = 10
+base_speed = 30
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)
@@ -113,8 +113,19 @@ libraries = {
 }
 
 [node name="FSM" parent="." index="3"]
-script = ExtResource("3_bqw64")
+script = ExtResource("3_pgjkd")
 
-[node name="Melee_Attack" parent="." index="5" instance=ExtResource("4_x8yey")]
-script = ExtResource("5_htjjy")
-attack_range = 30
+[node name="Ranged_Attack" parent="." index="5" instance=ExtResource("4_khtmn")]
+script = ExtResource("5_od4rn")
+attack_range = 600
+
+[node name="Attack_CD" parent="Ranged_Attack" index="0"]
+wait_time = 3.0
+
+[node name="visble_time" type="Timer" parent="Ranged_Attack" index="1"]
+wait_time = 0.05
+one_shot = true
+
+[connection signal="timeout" from="Ranged_Attack/visble_time" to="Ranged_Attack" method="_on_visble_time_timeout"]
+
+[editable path="Ranged_Attack"]

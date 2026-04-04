@@ -1,0 +1,14 @@
+[gd_scene load_steps=5 format=3 uid="uid://wy5o065cty5f"]
+
+[ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_84b4p"]
+[ext_resource type="Texture2D" uid="uid://csxj1uf0eutu2" path="res://Assets/CardSprites/sniper_card.png" id="2_vl65d"]
+[ext_resource type="Script" uid="uid://b0isyaopfuwlm" path="res://Units/unit_cards/sniper_card/sniper_card.gd" id="3_vl65d"]
+[ext_resource type="PackedScene" uid="uid://57ajvaf7rm52" path="res://Units/unit_scenes/sniper/sniper_unit.tscn" id="4_jksou"]
+
+[node name="Sniper_Card" instance=ExtResource("1_84b4p")]
+texture = ExtResource("2_vl65d")
+script = ExtResource("3_vl65d")
+num_units = 1
+placement_size = Vector2(2, 2)
+related_unit = ExtResource("4_jksou")
+item_name = "one_ranged"
