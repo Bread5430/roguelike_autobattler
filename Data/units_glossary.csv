@@ -7,3 +7,4 @@ arc_template,Arc Cleaver,10,100,2,Sweeps a wide arc in front of the unit to hit 
 arc_launcher,Arc Launcher,5,35,1,Fires an arc-shaped strike at the end of an aiming line.
 sniper_unit,Sniper,5,30,10,"Extremely long range and high damage, slow and fragile."
 bruiser_unit,Bruiser,30,80,4,"Fast, Tanky and Dangerous melee unit who both protects chaff and destroys single targets."
+router_unit,router_unit,20,35,1,"Core of an army. Make sure to protect to avoid being debuffed."

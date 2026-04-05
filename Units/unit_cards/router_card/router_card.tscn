@@ -1,0 +1,9 @@
+[gd_scene load_steps=4 format=3 uid="uid://tskt4okrymjo"]
+
+[ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_card"]
+[ext_resource type="Texture2D" uid="uid://dduabfim1mu2t" path="res://Assets/CardSprites/one_ranged.png" id="2_tex"]
+[ext_resource type="Script" uid="uid://dqugin46n70il" path="res://Units/unit_cards/router_card/router_card.gd" id="3_xydd5"]
+
+[node name="router_card" instance=ExtResource("1_card")]
+texture = ExtResource("2_tex")
+script = ExtResource("3_xydd5")

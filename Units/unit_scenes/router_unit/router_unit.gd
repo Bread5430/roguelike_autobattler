@@ -1,0 +1,25 @@
+extends Base_Unit
+
+const ALLY_DEATH_STUN_SECONDS := 10.0
+const ALLY_DEATH_STUN_STACK_KEY := "ally_death_stun"
+
+
+func take_damage(damage: int, apply_taken_mult: bool = true) -> void:
+	var was_alive := curr_hp > 0
+	super.take_damage(damage, apply_taken_mult)
+	if was_alive and curr_hp <= 0:
+		_apply_same_faction_death_stun()
+
+
+func _apply_same_faction_death_stun() -> void:
+	var parent_unit := get_parent()
+	if parent_unit == null:
+		return
+	var def := StatusEffectLibrary.stunned()
+	for c in parent_unit.get_children():
+		if c == self or not c is Base_Unit:
+			continue
+		var ally: Base_Unit = c
+		if ally.faction != faction:
+			continue
+		ally.apply_status_effect(def, ALLY_DEATH_STUN_STACK_KEY, 1, ALLY_DEATH_STUN_SECONDS)
