@@ -1,6 +1,12 @@
 extends Resource
 class_name StatusEffectDef
 
+enum Polarity {
+	NEUTRAL,
+	BUFF,
+	DEBUFF,
+}
+
 ## Unique id used for stacking keys and UI.
 @export var effect_id: StringName = &""
 @export var display_name: String = ""
@@ -24,4 +30,33 @@ func get_attack_speed_mult_for_stacks(stacks: int) -> float:
 
 ## Override for periodic effects (DoT). Default: no-op.
 func process_instance(_instance: StatusEffectInstance, _host: Base_Unit, _delta: float) -> void:
+	pass
+
+
+func get_polarity() -> Polarity:
+	return Polarity.NEUTRAL
+
+
+func restricts_movement() -> bool:
+	return false
+
+
+func restricts_basic_attacks() -> bool:
+	return false
+
+
+func restricts_special_abilities() -> bool:
+	return false
+
+
+func suppresses_buff_application() -> bool:
+	return false
+
+
+func suppresses_debuff_application() -> bool:
+	return false
+
+
+## Called on the host before a **new** instance is inserted (not on duration refresh of an existing key). Dispel-style defs purge here.
+func on_applied(_host: Base_Unit) -> void:
 	pass

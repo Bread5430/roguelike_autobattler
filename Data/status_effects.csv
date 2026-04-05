@@ -3,3 +3,4 @@ damage_vulnerability,Damage Vulnerability,res://Assets/CardSprites/circle_aoe_sp
 attack_speed_aura,Attack Speed Up,res://Assets/CardSprites/attack_speed_field.png,0.25,1
 ground_slow,Slowed,res://Assets/CardSprites/slow_spell.png,0.25,1
 dot_damage_ramp,Burning,res://Assets/CardSprites/dot_spell.png,5,5
+stunned,Stunned,res://Assets/CardSprites/slow_spell.png,2,1

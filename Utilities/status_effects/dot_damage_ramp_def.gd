@@ -14,6 +14,10 @@ func _init() -> void:
 	StatusEffectTune.apply_csv(self, effect_id)
 
 
+func get_polarity() -> Polarity:
+	return Polarity.DEBUFF
+
+
 func get_dmg_taken_mult_for_stacks(_stacks: int) -> float:
 	return 1.0
 

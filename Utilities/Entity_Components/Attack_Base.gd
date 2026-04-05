@@ -32,10 +32,13 @@ func check_new_targets() -> bool:
 		return true
 	
 func check_can_attack() -> bool:
+	if unit is Base_Unit:
+		var bu: Base_Unit = unit
+		if bu.is_basic_attacks_restricted():
+			return false
 	if in_range() and can_attack:
 		return true
-	else: 
-		return false
+	return false
 	
 func do_attack() -> void:
 	can_attack = false

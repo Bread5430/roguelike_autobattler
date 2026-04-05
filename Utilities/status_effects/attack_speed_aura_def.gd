@@ -13,6 +13,10 @@ func _init() -> void:
 	StatusEffectTune.apply_csv(self, effect_id)
 
 
+func get_polarity() -> Polarity:
+	return Polarity.BUFF
+
+
 func get_attack_speed_mult_for_stacks(stacks: int) -> float:
 	if stacks <= 0:
 		return 1.0

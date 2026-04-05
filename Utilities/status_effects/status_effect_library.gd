@@ -18,3 +18,7 @@ static func ground_slow() -> GroundSlowDef:
 
 static func dot_damage_ramp() -> DotDamageRampDef:
 	return DotDamageRampDef.new()
+
+
+static func stunned() -> StunnedDef:
+	return StunnedDef.new()

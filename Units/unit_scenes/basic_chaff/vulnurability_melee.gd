@@ -11,3 +11,5 @@ func do_attack():
 func _apply_post_hit_status_effects() -> void:
 	var stack_key = "vulnurability"
 	target_unit.apply_status_effect(StatusEffectLibrary.damage_vulnerability(), stack_key, 1, -1.0)
+	# Sample stunned implementation
+	#target_unit.apply_status_effect(StatusEffectLibrary.stunned(), "stun", 1, 1.5)

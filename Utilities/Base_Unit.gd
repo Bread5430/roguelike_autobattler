@@ -35,6 +35,11 @@ var dmg_taken_mult : float = 1.0
 var _status_effect_instances: Dictionary = {} ## String -> StatusEffectInstance
 ## Cached Attack_Base timer wait_time before status modifiers (per Attack_Base instance id).
 var _base_attack_cd_wait: Dictionary = {} ## int -> float
+var _restriction_movement: bool = false
+var _restriction_basic_attacks: bool = false
+var _restriction_special_abilities: bool = false
+var _suppress_buff_application: bool = false
+var _suppress_debuff_application: bool = false
 
 
 func _ready() -> void:
@@ -129,9 +134,48 @@ func apply_status_effect(
 		inst.reference_duration = dur
 		_recompute_status_stat_modifiers()
 	else:
+		var pol := def.get_polarity()
+		if pol == StatusEffectDef.Polarity.BUFF and _suppress_buff_application:
+			return
+		if pol == StatusEffectDef.Polarity.DEBUFF and _suppress_debuff_application:
+			return
+		def.on_applied(self)
 		var inst2 := StatusEffectInstance.new(def, stack_key, stacks_add, dur)
 		_status_effect_instances[key] = inst2
 		_recompute_status_stat_modifiers()
+
+
+func is_movement_restricted() -> bool:
+	return _restriction_movement
+
+
+func is_basic_attacks_restricted() -> bool:
+	return _restriction_basic_attacks
+
+
+func is_special_abilities_restricted() -> bool:
+	return _restriction_special_abilities
+
+
+func is_buff_application_suppressed() -> bool:
+	return _suppress_buff_application
+
+
+func is_debuff_application_suppressed() -> bool:
+	return _suppress_debuff_application
+
+
+func purge_status_effects_by_polarity(polarity: StatusEffectDef.Polarity) -> void:
+	var to_remove: Array[String] = []
+	for eff_key in _status_effect_instances:
+		var inst: StatusEffectInstance = _status_effect_instances[eff_key]
+		if inst.def and inst.def.get_polarity() == polarity:
+			to_remove.append(eff_key)
+	if to_remove.is_empty():
+		return
+	for eff_key in to_remove:
+		_status_effect_instances.erase(eff_key)
+	_recompute_status_stat_modifiers()
 
 
 ## One dictionary per active instance: [code]instance_key[/code], [code]display_name[/code], [code]stacks[/code], [code]remaining[/code], [code]duration_fraction[/code], [code]icon[/code].
@@ -198,13 +242,29 @@ func _recompute_status_stat_modifiers() -> void:
 	var dmg_t: float = 1.0
 	var move_m: float = 1.0
 	var atk_m: float = 1.0
+	_restriction_movement = false
+	_restriction_basic_attacks = false
+	_restriction_special_abilities = false
+	_suppress_buff_application = false
+	_suppress_debuff_application = false
 	for key in _status_effect_instances:
 		var inst: StatusEffectInstance = _status_effect_instances[key]
 		if inst.def == null:
 			continue
-		dmg_t *= inst.def.get_dmg_taken_mult_for_stacks(inst.stacks)
-		move_m *= inst.def.get_move_speed_mult_for_stacks(inst.stacks)
-		atk_m *= inst.def.get_attack_speed_mult_for_stacks(inst.stacks)
+		var d: StatusEffectDef = inst.def
+		dmg_t *= d.get_dmg_taken_mult_for_stacks(inst.stacks)
+		move_m *= d.get_move_speed_mult_for_stacks(inst.stacks)
+		atk_m *= d.get_attack_speed_mult_for_stacks(inst.stacks)
+		if d.restricts_movement():
+			_restriction_movement = true
+		if d.restricts_basic_attacks():
+			_restriction_basic_attacks = true
+		if d.restricts_special_abilities():
+			_restriction_special_abilities = true
+		if d.suppresses_buff_application():
+			_suppress_buff_application = true
+		if d.suppresses_debuff_application():
+			_suppress_debuff_application = true
 	dmg_taken_mult = dmg_t
 	move_speed = float(base_speed) * move_m
 	if atk_m <= 0.001:
