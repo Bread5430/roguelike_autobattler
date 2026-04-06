@@ -27,6 +27,9 @@ var unit_board_space_map : Array[Array] = [] # Stores references to units on the
 
 #### Store these state variables in globals since they are required by the input events
 
+## Deployment-only: world-space centers and radii for placed router cards (logical exclusion, not grid-derived).
+var _placed_router_exclusions: Array[Dictionary] = []
+
 # Variables related to unit placement when in deployment stage
 var deployment_mode : bool = false
 var targetCell
@@ -69,10 +72,6 @@ func post_ready():
 		battle_manager.unit_selected.connect(_on_unit_selected)
 	if battle_manager.has_signal("battle_ended"):
 		battle_manager.battle_ended.connect(_on_battle_ended)
-
-	var router_overlay := battle_manager.get_node_or_null("RouterDeploymentOverlay")
-	if router_overlay and router_overlay.has_method("set_gui"):
-		router_overlay.set_gui(self)
 
 	# Propagate downwards
 	for i in get_children():
@@ -160,10 +159,11 @@ func handle_game_area_click(event: InputEvent):
 		if removed_unit_info:
 			var top_corner = removed_unit_info[1]
 			var size = removed_unit_info[2]
-			var cells_to_reset := _get_cells_in_rect(top_corner, size)
+			var top_i := Vector2i(int(top_corner.x), int(top_corner.y))
+			var cells_to_reset := _get_cells_in_rect(top_i, size)
 			var item_inst = removed_unit_info[0].instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
 			item_inst.setup_unit()
-			remove_from_board(top_corner, size)
+			remove_from_board(top_i, size)
 			inventory.add_item(item_inst.item_name, 1)
 			curr_unit = removed_unit_info[0]
 			curr_unit_inst = item_inst
@@ -199,16 +199,27 @@ func check_cell():
 
 
 func remove_from_board(top_corner: Vector2i, size: Vector2) -> void:
+	_remove_placed_router_exclusion_if_matches(top_corner, size)
 	for x in size.x:
 		for y in size.y:
 			unit_board_space_map[top_corner.x + x][top_corner.y + y] = null
 
-	# Reset cells' full flag
-	var reset_cells := _get_object_cells()
+	var reset_cells := _get_cells_in_rect(top_corner, size)
 	for cell in reset_cells:
 		cell.full = false
 
 	battle_manager.remove_unit_from_board(top_corner, size)
+
+
+func _remove_placed_router_exclusion_if_matches(top_corner: Vector2i, size: Vector2) -> void:
+	var i := _placed_router_exclusions.size() - 1
+	while i >= 0:
+		var z: Dictionary = _placed_router_exclusions[i]
+		if z["top_corner"] == top_corner and z["size"] == size:
+			_placed_router_exclusions.remove_at(i)
+			return
+		i -= 1
+
 
 ### Internode Communication Methods
 func set_current_item(slot : InventorySlot):
@@ -238,7 +249,6 @@ func start_prep_phase():
 
 func _on_end_prep_pressed() -> void:
 	deployment_mode = false
-	_refresh_router_deployment_overlay()
 	end_prep.hide()
 	end_prep.disabled = true
 	toggle_inventory(false)
@@ -280,6 +290,7 @@ func _get_world_mouse_position() -> Vector2:
 
 ## Clear the placement grid and BoardSlot state so the next deployment starts fresh.
 func _clear_placement_grid() -> void:
+	_placed_router_exclusions.clear()
 	for i in unit_board_width:
 		for j in unit_board_height:
 			unit_board_space_map[i][j] = null
@@ -322,8 +333,17 @@ func _place_unit():
 	var unit_size = curr_unit_inst.rotated_placement_size if rotated_placement else curr_unit_inst.placement_size
 	var unit_vec = curr_unit_inst.rotated_vectors if rotated_placement else curr_unit_inst.placement_vectors
 
+	place_on_board(grid_pos, unit_size, curr_unit)
 	var router_excl := _router_exclusion_radius_for_current_unit()
-	place_on_board(grid_pos, unit_size, curr_unit, router_excl)
+	if router_excl > 0.0:
+		var center := _placement_center_global_from_cells(objectCells, unit_size)
+		var top_i := Vector2i(int(grid_pos.x), int(grid_pos.y))
+		_placed_router_exclusions.append({
+			"center": center,
+			"radius": router_excl,
+			"top_corner": top_i,
+			"size": unit_size,
+		})
 	battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, unit_vec, true)
 	_reset_highlight(objectCells)
 
@@ -349,10 +369,10 @@ func check_unit_space_availability(top_corner: Vector2, size: Vector2) -> bool:
 				return false
 	return true
 
-func place_on_board(top_corner: Vector2, size: Vector2, unit_ref: PackedScene, router_exclusion_radius: float = 0.0) -> void:
+func place_on_board(top_corner: Vector2, size: Vector2, unit_ref: PackedScene) -> void:
 	for x in size.x:
 		for y in size.y:
-			unit_board_space_map[top_corner.x + x][top_corner.y + y] = [unit_ref, top_corner, size, router_exclusion_radius]
+			unit_board_space_map[top_corner.x + x][top_corner.y + y] = [unit_ref, top_corner, size]
 
 
 func _router_exclusion_radius_for_current_unit() -> float:
@@ -374,31 +394,6 @@ func _placement_center_global_from_cells(cells: Array, size: Vector2) -> Vector2
 	return tl + Vector2(size.x * cw, size.y * ch) * 0.5
 
 
-func _get_placed_router_exclusion_zones() -> Array:
-	var out: Array = []
-	var seen: Dictionary = {}
-	for x in range(unit_board_width):
-		for y in range(unit_board_height):
-			var entry = unit_board_space_map[x][y]
-			if entry == null:
-				continue
-			var top_corner = entry[1]
-			var key := "%d,%d" % [int(top_corner.x), int(top_corner.y)]
-			if seen.has(key):
-				continue
-			seen[key] = true
-			var ex_r := 0.0
-			if entry.size() >= 4:
-				ex_r = float(entry[3])
-			if ex_r <= 0.0:
-				continue
-			var sz: Vector2 = entry[2]
-			var cells := _get_cells_in_rect(Vector2i(int(top_corner.x), int(top_corner.y)), sz)
-			var center := _placement_center_global_from_cells(cells, sz)
-			out.append({"center": center, "radius": ex_r})
-	return out
-
-
 func _router_placement_overlaps_exclusion(cells: Array, size: Vector2) -> bool:
 	if curr_unit_inst == null or not curr_unit_inst is Unit_Card:
 		return false
@@ -406,40 +401,10 @@ func _router_placement_overlaps_exclusion(cells: Array, size: Vector2) -> bool:
 	if not uc.is_router_card:
 		return false
 	var center := _placement_center_global_from_cells(cells, size)
-	for z in _get_placed_router_exclusion_zones():
-		if center.distance_to(z.center) < z.radius:
+	for z in _placed_router_exclusions:
+		if center.distance_to(z["center"]) < float(z["radius"]):
 			return true
 	return false
-
-
-## Drawn on `RouterDeploymentOverlay` under `battle_manager` so coordinates follow the game camera (not the CanvasLayer GUI).
-func paint_router_deployment_exclusions_on_canvas_item(cn: Node2D) -> void:
-	if not deployment_mode:
-		return
-	if curr_unit_inst == null or not curr_unit_inst is Unit_Card:
-		return
-	var uc := curr_unit_inst as Unit_Card
-	if not uc.is_router_card:
-		return
-	var placed_fill := Color(1.0, 0.45, 0.12, 0.18)
-	for z in _get_placed_router_exclusion_zones():
-		cn.draw_circle(cn.to_local(z.center), z.radius, placed_fill)
-	var active_size: Vector2 = uc.rotated_placement_size if rotated_placement else uc.placement_size
-	var expected_count := int(active_size.x) * int(active_size.y)
-	if objectCells.size() != expected_count:
-		return
-	var ctr := _placement_center_global_from_cells(objectCells, active_size)
-	var preview_ok := not _router_placement_overlaps_exclusion(objectCells, active_size)
-	var preview_fill := Color(1.0, 0.6, 0.2, 0.14) if preview_ok else Color(0.95, 0.15, 0.15, 0.22)
-	cn.draw_circle(cn.to_local(ctr), uc.router_exclusion_radius, preview_fill)
-
-
-func _refresh_router_deployment_overlay() -> void:
-	if battle_manager == null:
-		return
-	var o := battle_manager.get_node_or_null("RouterDeploymentOverlay")
-	if o:
-		o.queue_redraw()
 
 
 ## Returns the BoardSlot at the given world position (transformed coords; works with pan/zoom).
@@ -578,7 +543,6 @@ func _refund_items_after_battle() -> void:
 
 	_clear_placement_grid()
 	deployment_mode = false
-	_refresh_router_deployment_overlay()
 	_exit_casting_mode()
 
 func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:

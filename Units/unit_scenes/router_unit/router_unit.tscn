@@ -99,6 +99,7 @@ script = ExtResource("6_router")
 ally_death_stun_duration = 10.0
 aura_radius = 180.0
 aura_refresh_duration = 2.0
+deployment_exclusion_radius = 180.0
 unit_glossary_id = "router_unit"
 max_hp = 20
 base_speed = 35

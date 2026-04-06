@@ -32,6 +32,11 @@ func _process(_delta: float) -> void:
 		_refresh_selected_panel_labels()
 
 
+## Current selection for the stats panel (deployment + battle). Read-only for other UI.
+func get_selected_unit() -> Base_Unit:
+	return _selected_unit
+
+
 ## Set only on click, or when unit dies / combat ends. Pass null to hide.
 func set_selected_unit(unit: Base_Unit) -> void:
 	_selected_unit = unit

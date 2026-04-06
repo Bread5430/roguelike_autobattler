@@ -13,4 +13,4 @@ placement_size = Vector2(2, 2)
 related_unit = ExtResource("4_unit")
 is_router_card = true
 router_exclusion_radius = 180.0
-item_name = "router_unit"
+item_name = "router_card"
