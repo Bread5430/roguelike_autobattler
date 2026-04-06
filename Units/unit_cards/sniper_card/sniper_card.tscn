@@ -11,4 +11,4 @@ script = ExtResource("3_vl65d")
 num_units = 1
 placement_size = Vector2(2, 2)
 related_unit = ExtResource("4_jksou")
-item_name = "one_ranged"
+item_name = "sniper_unit"

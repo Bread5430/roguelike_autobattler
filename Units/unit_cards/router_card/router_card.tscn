@@ -1,9 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://tskt4okrymjo"]
+[gd_scene load_steps=5 format=3 uid="uid://tskt4okrymjo"]
 
 [ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_card"]
-[ext_resource type="Texture2D" uid="uid://dduabfim1mu2t" path="res://Assets/CardSprites/one_ranged.png" id="2_tex"]
+[ext_resource type="Texture2D" uid="uid://b4qagg8un066v" path="res://Assets/CardSprites/router_card.png" id="2_3yxou"]
 [ext_resource type="Script" uid="uid://dqugin46n70il" path="res://Units/unit_cards/router_card/router_card.gd" id="3_xydd5"]
+[ext_resource type="PackedScene" uid="uid://bisomu6xjvpgl" path="res://Units/unit_scenes/router_unit/router_unit.tscn" id="4_unit"]
 
 [node name="router_card" instance=ExtResource("1_card")]
-texture = ExtResource("2_tex")
+texture = ExtResource("2_3yxou")
 script = ExtResource("3_xydd5")
+num_units = 1
+placement_size = Vector2(2, 2)
+related_unit = ExtResource("4_unit")
+item_name = "router_unit"

@@ -14,14 +14,16 @@ enum  ROLES {
 	CARRY = 1,
 	SWARM = 2,
 	CLEAR = 4,
-	TANK = 8
+	TANK = 8,
+	ROUTER = 16
 }
 
 const ROLE_LOOKUP := {
 	"CARRY": ROLES.CARRY,
 	"SWARM": ROLES.SWARM,
 	"CLEAR": ROLES.CLEAR,
-	"TANK": ROLES.TANK
+	"TANK": ROLES.TANK,
+	"ROUTER": ROLES.ROUTER
 }
 
 var name_obj_map = {}

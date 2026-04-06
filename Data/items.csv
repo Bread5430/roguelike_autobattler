@@ -4,10 +4,10 @@ chaff_swarm,res://Units/unit_cards/chaff_swarm/chaff_swarm.tscn,SWARM
 one_ranged,res://Units/unit_cards/one_ranged/one_ranged.tscn,CARRY
 splash_unit,res://Units/unit_cards/splash_unit/splash_unit.tscn,CLEAR
 arc_unit,res://Units/unit_cards/arc_unit/arc_unit.tscn,CLEAR
-sniper_unit,res://Units/unit_cards/sniper_card/sniper_card.tscn,CARRY
+sniper_card,res://Units/unit_cards/sniper_card/sniper_card.tscn,CARRY
 arc_launcher,res://Units/unit_cards/arc_launcher/arc_launcher.tscn,CLEAR
-bruiser_unit,res://Units/unit_cards/bruiser_card/bruiser_card.tscn,TANK
-router_unit,res://Units/unit_cards/router_unit/router_unit.tscn,SPECIAL
+bruiser_card,res://Units/unit_cards/bruiser_card/bruiser_card.tscn,TANK
+router_card,res://Units/unit_cards/router_card/router_card.tscn,ROUTER
 circular_aoe,res://Spells/spell_cards/circle_aoe/circular_aoe_spellcard.tscn,SPELL
 attack_speed_aura,res://Spells/spell_cards/attack_speed_field/attack_speed_aura_spellcard.tscn,SPELL
 ground_slow_field,res://Spells/spell_cards/slow_field/ground_slow_field_spellcard.tscn,SPELL

@@ -1,0 +1,14 @@
+[gd_scene load_steps=5 format=3 uid="uid://lhd6p0yi4rgm"]
+
+[ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_6wsyk"]
+[ext_resource type="Texture2D" uid="uid://y1xx6sdahmbq" path="res://Assets/CardSprites/bruiser_card.png" id="2_h3i2u"]
+[ext_resource type="Script" uid="uid://2nmo8l6muffh" path="res://Units/unit_cards/bruiser_card/bruiser_card.gd" id="3_ieqv1"]
+[ext_resource type="PackedScene" uid="uid://1x8lgit6c1ek" path="res://Units/unit_scenes/bruiser_unit/bruiser_unit.tscn" id="4_1wcj4"]
+
+[node name="Bruiser_Card" instance=ExtResource("1_6wsyk")]
+texture = ExtResource("2_h3i2u")
+script = ExtResource("3_ieqv1")
+num_units = 1
+placement_size = Vector2(2, 2)
+related_unit = ExtResource("4_1wcj4")
+item_name = "bruiser_card"
