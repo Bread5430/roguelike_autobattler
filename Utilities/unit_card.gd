@@ -7,6 +7,10 @@ class_name Unit_Card
 var rotated_placement_size : Vector2 
 
 @export var related_unit : PackedScene
+## When true, other routers cannot be placed overlapping this card's [member router_exclusion_radius] (deployment only).
+@export var is_router_card: bool = false
+## World pixels: minimum center-to-center spacing vs other routers' zones ([code]r_self + r_other[/code]).
+@export var router_exclusion_radius: float = 180.0
 
 var placement_vectors : Array
 var rotated_vectors : Array

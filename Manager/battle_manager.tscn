@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://b2hkuu4ohgbnk"]
+[gd_scene load_steps=10 format=3 uid="uid://b2hkuu4ohgbnk"]
 
 [ext_resource type="Script" uid="uid://cuad6lpso0q62" path="res://Manager/battle_manager.gd" id="1_c6fe6"]
 [ext_resource type="Script" uid="uid://dxavhucjkx8u3" path="res://Manager/battle_manager_components/TargetManager.gd" id="2_7x82o"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://cuj7pk5iu8qbi" path="res://Manager/battle_manager_components/proj_pool.gd" id="7_0kdsf"]
 [ext_resource type="Script" uid="uid://c13q3sdjmbq53" path="res://Manager/Spell_Manager.gd" id="8_vbtom"]
 [ext_resource type="Script" uid="uid://bqo443bjdc1tg" path="res://Manager/battle_manager_components/enemy_spawner.gd" id="9_tj47k"]
+[ext_resource type="Script" path="res://Manager/battle_manager_components/router_deployment_overlay.gd" id="10_router_ov"]
 
 [node name="BattleManager" type="Control" groups=["BATTLEMANAGER"]]
 layout_mode = 3
@@ -28,6 +29,10 @@ width = 15
 height = 20
 cellWidth = 50
 cellHeight = 50
+
+[node name="RouterDeploymentOverlay" type="Node2D" parent="."]
+z_index = 25
+script = ExtResource("10_router_ov")
 
 [node name="FlowGen" type="Node" parent="." groups=["FLOWGEN"]]
 script = ExtResource("6_ksii2")

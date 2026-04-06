@@ -70,6 +70,10 @@ func post_ready():
 	if battle_manager.has_signal("battle_ended"):
 		battle_manager.battle_ended.connect(_on_battle_ended)
 
+	var router_overlay := battle_manager.get_node_or_null("RouterDeploymentOverlay")
+	if router_overlay and router_overlay.has_method("set_gui"):
+		router_overlay.set_gui(self)
+
 	# Propagate downwards
 	for i in get_children():
 		if i.has_method("post_ready"):
@@ -234,6 +238,7 @@ func start_prep_phase():
 
 func _on_end_prep_pressed() -> void:
 	deployment_mode = false
+	_refresh_router_deployment_overlay()
 	end_prep.hide()
 	end_prep.disabled = true
 	toggle_inventory(false)
@@ -303,6 +308,10 @@ func _check_and_highlight_cells(cells: Array) -> bool:
 			valid = false
 		else:
 			cell.change_color(Color.GREEN)
+	if valid and _router_placement_overlaps_exclusion(cells, active_size):
+		valid = false
+		for cell in cells:
+			cell.change_color(Color.RED)
 	return valid
 
 func _place_unit():
@@ -313,7 +322,8 @@ func _place_unit():
 	var unit_size = curr_unit_inst.rotated_placement_size if rotated_placement else curr_unit_inst.placement_size
 	var unit_vec = curr_unit_inst.rotated_vectors if rotated_placement else curr_unit_inst.placement_vectors
 
-	place_on_board(grid_pos, unit_size, curr_unit)
+	var router_excl := _router_exclusion_radius_for_current_unit()
+	place_on_board(grid_pos, unit_size, curr_unit, router_excl)
 	battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, unit_vec, true)
 	_reset_highlight(objectCells)
 
@@ -339,10 +349,98 @@ func check_unit_space_availability(top_corner: Vector2, size: Vector2) -> bool:
 				return false
 	return true
 
-func place_on_board(top_corner: Vector2, size: Vector2, unit_ref: PackedScene) -> void:
+func place_on_board(top_corner: Vector2, size: Vector2, unit_ref: PackedScene, router_exclusion_radius: float = 0.0) -> void:
 	for x in size.x:
 		for y in size.y:
-			unit_board_space_map[top_corner.x + x][top_corner.y + y] = [unit_ref,top_corner, size]
+			unit_board_space_map[top_corner.x + x][top_corner.y + y] = [unit_ref, top_corner, size, router_exclusion_radius]
+
+
+func _router_exclusion_radius_for_current_unit() -> float:
+	if curr_unit_inst is Unit_Card:
+		var uc := curr_unit_inst as Unit_Card
+		if uc.is_router_card:
+			return uc.router_exclusion_radius
+	return 0.0
+
+
+func _placement_center_global_from_cells(cells: Array, size: Vector2) -> Vector2:
+	if cells.is_empty():
+		return Vector2.ZERO
+	var sorted: Array = cells.duplicate()
+	sorted.sort_custom(func(a, b): return _cell_order(a, b) < 0)
+	var tl := (sorted[0] as BoardSlot).global_position
+	var cw := float(unit_board.cellWidth)
+	var ch := float(unit_board.cellHeight)
+	return tl + Vector2(size.x * cw, size.y * ch) * 0.5
+
+
+func _get_placed_router_exclusion_zones() -> Array:
+	var out: Array = []
+	var seen: Dictionary = {}
+	for x in range(unit_board_width):
+		for y in range(unit_board_height):
+			var entry = unit_board_space_map[x][y]
+			if entry == null:
+				continue
+			var top_corner = entry[1]
+			var key := "%d,%d" % [int(top_corner.x), int(top_corner.y)]
+			if seen.has(key):
+				continue
+			seen[key] = true
+			var ex_r := 0.0
+			if entry.size() >= 4:
+				ex_r = float(entry[3])
+			if ex_r <= 0.0:
+				continue
+			var sz: Vector2 = entry[2]
+			var cells := _get_cells_in_rect(Vector2i(int(top_corner.x), int(top_corner.y)), sz)
+			var center := _placement_center_global_from_cells(cells, sz)
+			out.append({"center": center, "radius": ex_r})
+	return out
+
+
+func _router_placement_overlaps_exclusion(cells: Array, size: Vector2) -> bool:
+	if curr_unit_inst == null or not curr_unit_inst is Unit_Card:
+		return false
+	var uc := curr_unit_inst as Unit_Card
+	if not uc.is_router_card:
+		return false
+	var center := _placement_center_global_from_cells(cells, size)
+	for z in _get_placed_router_exclusion_zones():
+		if center.distance_to(z.center) < z.radius:
+			return true
+	return false
+
+
+## Drawn on `RouterDeploymentOverlay` under `battle_manager` so coordinates follow the game camera (not the CanvasLayer GUI).
+func paint_router_deployment_exclusions_on_canvas_item(cn: Node2D) -> void:
+	if not deployment_mode:
+		return
+	if curr_unit_inst == null or not curr_unit_inst is Unit_Card:
+		return
+	var uc := curr_unit_inst as Unit_Card
+	if not uc.is_router_card:
+		return
+	var placed_fill := Color(1.0, 0.45, 0.12, 0.18)
+	for z in _get_placed_router_exclusion_zones():
+		cn.draw_circle(cn.to_local(z.center), z.radius, placed_fill)
+	var active_size: Vector2 = uc.rotated_placement_size if rotated_placement else uc.placement_size
+	var expected_count := int(active_size.x) * int(active_size.y)
+	if objectCells.size() != expected_count:
+		return
+	var ctr := _placement_center_global_from_cells(objectCells, active_size)
+	var preview_ok := not _router_placement_overlaps_exclusion(objectCells, active_size)
+	var preview_fill := Color(1.0, 0.6, 0.2, 0.14) if preview_ok else Color(0.95, 0.15, 0.15, 0.22)
+	cn.draw_circle(cn.to_local(ctr), uc.router_exclusion_radius, preview_fill)
+
+
+func _refresh_router_deployment_overlay() -> void:
+	if battle_manager == null:
+		return
+	var o := battle_manager.get_node_or_null("RouterDeploymentOverlay")
+	if o:
+		o.queue_redraw()
+
 
 ## Returns the BoardSlot at the given world position (transformed coords; works with pan/zoom).
 func _get_cell_at_world_position(world_pos: Vector2) -> BoardSlot:
@@ -480,6 +578,7 @@ func _refund_items_after_battle() -> void:
 
 	_clear_placement_grid()
 	deployment_mode = false
+	_refresh_router_deployment_overlay()
 	_exit_casting_mode()
 
 func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
