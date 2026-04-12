@@ -1,6 +1,7 @@
-[gd_scene load_steps=17 format=3 uid="uid://1x8lgit6c1ek"]
+[gd_scene load_steps=18 format=3 uid="uid://1x8lgit6c1ek"]
 
 [ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_y1ls7"]
+[ext_resource type="Script" uid="uid://bctncojb78b24" path="res://Units/unit_scenes/bruiser_unit/bruiser_unit.gd" id="2_1lovx"]
 [ext_resource type="Texture2D" uid="uid://uxnio2eat30p" path="res://Assets/UnitSprites/bruiser_unit.png" id="2_vmuac"]
 [ext_resource type="Script" uid="uid://bvp0uxwt0r3lf" path="res://Units/unit_scenes/melee_unit_template/melee_unit_fsm.gd" id="3_jvx18"]
 [ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_otlbk"]
@@ -94,6 +95,8 @@ _data = {
 }
 
 [node name="Bruiser_Unit" instance=ExtResource("1_y1ls7")]
+script = ExtResource("2_1lovx")
+flat_damage_reduction = 2
 unit_glossary_id = "bruiser_unit"
 max_hp = 30
 base_damage = 4

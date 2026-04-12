@@ -69,7 +69,12 @@ func _physics_process(delta: float) -> void:
 	
 func movement():
 	velocity = move_vec.normalized() * move_speed
-	
+
+
+func disable_physics_collision() -> void:
+	if coll_circle != null:
+		coll_circle.disabled = true
+
 
 ## If [param apply_taken_mult] is false, damage ignores [member dmg_taken_mult] (e.g. DoT ticks).
 func take_damage(damage: int, apply_taken_mult: bool = true) -> void:

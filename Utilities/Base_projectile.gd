@@ -84,6 +84,9 @@ func _on_body_entered(body):
 
 func return_to_pool() -> void:
 	"""Return this projectile to the pool"""
+	if not is_active:
+		return
+	is_active = false
 	if pool_manager:
 		pool_manager.return_to_pool(self)
 	else:

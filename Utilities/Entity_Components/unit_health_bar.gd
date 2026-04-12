@@ -17,6 +17,9 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not is_instance_valid(_unit):
 		return
+	if _unit.curr_hp <= 0:
+		visible = false
+		return
 	if _unit.curr_hp < _unit.max_hp:
 		visible = true
 		queue_redraw()
@@ -25,7 +28,7 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	if not is_instance_valid(_unit) or _unit.max_hp <= 0:
+	if not is_instance_valid(_unit) or _unit.max_hp <= 0 or _unit.curr_hp <= 0:
 		return
 	var ratio := clampf(float(_unit.curr_hp) / float(_unit.max_hp), 0.0, 1.0)
 	var half_w := BAR_WIDTH / 2.0

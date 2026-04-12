@@ -55,6 +55,7 @@ func set_state(new_state: int) -> void:
 	if states.has("dead") and new_state == states.dead:
 		parent.move_vec = Vector2.ZERO
 		parent.velocity = Vector2.ZERO
+		parent.disable_physics_collision()
 	_enter_state(previous_state, state)
 
 

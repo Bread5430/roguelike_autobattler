@@ -16,11 +16,11 @@ func spawn_death_explosion() -> void:
 	var proj := _proj_pool.spawn_projectile(DEATH_SPLASH_SCENE)
 	if proj == null:
 		return
-	var splash_damage: int = maxi(1, int(round(float(base_damage) * 2.5)))
 	proj.setup(self, global_position, not faction)
 	proj.set_properties_via_spawner({
-		"damage": splash_damage,
+		"damage": 10,
 		"speed": 300,
 		"lifetime_val": 1.0,
 	})
 	proj.set_target_position(global_position)
+	proj.scale = Vector2(2,2)

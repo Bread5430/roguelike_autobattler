@@ -162,15 +162,15 @@ func return_to_pool(projectile: Node) -> void:
 	
 	var pool = pools[scene_path]
 	
+	# Idempotence: can be called twice same physics step (e.g. hit + cleanup) or after failed paths
+	if projectile in pool["available"]:
+		push_warning("Projectile already in available pool") # (shouldn't happen, but safety check)
+		return
+	
 	# Remove from active list
 	var active_index = pool["active"].find(projectile)
 	if active_index != -1:
 		pool["active"].remove_at(active_index)
-	
-	# Check if already in available pool (shouldn't happen, but safety check)
-	if projectile in pool["available"]:
-		push_warning("Projectile already in available pool")
-		return
 	
 	# Call cleanup method if available
 	if projectile.has_method("on_returned"):
@@ -222,7 +222,8 @@ func _deactivate_projectile(projectile: Node) -> void:
 	if projectile is CollisionObject2D or projectile is CollisionObject3D:
 		for child in projectile.get_children():
 			if child is CollisionShape2D or child is CollisionShape3D:
-				child.disabled = true
+				# Cannot toggle shapes while physics is flushing queries (e.g. body_shape_entered)
+				child.set_deferred("disabled", true)
 
 # ============================================================================
 # UTILITY METHODS
