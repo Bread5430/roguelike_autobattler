@@ -6,49 +6,50 @@ var target_manager
 var flow_field
 
 ###### Internal variables
-var curr_targets : Array
-var flow_vec : Vector2
+var curr_targets: Array = []
+var flow_vec: Vector2
 
-var curr_target_iter : int = -1
-var target_idx = 0
+var curr_target_iter: int = -1
+var target_idx: int = 0
 
-##### Primary Functions
-
-func get_N_targets(num_targets : int) -> Array:
-	# Check if the target manager has updated recently
-	# get a new targets array from the manager and sort them by distanc
-	
-	if target_manager.target_iter != curr_target_iter:
-		curr_target_iter = target_manager.target_iter
-		curr_targets = target_manager.get_targets(!unit.faction, unit.position, num_targets)
-		curr_targets.sort_custom(_sort_ascending_distance)
-		
-	var results : Array = []
-	for i in curr_targets:
-		if i != null:
-			results.append(i)
-	curr_targets = results
-	
-	target_idx = 0
-	return curr_targets
+## Ask for extra candidates so we can skip dead units and still have alternates before the next manager tick.
+const _MIN_TARGET_FETCH := 5
 
 
-func get_target() -> Base_Unit:
-	var result = get_N_targets(1)
-	if result and result[0] != null:
-		return result[0]
+# Used for multitarget attacks - returns a list of N valid targets
+func get_N_targets(num_targets: int) -> Array:
+	_sync_targets_from_manager_if_needed(num_targets)
+	if curr_targets.is_empty():
+		return []
+	var kept: Array = []
+	for t in curr_targets:
+		if _is_valid_target(t):
+			kept.append(t)
+	curr_targets = kept
+
+	if curr_targets.size() < num_targets:
+		return curr_targets
 	else:
-		return null
-		
+		return curr_targets.slice(0,num_targets)
+
+
+# Used for single target attacks - returns a single valid target
+func get_target() -> Base_Unit:
+	_sync_targets_from_manager_if_needed(1)
+	if _get_non_null_idx():
+		return curr_targets[target_idx] as Base_Unit
+	return null
+
+
 func get_flow_field() -> Vector2:
 	flow_vec = flow_field.get_flow(!unit.faction, unit.position)
 	return flow_vec
 
 func get_dir_target() -> Vector2:
 	if _get_non_null_idx():
-		return  (curr_targets[target_idx].position - unit.position).normalized()
+		return (curr_targets[target_idx].position - unit.position).normalized()
 	return flow_vec
-	
+
 func in_same_tile() -> bool:
 	if _get_non_null_idx():
 		# use larger than the size of a tile to prevent getting stuck at edges
@@ -62,22 +63,43 @@ func post_ready() -> void:
 	target_manager = get_tree().get_nodes_in_group("TARGETMANAGER")[0]
 	flow_field = get_tree().get_nodes_in_group("FLOWGEN")[0]
 
-func _get_non_null_idx():
-	while target_idx < curr_targets.size() and curr_targets[target_idx] == null:
+
+func _sync_targets_from_manager_if_needed(num_targets: int) -> void:
+	if target_manager.target_iter == curr_target_iter:
+		return
+	curr_target_iter = target_manager.target_iter
+	var fetch_n: int = maxi(num_targets * 3, _MIN_TARGET_FETCH)
+	curr_targets = target_manager.get_targets(!unit.faction, unit.position, fetch_n)
+	curr_targets.sort_custom(_sort_ascending_distance)
+	target_idx = 0
+
+
+
+func _get_non_null_idx() -> bool:
+	while target_idx < curr_targets.size():
+		if _is_valid_target(curr_targets[target_idx]):
+			return true
 		target_idx += 1
-	
-	# Case: No non-null targets left
-	if target_idx == curr_targets.size():
+	return false
+
+
+func _is_valid_target(t: Variant) -> bool:
+	if t == null or not is_instance_valid(t):
 		return false
-	return true
+	if not t is Base_Unit:
+		return false
+	return t.curr_hp > 0
+
 
 func _sort_ascending_distance(a, b):
-	# Move Nulls to the back of the array
-	if a == null and b == null:
+	# Move null / invalid / dead to the back of the array
+	var a_ok := _is_valid_target(a)
+	var b_ok := _is_valid_target(b)
+	if not a_ok and not b_ok:
 		return true
-	if a == null:
+	if not a_ok:
 		return false
-	if b == null:
+	if not b_ok:
 		return true
 		
 	# Sort by which unit is closer

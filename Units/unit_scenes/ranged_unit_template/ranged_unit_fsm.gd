@@ -22,6 +22,7 @@ func _state_logic(_delta: float) -> void:
 			parent.move_vec = target_movement.get_flow_field()
 
 		states.attack:
+			ranged_attack.check_new_targets()
 			if ranged_attack.check_can_attack():
 				ranged_attack.do_attack()
 			parent.move_vec = Vector2.ZERO

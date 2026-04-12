@@ -22,6 +22,7 @@ func _state_logic(_delta: float) -> void:
 			parent.move_vec = target_movement.get_flow_field()
 
 		states.attack:
+			arc_attack.check_new_targets()
 			if arc_attack.check_can_attack():
 				arc_attack.do_attack()
 			parent.move_vec = Vector2.ZERO

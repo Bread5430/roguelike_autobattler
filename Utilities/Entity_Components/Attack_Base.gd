@@ -14,7 +14,7 @@ var can_attack = true
 ####### Primary Functions
 
 func in_range() -> bool:
-	if target_unit == null:
+	if not _target_is_valid_for_attack():
 		return false
 		
 	# Subtract the collision circle radius for both the target and the attacker
@@ -34,6 +34,8 @@ func check_new_targets() -> bool:
 func check_can_attack() -> bool:
 	if unit.is_basic_attacks_restricted():
 		return false
+	if not _target_is_valid_for_attack():
+		return false
 	if in_range() and can_attack:
 		return true
 	return false
@@ -47,6 +49,12 @@ func do_attack() -> void:
 func post_ready() -> void:
 	unit = get_parent()
 	target_cmp = unit.target_move
+
+
+func _target_is_valid_for_attack() -> bool:
+	if target_unit == null or not is_instance_valid(target_unit):
+		return false
+	return target_unit.curr_hp > 0
 
 
 ## Damage for this strike: parent unit's damage stat times dealt multiplier (queried at fire time).

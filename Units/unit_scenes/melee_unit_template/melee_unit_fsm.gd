@@ -25,6 +25,7 @@ func _state_logic(_delta: float) -> void:
 			melee_atk.check_new_targets()
 			parent.move_vec = target_movement.get_dir_target()
 		states.attack:
+			melee_atk.check_new_targets()
 			if melee_atk.check_can_attack():
 				melee_atk.do_attack()
 			parent.move_vec = Vector2.ZERO

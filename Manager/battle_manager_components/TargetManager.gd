@@ -27,13 +27,13 @@ func get_targets(faction: bool, location: Vector2, num_targets : int = 10, max_r
 	
 	# Check if we have already seen this location
 	if target_location in cached_enemies and faction == false:
-		cached_enemies[target_location] = _remove_nulls(cached_enemies[target_location])
+		cached_enemies[target_location] = _sanitize_target_array(cached_enemies[target_location])
 		if num_targets > cached_enemies[target_location].size():
 			num_targets = cached_enemies[target_location].size()
 		return cached_enemies[target_location].slice(0, num_targets)
 		
 	if target_location in cached_allies and faction == true:
-		cached_allies[target_location] = _remove_nulls(cached_allies[target_location])
+		cached_allies[target_location] = _sanitize_target_array(cached_allies[target_location])
 		if num_targets > cached_allies[target_location].size():
 			num_targets = cached_allies[target_location].size()
 		return cached_allies[target_location].slice(0, num_targets)
@@ -63,7 +63,9 @@ func get_targets(faction: bool, location: Vector2, num_targets : int = 10, max_r
 		curr_depth += 1
 		for i in curr:
 			seen[i] = true
-			result += src_tiles[i.x][i.y]
+			for u in src_tiles[i.x][i.y]:
+				if _is_living_target(u):
+					result.append(u)
 
 			for dir in DIRECTIONS:
 				var next_loc = Vector2i(i + dir)
@@ -87,9 +89,17 @@ func get_targets(faction: bool, location: Vector2, num_targets : int = 10, max_r
 		
 	return result.slice(0, num_targets)
 
-func _remove_nulls(array : Array) -> Array:
-	var new_array = []
+func _is_living_target(u: Variant) -> bool:
+	if u == null or not is_instance_valid(u):
+		return false
+	if not u is Base_Unit:
+		return false
+	return u.curr_hp > 0
+
+
+func _sanitize_target_array(array: Array) -> Array:
+	var new_array: Array = []
 	for i in array:
-		if i != null:
+		if _is_living_target(i):
 			new_array.append(i)
 	return new_array
