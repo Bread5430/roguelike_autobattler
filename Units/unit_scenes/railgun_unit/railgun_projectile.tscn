@@ -1,0 +1,51 @@
+[gd_scene load_steps=8 format=3 uid="uid://cjqm8r4lgnunit"]
+
+[ext_resource type="PackedScene" uid="uid://ds2ntigtworxc" path="res://Utilities/Base_projectile.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://d4r1lgnpr0jct" path="res://Units/unit_scenes/railgun_unit/railgun_projectile.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://c14s0skccalsk" path="res://Assets/Projectiles/splash_projectile.png" id="3_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_slug"]
+atlas = ExtResource("3_tex")
+region = Rect2(0, 0, 8, 8)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_slug"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_slug")
+}],
+"loop": true,
+"name": &"default",
+"speed": 8.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_slug"]
+radius = 3.0
+
+[sub_resource type="Animation" id="Animation_reset"]
+length = 0.001
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_slug"]
+_data = {
+&"RESET": SubResource("Animation_reset")
+}
+
+[node name="Railgun_Proj" instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+speed = 520
+
+[node name="AnimatedSprite2D" parent="." index="0"]
+scale = Vector2(0.6, 0.6)
+sprite_frames = SubResource("SpriteFrames_slug")
+animation = &"default"
+
+[node name="CollisionShape2D" parent="." index="1"]
+shape = SubResource("CircleShape2D_slug")
+
+[node name="AnimationPlayer" parent="." index="2"]
+libraries = {
+&"": SubResource("AnimationLibrary_slug")
+}
+
+[node name="Lifetime" parent="." index="3"]
+autostart = false

@@ -1,0 +1,126 @@
+[gd_scene load_steps=18 format=3 uid="uid://wc287gt3lvsx"]
+
+[ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_y1ls7"]
+[ext_resource type="Script" uid="uid://b7s2m1seks0pf" path="res://Units/unit_scenes/exploder_unit/exploder_unit.gd" id="2_expl"]
+[ext_resource type="Texture2D" uid="uid://uxnio2eat30p" path="res://Assets/UnitSprites/bruiser_unit.png" id="2_vmuac"]
+[ext_resource type="Script" uid="uid://bvp0uxwt0r3lf" path="res://Units/unit_scenes/melee_unit_template/melee_unit_fsm.gd" id="4_hynyk"]
+[ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_otlbk"]
+[ext_resource type="Script" uid="uid://bqv2g0eqmyue" path="res://Units/unit_scenes/melee_unit_template/basic_melee.gd" id="5_d3lu7"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1lovx"]
+atlas = ExtResource("2_vmuac")
+region = Rect2(0, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d26ac"]
+atlas = ExtResource("2_vmuac")
+region = Rect2(32, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4unam"]
+atlas = ExtResource("2_vmuac")
+region = Rect2(64, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_11wxx"]
+atlas = ExtResource("2_vmuac")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vgsjq"]
+atlas = ExtResource("2_vmuac")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g3j4p"]
+atlas = ExtResource("2_vmuac")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pks1s"]
+atlas = ExtResource("2_vmuac")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_louiq"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1lovx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d26ac")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4unam")
+}],
+"loop": true,
+"name": &"die",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_11wxx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vgsjq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g3j4p")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pks1s")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 4.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_eggw2"]
+radius = 7.0
+
+[sub_resource type="Animation" id="Animation_rbyda"]
+resource_name = "dead"
+length = 0.5
+tracks/0/type = "method"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"values": [{
+"args": [],
+"method": &"spawn_death_explosion"
+}, {
+"args": [],
+"method": &"queue_free"
+}]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_p2yhk"]
+_data = {
+&"dead": SubResource("Animation_rbyda")
+}
+
+[node name="Exploder_Unit" instance=ExtResource("1_y1ls7")]
+script = ExtResource("2_expl")
+unit_glossary_id = "exploder_unit"
+max_hp = 28
+base_damage = 3
+base_speed = 90
+
+[node name="AnimatedSprite2D" parent="." index="0"]
+position = Vector2(1, 0)
+sprite_frames = SubResource("SpriteFrames_louiq")
+animation = &"walk"
+
+[node name="CollisionShape2D" parent="." index="1"]
+shape = SubResource("CircleShape2D_eggw2")
+
+[node name="AnimationPlayer" parent="." index="2"]
+libraries = {
+&"": SubResource("AnimationLibrary_p2yhk")
+}
+
+[node name="FSM" parent="." index="3"]
+script = ExtResource("4_hynyk")
+
+[node name="Melee_Attack" parent="." index="5" instance=ExtResource("4_otlbk")]
+script = ExtResource("5_d3lu7")
+attack_range = 30
