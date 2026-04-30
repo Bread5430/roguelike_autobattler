@@ -16,15 +16,15 @@ enum Polarity {
 @export var max_stacks: int = 10
 
 ## Multiplier applied per this instance (product across instances in host).
-func get_dmg_taken_mult_for_stacks(stacks: int) -> float:
+func get_dmg_taken_mult_for_stacks(_stacks: int) -> float:
 	return 1.0
 
 
-func get_move_speed_mult_for_stacks(stacks: int) -> float:
+func get_move_speed_mult_for_stacks(_stacks: int) -> float:
 	return 1.0
 
 
-func get_attack_speed_mult_for_stacks(stacks: int) -> float:
+func get_attack_speed_mult_for_stacks(_stacks: int) -> float:
 	return 1.0
 
 

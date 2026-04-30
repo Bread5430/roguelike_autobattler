@@ -17,7 +17,7 @@ extends Node
 
 var bm
 
-@export var grid_size := Vector2i(10, 0)
+@export var grid_size := Vector2i(20, 0)
 
 
 #var unit_bitstring_cache = {}
@@ -43,55 +43,9 @@ func get_enemy_spawns(stage: int, difficulty: String) -> Array:
 	var seen_groups = {}
 	
 	for parsed in formation:
-		# Parse the formation string to determine what to spawn
-		if parsed.is_empty():
-			push_warning("Malformed Formation")
-			continue
-			
-		var spawn_pos := Vector2i(parsed["x"], parsed["y"]) + grid_size
-		var size := Vector2i(parsed["w"], parsed["h"])
-		var role: int = parsed["role"]
-		var unit_group: int = parsed["group"]
-		var selected_unit_scene: PackedScene
-		
-		# Check if we already have a unit selected for this group
-		if unit_group in seen_groups:
-			selected_unit_scene = seen_groups[unit_group]
-		else: # If not - randomly select a new unit for this group
-			var unit_options := get_unit_by_role_cached(role)
-			if not unit_options:
-				push_warning("Unknown unit role: %s" % role)
-				continue
-			selected_unit_scene = weighted_random_selections(unit_options)
-			seen_groups[unit_group] = selected_unit_scene
-		
-		# Check if we have an exact type specified
-		if parsed.has("exact_type"):
-			# Override with the exact unit type if specified
-			selected_unit_scene = ITEM_NAME.item_lookup(parsed["exact_type"])
-			if not selected_unit_scene:
-				push_warning("Unknown exact unit type: %s" % parsed["exact_type"])
-				continue
-		
-		# Get the Item instance to determine placement vectors
-		var unit_item_inst = selected_unit_scene.instantiate()
-		unit_item_inst.setup_unit()
-		
-		# Calculate world position for spawning
-		var world_spawn_pos = bm.grid_to_world(spawn_pos)
-		
-		# Generate placement vectors based on the spawn area size
-		# TODO: Determine if we want to spawn things in a rotated fashion
-		var placement = unit_item_inst.get_placement(false)
-		
-		# Use battle manager's add_unit_to_board function
-		# Faction = False corresponds to enemy faction
-		bm.add_unit_to_board(unit_item_inst, world_spawn_pos, placement[1], false)
-		
-		# Clean up the temporary instance
-		unit_item_inst.queue_free()
-		
-		all_spawn_positions.append(spawn_pos)
+		var spawn_pos : Vector2 = spawn_single_formation_entry(parsed, seen_groups)
+		if spawn_pos != null:
+			all_spawn_positions.append(spawn_pos)
 	
 	return all_spawn_positions
 	
@@ -161,6 +115,93 @@ func weighted_random_selections(array: Array) -> PackedScene:
 			return ITEM_NAME.item_lookup(selected_item)
 			
 	return null
+
+
+func _exact_unit_id_from_parsed(parsed: Dictionary) -> String:
+	var u = parsed.get("exact_unit", null)
+	if u != null and str(u) != "":
+		return str(u)
+	var t = parsed.get("exact_type", null)
+	if t != null and str(t) != "":
+		return str(t)
+	return ""
+
+
+## Resolves which unit card scene to use for one formation row (shared group/role/exact logic).
+func pick_unit_scene_for_entry(parsed: Dictionary, seen_groups: Dictionary) -> PackedScene:
+	var role: int = int(parsed["role"])
+	var unit_group: int = int(parsed["group"])
+	var selected_unit_scene: PackedScene
+
+	if unit_group in seen_groups:
+		selected_unit_scene = seen_groups[unit_group]
+	else:
+		var unit_options := get_unit_by_role_cached(role)
+		if unit_options.is_empty():
+			push_warning("Unknown unit role: %s" % role)
+			return null
+		selected_unit_scene = weighted_random_selections(unit_options)
+		if not selected_unit_scene:
+			return null
+		seen_groups[unit_group] = selected_unit_scene
+
+	var exact_id := _exact_unit_id_from_parsed(parsed)
+	if exact_id != "":
+		var exact_scene := ITEM_NAME.item_lookup(exact_id)
+		if exact_scene:
+			selected_unit_scene = exact_scene
+			seen_groups[unit_group] = selected_unit_scene
+		else:
+			push_warning("Unknown exact unit: %s" % exact_id)
+			return null
+
+	return selected_unit_scene
+
+
+## Spawns one formation entry as enemies. Returns spawn grid position on success, or null.
+func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -> Variant:
+	if parsed.is_empty():
+		push_warning("Malformed Formation")
+		return null
+
+	var selected_unit_scene := pick_unit_scene_for_entry(parsed, seen_groups)
+	if not selected_unit_scene:
+		return null
+
+	var unit_item_inst = selected_unit_scene.instantiate()
+	if not unit_item_inst.has_method("setup_unit"):
+		unit_item_inst.queue_free()
+		return null
+	unit_item_inst.setup_unit()
+
+	var spawn_pos := Vector2i(int(parsed["x"]), int(parsed["y"])) + grid_size
+	var world_spawn_pos := _board_grid_to_world(spawn_pos)
+	var placement = unit_item_inst.get_placement(false)
+
+	bm.add_unit_to_board(unit_item_inst, world_spawn_pos, placement[1], false)
+	unit_item_inst.queue_free()
+	return spawn_pos
+
+
+## Enemy formations are authored in BoardUI tile coordinates.
+## Use board cell size, not BattleManager.tile_size, to avoid oversized spacing.
+func _board_grid_to_world(coord: Vector2i) -> Vector2:
+	if bm and bm.has_node("BoardUI"):
+		var board = bm.get_node("BoardUI")
+		if board and "cellWidth" in board and "cellHeight" in board:
+			return Vector2(coord.x * int(board.cellWidth), coord.y * int(board.cellHeight))
+	return bm.grid_to_world(coord)
+
+
+## Dev / console: spawn an arbitrary formation list (e.g. from FORMATION_MAP.formation_lookup).
+func spawn_formation_rows(rows: Array) -> int:
+	var seen_groups := {}
+	var n := 0
+	for parsed in rows:
+		if spawn_single_formation_entry(parsed, seen_groups) != null:
+			n += 1
+	return n
+
 
 func post_ready():
 	bm = get_parent()

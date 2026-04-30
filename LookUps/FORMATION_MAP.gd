@@ -62,6 +62,11 @@ func load_formation_csv_structured(path: String) -> Dictionary:
 
 			result[current_level][current_name] = []
 
+		var exact_val = null
+		if c.size() > 8:
+			var raw := str(c[8]).strip_edges()
+			if raw != "":
+				exact_val = raw
 		var entry := {
 			"x": int(c[2]),
 			"y": int(c[3]),
@@ -69,7 +74,8 @@ func load_formation_csv_structured(path: String) -> Dictionary:
 			"h": int(c[5]),
 			"role": int(c[6]),
 			"group": int(c[7]),
-			"exact_unit": c[8] if (c.size() > 8 and c[8] != "") else null
+			"exact_unit": exact_val,
+			"exact_type": exact_val,
 		}
 
 		result[current_level][current_name].append(entry)

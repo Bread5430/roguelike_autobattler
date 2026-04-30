@@ -73,7 +73,7 @@ func movement():
 
 func disable_physics_collision() -> void:
 	if coll_circle != null:
-		coll_circle.disabled = true
+		coll_circle.set_deferred("disabled",true)
 
 
 ## If [param apply_taken_mult] is false, damage ignores [member dmg_taken_mult] (e.g. DoT ticks).

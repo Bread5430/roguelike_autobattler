@@ -100,7 +100,6 @@ script = ExtResource("2_6m7fj")
 unit_glossary_id = "splash_template"
 max_hp = 5
 base_speed = 100
-base_damage = 1
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)
@@ -121,11 +120,13 @@ script = ExtResource("3_6m7fj")
 [node name="Ranged_Attack" parent="." index="5" instance=ExtResource("4_eh422")]
 script = ExtResource("5_om312")
 proj_scene = ExtResource("7_6m7fj")
-speed = 50
+speed = 100
 lifetime_val = 1.0
-attack_range = 200
+burst_size = 10
+burst_radius = 50.0
+attack_range = 1000
 
 [node name="Attack_CD" parent="Ranged_Attack" index="0"]
-wait_time = 0.5
+wait_time = 5.0
 
 [editable path="Ranged_Attack"]

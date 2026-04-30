@@ -1,4 +1,5 @@
 extends CanvasLayer
+class_name DevConsole
 
 # Developer Console
 # Press ` (backtick/tilde key) to toggle
@@ -23,6 +24,7 @@ var map_manager: Node2D
 var camera: Camera2D
 
 func _ready():
+	layer = 100
 	# Build the console UI
 	setup_console_ui()
 	hide_console()
@@ -181,6 +183,9 @@ func navigate_history(direction: int):
 	else:
 		input_line.clear()
 
+
+#### COMMAND LIST AND IMPL ######
+
 func execute_command(command: String):
 	"""Parse and execute a command"""
 	var parts = command.split(" ", false)
@@ -251,7 +256,13 @@ func execute_command(command: String):
 				log_message("Map state: %s" % str(state), "cyan")
 			else:
 				log_message("MapManager not found", "red")
-		
+
+		"formation_editor":
+			_cmd_formation_editor(args)
+
+		"formation_load":
+			_cmd_formation_load(args)
+
 		_:
 			log_message("Unknown command: '%s'. Type 'help' for commands." % cmd, "red")
 
@@ -269,6 +280,48 @@ func show_help():
 	log_message("complete_node - Complete current node")
 	log_message("timescale <value> - Set game speed (1.0 = normal)")
 	log_message("save - Show current save state")
+	log_message("formation_editor on [name [level]] | formation_editor off — enemy formation CSV editor (deployment)")
+	log_message("formation_load <name> — load formation (editor: player board; normal prep: enemy side)")
+
+func _cmd_formation_editor(args: Array) -> void:
+	if args.is_empty():
+		log_message("Usage: formation_editor on [name [level]] | formation_editor off", "orange")
+		return
+	var sub := str(args[0]).to_lower()
+	var g := get_tree().root.find_child("Gui", true, false) as Control
+	if g == null or not g.has_method("enter_enemy_formation_editor_mode"):
+		log_message("Gui not found", "red")
+		return
+	if sub == "on":
+		var fname := str(args[1]) if args.size() > 1 else ""
+		var flevel := str(args[2]) if args.size() > 2 else ""
+		var err: Variant = g.call("enter_enemy_formation_editor_mode", fname, flevel)
+		if str(err) != "":
+			log_message(str(err), "red")
+		else:
+			log_message("Enemy formation editor on.", "green")
+	elif sub == "off":
+		if g.has_method("exit_enemy_formation_editor_mode"):
+			g.call("exit_enemy_formation_editor_mode")
+		log_message("Enemy formation editor off.", "green")
+	else:
+		log_message("Usage: formation_editor on [name [level]] | formation_editor off", "orange")
+
+
+func _cmd_formation_load(args: Array) -> void:
+	if args.is_empty():
+		log_message("Usage: formation_load <formation_name>", "orange")
+		return
+	var formation_name := str(args[0])
+	var g := get_tree().root.find_child("Gui", true, false) as Control
+	if g == null or not g.has_method("dev_load_formation"):
+		log_message("Gui not found", "red")
+		return
+	var err: Variant = g.call("dev_load_formation", formation_name)
+	if str(err) != "":
+		log_message(str(err), "red")
+	else:
+		log_message("Loaded formation: %s" % formation_name, "green")
 
 func teleport_camera(x: float, y: float):
 	"""Teleport camera to position"""
@@ -302,6 +355,7 @@ func show_node_info():
 # Public API for logging from other scripts
 static func log(message: String, color: String = "white"):
 	"""Static method to log from anywhere in the game"""
-	var console = Engine.get_main_loop().root.get_node_or_null("DevConsole")
+	var root = Engine.get_main_loop().root
+	var console = root.find_child("DevConsole", true, false)
 	if console and console.has_method("log_message"):
 		console.log_message(message, color)

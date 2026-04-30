@@ -4,8 +4,10 @@ extends Attack_Base
 @export var proj_pool : Node
 
 # Additonal properties 
-@export var speed : int = 50
+@export var speed : int = 100
 @export var lifetime_val : float = 1.0
+@export var burst_size : int = 10
+@export var burst_radius : float = 50
 
 func set_proj_pool(pool : Node):
 	proj_pool = pool
@@ -13,15 +15,17 @@ func set_proj_pool(pool : Node):
 func do_attack():
 	# Spawn a projectile instance, and pass it the information of its target
 	
-	var new_projectile = proj_pool.spawn_projectile(proj_scene)
-	new_projectile.setup(get_parent(), self.global_position, not get_parent().faction)
-	
-	new_projectile.set_properties_via_spawner({
-		"damage" : get_strike_damage(),
-		"speed" : speed,
-		"lifetime_val" : lifetime_val,
-	})
-	
-	new_projectile.set_target_position(target_unit.global_position)
+	for i in burst_size:
+		var new_projectile = proj_pool.spawn_projectile(proj_scene)
+		new_projectile.setup(get_parent(), self.global_position, not get_parent().faction)
+		
+		new_projectile.set_properties_via_spawner({
+			"damage" : get_strike_damage(),
+			"speed" : speed * randf_range(0.8, 1.2), # slightly vary speeds to give visual difference
+			"lifetime_val" : lifetime_val,
+		})
+		
+		var deviation = Vector2(randf_range(-1, 1), randf_range(1, 1)) * randf_range(0, burst_radius)
+		new_projectile.set_target_position(target_unit.global_position + deviation)
 	
 	super()

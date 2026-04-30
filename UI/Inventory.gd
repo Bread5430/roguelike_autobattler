@@ -105,6 +105,11 @@ func get_number_of_item (itemID : String) -> int:
   
 	return total
 
+
+func clear_all_slots() -> void:
+	for slot in slots:
+		slot.set_item("", null, 0)
+
 func set_current_item(slot : InventorySlot):
 	# Pass the item up to the GUI
 	get_parent().set_current_item(slot)

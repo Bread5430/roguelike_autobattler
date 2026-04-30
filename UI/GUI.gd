@@ -43,6 +43,15 @@ var rotated_placement : bool = false
 
 signal preperation_ended
 
+const END_PREP_DEFAULT_TEXT := "End Preperation Phase"
+
+## Dev: enemy formation CSV authoring during deployment (see Testing/dev_console.gd).
+var enemy_formation_editor_mode: bool = false
+var formation_editor_name: String = "formation_export"
+var formation_editor_level: String = "light"
+
+var enemy_spawner: Node
+
 ## Items committed for the current battle so we can refund them when battle ends.
 ## - Units are inferred from unit_board_space_map (one entry per placed unit).
 ## - Spells are tracked because they can be cast/removed during battle.
@@ -51,6 +60,7 @@ var _committed_spell_item_names: Array[String] = []
 func post_ready():
 	inventory = get_node("Inventory")
 	unit_board = battle_manager.get_node("BoardUI")
+	enemy_spawner = battle_manager.get_node("Enemy_Spawner")
 	unit_board_height = unit_board.height
 	unit_board_width = unit_board.width
 	
@@ -238,6 +248,8 @@ func set_current_item(slot : InventorySlot):
 		# In other modes: do nothing when clicking a spell
 
 func start_prep_phase():
+	enemy_formation_editor_mode = false
+	end_prep.text = END_PREP_DEFAULT_TEXT
 	_clear_placement_grid()
 	_committed_spell_item_names.clear()
 	deployment_mode = true
@@ -248,11 +260,287 @@ func start_prep_phase():
 	
 
 func _on_end_prep_pressed() -> void:
+	if enemy_formation_editor_mode:
+		var save_err := _save_editor_formation_to_new_csv()
+		if save_err.begins_with("OK:"):
+			var msg := save_err.trim_prefix("OK:")
+			DevConsole.log(msg, "green")
+			print("[Formation] ", msg)
+		else:
+			DevConsole.log(save_err, "red")
+			push_warning(save_err)
+		return
+
 	deployment_mode = false
 	end_prep.hide()
 	end_prep.disabled = true
 	toggle_inventory(false)
 	preperation_ended.emit()
+
+
+func enter_enemy_formation_editor_mode(default_name: String = "", default_level: String = "") -> String:
+	if not deployment_mode:
+		return "Enter battle preparation (deployment) first."
+	_clear_board_allied_units()
+	_clear_placement_grid()
+	inventory.clear_all_slots()
+	_clear_spells_from_inventory_and_bar()
+	_grant_all_unit_cards_to_inventory(999)
+	enemy_formation_editor_mode = true
+	formation_editor_name = default_name.strip_edges() if default_name.strip_edges() != "" else "formation_export"
+	var lvl := default_level.strip_edges().to_lower() if default_level.strip_edges() != "" else "light"
+	if not FORMATION_MAP.LEVELS.has(lvl):
+		lvl = "light"
+	formation_editor_level = lvl
+	end_prep.text = "Confirm Position"
+	curr_unit = null
+	curr_unit_inst = null
+	objectCells.clear()
+	return ""
+
+
+func exit_enemy_formation_editor_mode() -> void:
+	enemy_formation_editor_mode = false
+	end_prep.text = END_PREP_DEFAULT_TEXT
+
+
+func dev_load_formation(formation_name: String) -> String:
+	if not post_ready_check or battle_manager == null:
+		return "GUI or battle not ready."
+	if not deployment_mode:
+		return "Open battle preparation (deployment) first."
+	var rows := FORMATION_MAP.formation_lookup(formation_name)
+	if rows.is_empty():
+		return "Unknown formation: %s" % formation_name
+	if enemy_formation_editor_mode:
+		_clear_board_allied_units()
+		_clear_placement_grid()
+		var n := _load_formation_rows_on_player_board(rows)
+		if n <= 0:
+			return "Failed to place formation on board."
+		return ""
+	_clear_board_enemy_units()
+	if enemy_spawner == null or not enemy_spawner.has_method("spawn_formation_rows"):
+		return "Enemy spawner missing."
+	var n2: int = enemy_spawner.spawn_formation_rows(rows)
+	if n2 <= 0:
+		return "Failed to spawn enemy units."
+	return ""
+
+
+func _clear_spells_from_inventory_and_bar() -> void:
+	if spell_bar:
+		for slot in spell_bar.slots:
+			spell_bar.remove_spell_at(slot)
+	if inventory == null:
+		return
+	for slot in inventory.slots:
+		if slot.item_inst is Spell_Card:
+			slot.set_item("", null, 0)
+
+
+func _grant_all_unit_cards_to_inventory(qty: int) -> void:
+	if inventory == null:
+		return
+	for item_id in ITEM_NAME.name_obj_map.keys():
+		var sc: PackedScene = ITEM_NAME.item_lookup(item_id)
+		if sc == null:
+			continue
+		var inst = sc.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+		if inst is Unit_Card:
+			inst.setup_unit()
+			inventory.add_item(item_id, qty)
+		if inst:
+			inst.queue_free()
+
+
+func _clear_board_allied_units() -> void:
+	if battle_manager == null:
+		return
+	var up := battle_manager.get_node_or_null("Unit_Parent")
+	if up == null:
+		return
+	for child in up.get_children():
+		if child is Base_Unit and (child as Base_Unit).faction:
+			child.queue_free()
+
+
+func _clear_board_enemy_units() -> void:
+	if battle_manager == null:
+		return
+	var up := battle_manager.get_node_or_null("Unit_Parent")
+	if up == null:
+		return
+	for child in up.get_children():
+		if child is Base_Unit and not (child as Base_Unit).faction:
+			child.queue_free()
+
+
+func _get_board_slot_at_grid(grid_xy: Vector2i) -> BoardSlot:
+	if grid_xy.x < 0 or grid_xy.x >= unit_board_width or grid_xy.y < 0 or grid_xy.y >= unit_board_height:
+		return null
+	var idx := grid_xy.x + grid_xy.y * unit_board_width
+	var children := unit_board.get_children()
+	if idx >= children.size():
+		return null
+	var cell = children[idx]
+	return cell as BoardSlot if cell is BoardSlot else null
+
+
+func _router_exclusion_radius_from_card_inst(inst: Item) -> float:
+	if inst is Unit_Card:
+		var uc := inst as Unit_Card
+		if uc.is_router_card:
+			return uc.router_exclusion_radius
+	return 0.0
+
+
+func _place_unit_card_programmatic(p_scene: PackedScene, top_left: Vector2i, rotated: bool) -> bool:
+	var item_inst = p_scene.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+	if not item_inst is Unit_Card:
+		item_inst.queue_free()
+		return false
+	item_inst.setup_unit()
+	curr_unit_inst = item_inst
+	curr_unit = p_scene
+	rotated_placement = rotated
+	var anchor := _get_board_slot_at_grid(top_left)
+	if anchor == null:
+		item_inst.queue_free()
+		curr_unit_inst = null
+		curr_unit = null
+		return false
+	targetCell = anchor
+	objectCells = _get_object_cells_for_anchor(anchor)
+	if not _check_and_highlight_cells(objectCells):
+		_reset_highlight(objectCells)
+		item_inst.queue_free()
+		curr_unit_inst = null
+		curr_unit = null
+		return false
+
+	for cell in objectCells:
+		cell.full = true
+
+	var grid_pos: Vector2 = objectCells[0].board_position
+	var unit_size = item_inst.rotated_placement_size if rotated else item_inst.placement_size
+	var unit_vec = item_inst.rotated_vectors if rotated else item_inst.placement_vectors
+
+	place_on_board(grid_pos, unit_size, p_scene)
+
+	var router_excl := _router_exclusion_radius_from_card_inst(item_inst)
+	if router_excl > 0.0:
+		var center := _placement_center_global_from_cells(objectCells, unit_size)
+		var top_i := Vector2i(int(grid_pos.x), int(grid_pos.y))
+		_placed_router_exclusions.append({
+			"center": center,
+			"radius": router_excl,
+			"top_corner": top_i,
+			"size": unit_size,
+		})
+
+	battle_manager.add_unit_to_board(item_inst, objectCells[0].position, unit_vec, true)
+	_reset_highlight(objectCells)
+	item_inst.queue_free()
+	curr_unit_inst = null
+	curr_unit = null
+	isValid = false
+	return true
+
+
+func _load_formation_rows_on_player_board(rows: Array) -> int:
+	if enemy_spawner == null:
+		return 0
+	var seen_groups := {}
+	var placed := 0
+	for parsed in rows:
+		if parsed.is_empty():
+			continue
+		var scene: PackedScene = enemy_spawner.pick_unit_scene_for_entry(parsed, seen_groups)
+		if scene == null:
+			continue
+		var top := Vector2i(int(parsed["x"]), int(parsed["y"]))
+		if _place_unit_card_programmatic(scene, top, false):
+			placed += 1
+	return placed
+
+
+func _sanitize_formation_filename_part(s: String) -> String:
+	var out := ""
+	for i in s.length():
+		var ch := s[i]
+		if ch == "/" or ch == "\\" or ch == ":" or ch == "*" or ch == "?" or ch == "\"" or ch == "<" or ch == ">" or ch == "|":
+			continue
+		out += ch
+	return out if out.length() > 0 else "formation"
+
+
+func _save_editor_formation_to_new_csv() -> String:
+	var row_dicts: Array = []
+	for x in unit_board_width:
+		for y in unit_board_height:
+			var entry = unit_board_space_map[x][y]
+			if entry == null:
+				continue
+			var top_corner: Vector2i = entry[1]
+			if top_corner.x != x or top_corner.y != y:
+				continue
+			var packed: PackedScene = entry[0]
+			var sz: Vector2 = entry[2]
+			var card = packed.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+			if card == null or not card.has_method("setup_unit"):
+				if card:
+					card.queue_free()
+				continue
+			card.setup_unit()
+			var exact := ""
+			if "item_name" in card:
+				exact = str(card.item_name)
+			card.queue_free()
+			row_dicts.append({
+				"x": top_corner.x,
+				"y": top_corner.y,
+				"w": int(sz.x),
+				"h": int(sz.y),
+				"role": 1,
+				"group": 1,
+				"exact": exact,
+			})
+
+	if row_dicts.is_empty():
+		return "Nothing placed on the board."
+
+	var lines: PackedStringArray = []
+	lines.append("Name,Level,X,Y,W,H,Role,Group,Exact_Unit")
+	var first := true
+	for r in row_dicts:
+		var nc := formation_editor_name if first else ""
+		var lc := formation_editor_level if first else ""
+		first = false
+		lines.append("%s,%s,%d,%d,%d,%d,%d,%d,%s" % [
+			nc, lc, r["x"], r["y"], r["w"], r["h"], r["role"], r["group"], r["exact"]
+		])
+	var text := "\n".join(lines) + "\n"
+
+	var name_part := _sanitize_formation_filename_part(formation_editor_name)
+	var ts := str(Time.get_ticks_msec())
+	var fname := "formations_%s_%s.csv" % [name_part, ts]
+	var res_path := "res://Data/%s" % fname
+	var user_path := "user://formation_exports/%s" % fname
+
+	var f := FileAccess.open(res_path, FileAccess.WRITE)
+	if f:
+		f.store_string(text)
+		f.close()
+		return "OK:Saved %s" % ProjectSettings.globalize_path(res_path)
+
+	DirAccess.make_dir_recursive_absolute("user://formation_exports")
+	f = FileAccess.open(user_path, FileAccess.WRITE)
+	if f:
+		f.store_string(text)
+		f.close()
+		return "OK:Saved %s (res:// not writable; used user://)" % ProjectSettings.globalize_path(user_path)
+	return "Could not write formation CSV."
 
 func _on_spell_slot_clicked(slot: SpellBarSlot) -> void:
 	# In battle mode: enter casting mode (only if slot has a spell)
