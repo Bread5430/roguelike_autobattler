@@ -17,6 +17,20 @@ func clear_preview() -> void:
 	pass
 
 
+## Multi-step spells override [method handles_casting_input] and [method on_casting_click].
+## Return dict keys: [code]consume_spell[/code] (remove from bar), [code]exit_casting[/code] (leave casting mode).
+func handles_casting_input() -> bool:
+	return false
+
+
+func on_casting_click(_world_pos: Vector2) -> Dictionary:
+	return {"consume_spell": true, "exit_casting": true}
+
+
+func on_casting_cancel() -> void:
+	pass
+
+
 ## Ask the battle_manager for active modifiers at the current cast location, then apply these to the spell
 func _apply_modifiers(cast_location : Vector2, modifiable_attributes : Dictionary) -> void:
 	pass

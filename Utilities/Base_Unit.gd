@@ -41,6 +41,8 @@ var _restriction_special_abilities: bool = false
 var _suppress_buff_application: bool = false
 var _suppress_debuff_application: bool = false
 
+signal beacon_status_changed(active: bool)
+
 
 func _ready() -> void:
 	_sync_from_glossary()
@@ -139,6 +141,7 @@ func apply_status_effect(
 		inst.reference_duration = dur
 		_recompute_status_stat_modifiers()
 	else:
+		var had_beacon_before := _has_effect_id(&"beacon_following")
 		var pol := def.get_polarity()
 		if pol == StatusEffectDef.Polarity.BUFF and _suppress_buff_application:
 			return
@@ -148,6 +151,8 @@ func apply_status_effect(
 		var inst2 := StatusEffectInstance.new(def, stack_key, stacks_add, dur)
 		_status_effect_instances[key] = inst2
 		_recompute_status_stat_modifiers()
+		if def.effect_id == &"beacon_following" and not had_beacon_before:
+			beacon_status_changed.emit(true)
 
 
 func is_movement_restricted() -> bool:
@@ -171,6 +176,7 @@ func is_debuff_application_suppressed() -> bool:
 
 
 func purge_status_effects_by_polarity(polarity: StatusEffectDef.Polarity) -> void:
+	var had_beacon_before := _has_effect_id(&"beacon_following")
 	var to_remove: Array[String] = []
 	for eff_key in _status_effect_instances:
 		var inst: StatusEffectInstance = _status_effect_instances[eff_key]
@@ -181,6 +187,8 @@ func purge_status_effects_by_polarity(polarity: StatusEffectDef.Polarity) -> voi
 	for eff_key in to_remove:
 		_status_effect_instances.erase(eff_key)
 	_recompute_status_stat_modifiers()
+	if had_beacon_before and not _has_effect_id(&"beacon_following"):
+		beacon_status_changed.emit(false)
 
 
 ## One dictionary per active instance: [code]instance_key[/code], [code]display_name[/code], [code]stacks[/code], [code]remaining[/code], [code]duration_fraction[/code], [code]icon[/code].
@@ -222,11 +230,14 @@ func _get_status_effect_icon(inst: StatusEffectInstance) -> Texture2D:
 
 
 func remove_status_effect(effect_id: StringName, stack_key: String) -> void:
+	var had_effect_before := _has_effect_id(effect_id)
 	var key := _status_instance_key(effect_id, stack_key)
 	if not _status_effect_instances.has(key):
 		return
 	_status_effect_instances.erase(key)
 	_recompute_status_stat_modifiers()
+	if effect_id == &"beacon_following" and had_effect_before and not _has_effect_id(effect_id):
+		beacon_status_changed.emit(false)
 
 
 func _status_instance_key(effect_id: StringName, stack_key: String) -> String:
@@ -295,5 +306,17 @@ func _process_status_effects(delta: float) -> void:
 		if inst.remaining_time <= 0.0:
 			to_remove.append(key)
 	for key in to_remove:
+		var inst_rm: StatusEffectInstance = _status_effect_instances[key]
+		var removed_effect_id: StringName = inst_rm.def.effect_id if inst_rm and inst_rm.def else &""
 		_status_effect_instances.erase(key)
 		_recompute_status_stat_modifiers()
+		if removed_effect_id == &"beacon_following" and not _has_effect_id(&"beacon_following"):
+			beacon_status_changed.emit(false)
+
+
+func _has_effect_id(effect_id: StringName) -> bool:
+	for key in _status_effect_instances:
+		var inst: StatusEffectInstance = _status_effect_instances[key]
+		if inst and inst.def and inst.def.effect_id == effect_id:
+			return true
+	return false

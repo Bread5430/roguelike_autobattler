@@ -7,6 +7,7 @@ var state: int = -1: set = set_state
 var post_ready_check = false
 var round_start_check = false
 var start_state = null
+var beacon_move_vec: Vector2 = Vector2.ZERO
 
 @onready var parent: Base_Unit = get_parent()
 @onready var sprite: AnimatedSprite2D = parent.get_node("AnimatedSprite2D")
@@ -18,17 +19,26 @@ func _init():
 
 func _ready():
 	set_state(states.wait_ready)
+	if parent and parent.has_signal("beacon_status_changed"):
+		parent.beacon_status_changed.connect(_on_beacon_status_changed)
 
 func post_ready():
 	post_ready_check = true
 
 func _physics_process(delta: float) -> void:
 	if state != -1:
+		_refresh_shared_tick_cache()
 		_state_logic(delta)
 		var transition: int = _get_transition()
 		if transition != -1:
 			set_state(transition)
 
+
+func _refresh_shared_tick_cache() -> void:
+	beacon_move_vec = Vector2.ZERO
+	if target_movement and target_movement.has_method("begin_physics_tick"):
+		target_movement.begin_physics_tick()
+		beacon_move_vec = target_movement.get_cached_beacon_move_vec()
 
 func _state_logic(_delta: float) -> void:
 	pass
@@ -40,7 +50,9 @@ func _get_transition() -> int:
 		if round_start_check == true and post_ready_check == true:
 			if start_state != null:
 				return start_state
-			 
+	elif state == states.beaconed: # End beacon when out of path to follow
+		if beacon_move_vec == Vector2.ZERO:
+			_on_beacon_status_changed(false)
 	return -1
 
 
@@ -65,3 +77,10 @@ func _enter_state(_previous_state: int, _new_state: int) -> void:
 
 func _exit_state(_state_exited: int) -> void:
 	pass
+
+
+func _on_beacon_status_changed(active: bool) -> void:
+	if active and states.has("beaconed"):
+		set_state(states.beaconed)
+	elif !active and states.has("march"):
+		set_state(states.march)

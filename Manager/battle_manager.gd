@@ -16,7 +16,11 @@ var tile_map_size : Vector2i
 @onready var flow_visualizer = $flow_visualizer
 @onready var spell_manager = $Spell_Manager
 @onready var proj_pool = $Proj_Pool
+@onready var beacon_controller: BeaconController = $BeaconController
 #@onready var viewport = $Viewport
+
+## Set by GUI for beacon spell validation (selected ally near path start).
+var tactical_cursor: Node = null
 
 var enemies_tiles : Array[Array]
 var allies_tiles : Array[Array]
@@ -42,6 +46,8 @@ func clear_battlefield():
 	"""Clear all units from the battlefield and return active projectiles so they don't linger."""
 	if proj_pool and proj_pool.has_method("return_all_active"):
 		proj_pool.return_all_active()
+	if beacon_controller:
+		beacon_controller.clear_all()
 	for child in unit_parent.get_children():
 		child.queue_free()
 	_clear_unit_tile_grids()
@@ -57,6 +63,8 @@ func end_battle():
 	manager_timer.stop()
 	flow_visualizer.redraw_timer.stop()
 	set_unit_start_stop(false)
+	if beacon_controller:
+		beacon_controller.clear_all()
 	# TODO: Add way to calculate if the player won or lost
 	battle_ended.emit(true)
 	

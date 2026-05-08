@@ -11,6 +11,7 @@ func _init() -> void:
 	_add_state("march")
 	_add_state("local_march")
 	_add_state("attack")
+	_add_state("beaconed")
 	_add_state("dead")
 	
 	start_state = states.march
@@ -29,6 +30,12 @@ func _state_logic(_delta: float) -> void:
 			if melee_atk.check_can_attack():
 				melee_atk.do_attack()
 			parent.move_vec = Vector2.ZERO
+
+		states.beaconed:
+			melee_atk.check_new_targets()
+			if melee_atk.check_can_attack():
+				melee_atk.do_attack()
+			parent.move_vec = beacon_move_vec
 			
 	parent.movement()
 
@@ -51,6 +58,7 @@ func _get_transition() -> int:
 		states.attack:
 			if not melee_atk.in_range():
 				set_state(states.local_march)
+				
 	return super()
 	
 	
@@ -60,6 +68,9 @@ func _enter_state(_previous_state: int, new_state: int) -> void:
 			sprite.play("walk")
 			
 		states.local_march:
+			sprite.play("walk")
+
+		states.beaconed:
 			sprite.play("walk")
 
 		states.dead:

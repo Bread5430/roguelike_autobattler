@@ -22,3 +22,7 @@ static func dot_damage_ramp() -> DotDamageRampDef:
 
 static func stunned() -> StunnedDef:
 	return StunnedDef.new()
+
+
+static func beacon_following() -> BeaconFollowingDef:
+	return BeaconFollowingDef.new()

@@ -2,9 +2,9 @@
 
 [ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_base"]
 [ext_resource type="Texture2D" uid="uid://cjr1vox5odcwj" path="res://Assets/UnitSprites/arc_unit.png" id="2_hjdd7"]
-[ext_resource type="Script" uid="uid://b0j137nphwqnl" path="res://Units/unit_scenes/arc_template/arc_unit_fsm.gd" id="3_fsm"]
 [ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_attack_base"]
 [ext_resource type="Script" uid="uid://22inhe8x2vy6" path="res://Units/unit_scenes/arc_template/arc_attack.gd" id="5_arc_script"]
+[ext_resource type="Script" uid="uid://dh4tqvn6emwhy" path="res://Units/unit_scenes/ranged_unit_template/ranged_unit_fsm.gd" id="5_hjdd7"]
 [ext_resource type="PackedScene" uid="uid://oygnqkjx2k53" path="res://Units/unit_scenes/arc_template/arc_hitbox.tscn" id="6_hitbox"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_01d82"]
@@ -97,8 +97,8 @@ _data = {
 [node name="ArcUnitTemplate" instance=ExtResource("1_base")]
 unit_glossary_id = "arc_template"
 max_hp = 10
-base_speed = 100
 base_damage = 2
+base_speed = 100
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)
@@ -114,13 +114,13 @@ libraries = {
 }
 
 [node name="FSM" parent="." index="3"]
-script = ExtResource("3_fsm")
+script = ExtResource("5_hjdd7")
 
-[node name="Arc_Attack" parent="." index="5" instance=ExtResource("4_attack_base")]
+[node name="Ranged_Attack" parent="." index="5" instance=ExtResource("4_attack_base")]
 script = ExtResource("5_arc_script")
 arc_angle_deg = 90.0
-attack_range = 120
+attack_range = 100
 
-[node name="Arc_Hitbox" parent="Arc_Attack" index="1" instance=ExtResource("6_hitbox")]
+[node name="Arc_Hitbox" parent="Ranged_Attack" index="1" instance=ExtResource("6_hitbox")]
 
-[editable path="Arc_Attack"]
+[editable path="Ranged_Attack"]

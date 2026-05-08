@@ -75,6 +75,7 @@ func post_ready():
 	post_ready_check = true
 
 	spell_bar.battle_manager = battle_manager
+	battle_manager.tactical_cursor = tactical_cursor
 	inventory.inspect_requested.connect(_on_inventory_inspect_requested)
 	spell_bar.spell_slot_clicked.connect(_on_spell_slot_clicked)
 	spell_bar.spell_slot_right_clicked.connect(_on_spell_slot_right_clicked)
@@ -110,9 +111,20 @@ func _input(event: InputEvent):
 	var mouse_pos := get_viewport().get_mouse_position()
 	if event.is_action_pressed("leftClick"):
 		if not is_mouse_over_ui_element(mouse_pos) and casting_slot and is_instance_valid(casting_slot.spell_inst):
-			casting_slot.spell_inst.cast(_get_world_mouse_position())
-			spell_bar.remove_spell_at(casting_slot)
-		_exit_casting_mode()
+			var spell_inst: Base_Spell = casting_slot.spell_inst
+			var world_pos := _get_world_mouse_position()
+			if spell_inst.handles_casting_input():
+				var r: Dictionary = spell_inst.on_casting_click(world_pos)
+				if r.get("consume_spell", false):
+					spell_bar.remove_spell_at(casting_slot)
+				if r.get("exit_casting", true):
+					_exit_casting_mode()
+			else:
+				spell_inst.cast(world_pos)
+				spell_bar.remove_spell_at(casting_slot)
+				_exit_casting_mode()
+		else:
+			_exit_casting_mode()
 		return
 	if event.is_action_pressed("rightClick") or event.is_action_pressed("ui_cancel"):
 		_exit_casting_mode()
@@ -567,7 +579,10 @@ func _on_inventory_inspect_requested(item_inst: Item, item_name: String, source_
 
 func _exit_casting_mode() -> void:
 	if casting_slot and is_instance_valid(casting_slot.spell_inst):
-		casting_slot.spell_inst.clear_preview()
+		var si: Base_Spell = casting_slot.spell_inst
+		if si.handles_casting_input():
+			si.on_casting_cancel()
+		si.clear_preview()
 	casting_mode = false
 	casting_slot = null
 
