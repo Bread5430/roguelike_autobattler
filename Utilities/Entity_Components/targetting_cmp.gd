@@ -111,8 +111,7 @@ func _sync_targets_from_manager_if_needed(num_targets: int) -> void:
 		return
 	curr_target_iter = target_manager.target_iter
 	var fetch_n: int = maxi(num_targets * 3, _MIN_TARGET_FETCH)
-	curr_targets = target_manager.get_targets(!unit.faction, unit.position, fetch_n)
-	curr_targets.sort_custom(_sort_ascending_distance)
+	curr_targets = target_manager.get_closest_targets(!unit.faction, unit.position, fetch_n)
 	target_idx = 0
 
 
@@ -131,20 +130,3 @@ func _is_valid_target(t: Variant) -> bool:
 	if not t is Base_Unit:
 		return false
 	return t.curr_hp > 0
-
-
-func _sort_ascending_distance(a, b):
-	# Move null / invalid / dead to the back of the array
-	var a_ok := _is_valid_target(a)
-	var b_ok := _is_valid_target(b)
-	if not a_ok and not b_ok:
-		return true
-	if not a_ok:
-		return false
-	if not b_ok:
-		return true
-		
-	# Sort by which unit is closer
-	if (unit.position - a.position).length_squared() < (unit.position - b.position).length_squared():
-		return true
-	return false

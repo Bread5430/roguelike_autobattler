@@ -18,6 +18,7 @@ script = ExtResource("6_coord")
 [node name="DevConsole" parent="." instance=ExtResource("7_devc")]
 
 [node name="BattleManager" parent="." instance=ExtResource("1_b7jtx")]
+debug_target_perf = true
 
 [node name="MapManager" parent="." instance=ExtResource("2_rks66")]
 

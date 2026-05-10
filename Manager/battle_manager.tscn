@@ -39,7 +39,7 @@ script = ExtResource("2_7x82o")
 [node name="Unit_Parent" type="Node" parent="."]
 
 [node name="Manager_Update" type="Timer" parent="."]
-wait_time = 0.05
+wait_time = 0.15
 
 [node name="Enemy_Spawner" type="Node" parent="."]
 script = ExtResource("9_tj47k")

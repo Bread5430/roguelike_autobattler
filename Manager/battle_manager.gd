@@ -3,6 +3,7 @@ extends Control
 @export_group("Battle Map Config")
 @export var map_size : Vector2i
 @export var tile_size : int
+@export var debug_target_perf: bool = false
 var tile_map_size : Vector2i 
 
 
@@ -207,4 +208,9 @@ func _on_manager_update_timeout():
 	
 	# Reset targetting component
 	target_man.reset_cache()
+	if debug_target_perf and target_man.has_method("get_perf_counters"):
+		var counters: Dictionary = target_man.get_perf_counters()
+		print("Target perf tick:", counters)
+		if target_man.has_method("reset_perf_counters"):
+			target_man.reset_perf_counters()
 	

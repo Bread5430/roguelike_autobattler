@@ -10,6 +10,8 @@ var target_cmp
 @export var attack_range : int
 var target_unit : Base_Unit = null
 var can_attack = true
+const RETARGET_INTERVAL_FRAMES := 3
+var _last_retarget_frame: int = -1
 
 ####### Primary Functions
 
@@ -24,7 +26,12 @@ func in_range() -> bool:
 		< attack_range ** 2
 
 func check_new_targets() -> bool:
+	var frame := Engine.get_physics_frames()
+	if _target_is_valid_for_attack() and _last_retarget_frame >= 0 and frame - _last_retarget_frame < RETARGET_INTERVAL_FRAMES:
+		return false
+	
 	var new_target = target_cmp.get_target()
+	_last_retarget_frame = frame
 	if new_target == target_unit:
 		return false
 	else:
