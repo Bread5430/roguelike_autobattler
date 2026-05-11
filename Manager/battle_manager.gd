@@ -75,6 +75,11 @@ func set_unit_start_stop(stopped : bool):
 		if i is Base_Unit:
 			i.set_start_stop(stopped)
 
+
+func _physics_process(_delta: float) -> void:
+	if not manager_timer.is_stopped() and target_man and target_man.has_method("advance_snapshot_refresh"):
+		target_man.advance_snapshot_refresh(target_man.snapshot_cells_per_tick)
+
 func check_only_faction_units_alive(faction : bool):
 	for i in unit_parent.get_children():
 		if i is Base_Unit and i.faction != faction:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://ooyule8c5gdc"]
+[gd_scene load_steps=10 format=3 uid="uid://ooyule8c5gdc"]
 
 [ext_resource type="PackedScene" uid="uid://b2hkuu4ohgbnk" path="res://Manager/battle_manager.tscn" id="1_b7jtx"]
 [ext_resource type="Script" uid="uid://dtlxst4r4hl5x" path="res://Manager/game_state_manager.gd" id="1_rks66"]
@@ -8,9 +8,13 @@
 [ext_resource type="Script" uid="uid://dxaapkuxw4574" path="res://UI/ui_canvas.gd" id="5_drtnq"]
 [ext_resource type="Script" uid="uid://bqf80g2fr8wd5" path="res://Manager/input_coordinator.gd" id="6_coord"]
 [ext_resource type="PackedScene" uid="uid://ddv7kwodp285" path="res://Testing/dev_console.tscn" id="7_devc"]
+[ext_resource type="Script" uid="uid://c2oq0joo2w8a" path="res://Manager/generic_worker_pool.gd" id="8_pool"]
 
 [node name="GameStateManager" type="Node"]
 script = ExtResource("1_rks66")
+
+[node name="GenericWorkerPool" type="Node" parent="."]
+script = ExtResource("8_pool")
 
 [node name="InputCoordinator" type="Node" parent="."]
 script = ExtResource("6_coord")

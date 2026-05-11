@@ -13,6 +13,7 @@ enum GameState {
 
 
 @onready var battle_manager = $BattleManager
+@onready var generic_worker_pool: GenericWorkerPool = $GenericWorkerPool
 @onready var viewport = $Viewport
 @onready var gui = $UICanvas/Gui
 @onready var map_generator = $MapManager
