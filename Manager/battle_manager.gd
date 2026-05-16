@@ -45,10 +45,8 @@ func setup_battle(battle_params : Dictionary):
 	
 func clear_battlefield():
 	"""Clear all units from the battlefield and return active projectiles so they don't linger."""
-	if proj_pool and proj_pool.has_method("return_all_active"):
-		proj_pool.return_all_active()
-	if beacon_controller:
-		beacon_controller.clear_all()
+	proj_pool.return_all_active()
+	beacon_controller.clear_all()
 	for child in unit_parent.get_children():
 		child.queue_free()
 	_clear_unit_tile_grids()
@@ -64,8 +62,7 @@ func end_battle():
 	manager_timer.stop()
 	flow_visualizer.redraw_timer.stop()
 	set_unit_start_stop(false)
-	if beacon_controller:
-		beacon_controller.clear_all()
+	beacon_controller.clear_all()
 	# TODO: Add way to calculate if the player won or lost
 	battle_ended.emit(true)
 	
@@ -77,7 +74,7 @@ func set_unit_start_stop(stopped : bool):
 
 
 func _physics_process(_delta: float) -> void:
-	if not manager_timer.is_stopped() and target_man and target_man.has_method("advance_snapshot_refresh"):
+	if not manager_timer.is_stopped():
 		target_man.advance_snapshot_refresh(target_man.snapshot_cells_per_tick)
 
 func check_only_faction_units_alive(faction : bool):
@@ -166,8 +163,7 @@ func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
 func handle_unit_click(event: InputEvent) -> void:
 	if not event is InputEventMouseButton:
 		return
-	var vp := get_viewport()
-	var world_pos : Vector2 = vp.get_canvas_transform().affine_inverse() * event.position
+	var world_pos : Vector2 = get_viewport().get_canvas_transform().affine_inverse() * event.position
 	var unit := get_unit_under_cursor(world_pos)
 	if unit:
 		unit_selected.emit(unit)

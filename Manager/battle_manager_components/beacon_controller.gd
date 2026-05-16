@@ -8,6 +8,7 @@ class_name BeaconController
 @export var waypoint_arrive_distance: float = 36.0
 
 var battle_manager: Node
+var target_man: Node
 
 var _next_beacon_id: int = 1
 ## beacon_id -> { "path": PackedVector2Array, "units": Array[Base_Unit] }
@@ -23,9 +24,9 @@ var _steer_cache_frame: int = -1
 var _preview_line: Line2D = null
 
 
-func _ready() -> void:
+func post_ready() -> void:
 	battle_manager = get_parent()
-
+	target_man = battle_manager.target_man
 
 func clear_all() -> void:
 	for beacon_id in _beacons.keys():
@@ -75,37 +76,23 @@ func is_enemy_within_panic_radius(unit: Base_Unit) -> bool:
 	if unit == null or not is_instance_valid(unit):
 		return false
 	var uid := unit.get_instance_id()
-	var target_man = battle_manager.target_man
-	if target_man:
-		var iter: int = int(target_man.target_iter)
-		if iter != _panic_cache_target_iter:
-			_panic_cache_target_iter = iter
-			_panic_cache_by_uid.clear()
-		elif _panic_cache_by_uid.has(uid):
-			return bool(_panic_cache_by_uid[uid])
-		if target_man.has_method("get_targets"):
-			var nearby: Array = target_man.get_targets(!unit.faction, unit.position, 1, maxi(int(panic_radius), 1))
-			var has_enemy := not nearby.is_empty()
-			_panic_cache_by_uid[uid] = has_enemy
-			return has_enemy
-	for c in battle_manager.unit_parent.get_children():
-		if not c is Base_Unit:
-			continue
-		var other: Base_Unit = c as Base_Unit
-		if other.faction == unit.faction:
-			continue
-		if other.curr_hp <= 0:
-			continue
-		if unit.global_position.distance_squared_to(other.global_position) <= panic_radius * panic_radius:
-			_panic_cache_by_uid[uid] = true
-			return true
-	_panic_cache_by_uid[uid] = false
-	return false
+	var iter: int = int(target_man.target_iter)
+	if iter != _panic_cache_target_iter:
+		_panic_cache_target_iter = iter
+		_panic_cache_by_uid.clear()
+	elif _panic_cache_by_uid.has(uid):
+		return bool(_panic_cache_by_uid[uid])
+	var nearby: Array = target_man.get_targets(!unit.faction, unit.position, 1, maxi(int(panic_radius), 1))
+	var has_enemy := not nearby.is_empty()
+	_panic_cache_by_uid[uid] = has_enemy
+	return has_enemy
 
 
 func compute_steering(unit: Base_Unit) -> Vector2:
 	if unit == null or not is_instance_valid(unit):
 		return Vector2.ZERO
+	
+	# Do not recalculate the steering vector too often
 	var frame: int = Engine.get_physics_frames()
 	if frame != _steer_cache_frame:
 		_steer_cache_frame = frame
@@ -113,30 +100,31 @@ func compute_steering(unit: Base_Unit) -> Vector2:
 	var uid := unit.get_instance_id()
 	if _steer_cache_by_uid.has(uid):
 		return _steer_cache_by_uid[uid]
+	
+	# fetch the beacon that a unit is using
 	var path := get_path_for_unit(unit)
 	if path.size() < 2:
 		_steer_cache_by_uid[uid] = Vector2.ZERO
 		return Vector2.ZERO
+		
+	# Determine which section of the path the unit is on by incrementing the waypoint index to the last one traveled to
 	var wp_idx: int = int(_unit_waypoint_idx.get(uid, 1))
 	wp_idx = clampi(wp_idx, 1, path.size() - 1)
-	var goal: Vector2 = path[wp_idx]
-	var to_goal: Vector2 = goal - unit.global_position
-	var eps := waypoint_arrive_distance
-	var eps_sq := eps * eps
+	var to_goal: Vector2 = path[wp_idx] - unit.global_position
+	var eps_sq := waypoint_arrive_distance * waypoint_arrive_distance
 	while to_goal.length_squared() <= eps_sq and wp_idx < path.size() - 1:
 		wp_idx += 1
 		_unit_waypoint_idx[uid] = wp_idx
-		goal = path[wp_idx]
-		to_goal = goal - unit.global_position
-	if wp_idx >= path.size() - 1 and to_goal.length_squared() <= eps_sq:
+		to_goal = path[wp_idx] - unit.global_position
+	
+	# Check if unit is at the end of the path
+	if (wp_idx >= path.size() - 1 and to_goal.length_squared() <= eps_sq) or to_goal.length_squared() < 0.0001:
 		_steer_cache_by_uid[uid] = Vector2.ZERO
 		return Vector2.ZERO
-	if to_goal.length_squared() < 0.0001:
-		_steer_cache_by_uid[uid] = Vector2.ZERO
-		return Vector2.ZERO
-	var out := to_goal.normalized()
-	_steer_cache_by_uid[uid] = out
-	return out
+	
+	to_goal = to_goal.normalized()
+	_steer_cache_by_uid[uid] = to_goal
+	return to_goal
 
 
 ## Returns beacon id, or -1 if nothing was registered.

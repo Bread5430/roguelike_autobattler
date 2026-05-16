@@ -186,11 +186,8 @@ func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -
 ## Enemy formations are authored in BoardUI tile coordinates.
 ## Use board cell size, not BattleManager.tile_size, to avoid oversized spacing.
 func _board_grid_to_world(coord: Vector2i) -> Vector2:
-	if bm and bm.has_node("BoardUI"):
-		var board = bm.get_node("BoardUI")
-		if board and "cellWidth" in board and "cellHeight" in board:
-			return Vector2(coord.x * int(board.cellWidth), coord.y * int(board.cellHeight))
-	return bm.grid_to_world(coord)
+	var board = bm.get_node("BoardUI")
+	return Vector2(coord.x * int(board.cellWidth), coord.y * int(board.cellHeight))
 
 
 ## Dev / console: spawn an arbitrary formation list (e.g. from FORMATION_MAP.formation_lookup).

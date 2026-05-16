@@ -16,6 +16,8 @@ const DIRECTIONS = [
 ## When a BFS layer has at least this many cells, neighbor expansion uses the worker pool.
 @export var bfs_parallel_layer_threshold: int = 16
 
+@export var min_bfs_depth = 4
+
 var cached_enemies = {}
 var cached_allies = {}
 var target_iter = 0
@@ -45,11 +47,14 @@ var _bfs_seen_stamp: PackedInt32Array = PackedInt32Array()
 var _bfs_visit_serial: int = 0
 
 var _worker_pool: GenericWorkerPool = null
-
+# Battle manager reference
+var bm 
 
 func post_ready() -> void:
-	_ensure_snapshot_buffers()
 	_worker_pool = get_tree().get_first_node_in_group("GENERIC_WORKER_POOL") as GenericWorkerPool
+	bm = get_parent()
+	_ensure_snapshot_buffers()
+
 
 
 func reset_cache() -> void:
@@ -106,10 +111,9 @@ func get_targets(faction: bool, location: Vector2, num_targets: int = 10, max_ra
 	_ensure_snapshot_buffers()
 	perf_counters["bfs_calls"] += 1
 
-	var bm: Node = get_parent()
 	var grid_w: int = int(bm.tile_map_size.x)
 	var grid_h: int = int(bm.tile_map_size.y)
-	var max_depth: int = maxi(int(max_range / bm.tile_size), 3)
+	var max_depth: int = maxi(int(max_range / bm.tile_size), min_bfs_depth)
 
 	var visit_id := _alloc_bfs_visit_id()
 	var result: Array = []
@@ -127,12 +131,12 @@ func get_targets(faction: bool, location: Vector2, num_targets: int = 10, max_ra
 				if _is_living_target(u):
 					result.append(u)
 
-		if curr.size() >= bfs_parallel_layer_threshold and _worker_pool != null:
-			_append_bfs_neighbors_parallel(curr, visit_id, next, grid_w, grid_h)
-		else:
-			_append_bfs_neighbors_sequential(curr, visit_id, next, grid_w, grid_h)
-
-		curr = next
+		if _should_expand_bfs_next_layer(curr_depth, max_depth):
+			if curr.size() >= bfs_parallel_layer_threshold and _worker_pool != null:
+				_append_bfs_neighbors_parallel(curr, visit_id, next, grid_w, grid_h)
+			else:
+				_append_bfs_neighbors_sequential(curr, visit_id, next, grid_w, grid_h)
+			curr = next
 
 	if faction:
 		cached_allies[target_location] = result
@@ -194,16 +198,9 @@ func _is_living_target(u: Variant) -> bool:
 func _ensure_snapshot_buffers() -> void:
 	if _snapshot_buffers_ready:
 		return
-	var bm: Node = get_parent()
-	if bm == null:
-		return
 	var ts: Variant = bm.get("tile_map_size")
-	if typeof(ts) != TYPE_VECTOR2I:
-		return
 	_grid_w = int((ts as Vector2i).x)
 	_grid_h = int((ts as Vector2i).y)
-	if _grid_w <= 0 or _grid_h <= 0:
-		return
 	_total_cells = _grid_w * _grid_h
 
 	_living_enemies.clear()
@@ -235,7 +232,6 @@ func _ensure_cell_current(x: int, y: int) -> void:
 
 
 func _rebuild_living_cell(x: int, y: int) -> void:
-	var bm: Node = get_parent()
 	var allies_cell: Array = bm.allies_tiles[x][y]
 	var enemies_cell: Array = bm.enemies_tiles[x][y]
 	var la: Array = _living_allies[x][y]
@@ -278,6 +274,10 @@ func _bfs_stamp_at(x: int, y: int) -> int:
 	return _bfs_seen_stamp[f]
 
 
+func _should_expand_bfs_next_layer(curr_depth: int, max_depth: int) -> bool:
+	return curr_depth < max_depth
+
+
 func _append_bfs_neighbors_sequential(
 	curr: Array[Vector2i],
 	visit_id: int,
@@ -314,35 +314,40 @@ func _append_bfs_neighbors_parallel(
 		_append_bfs_neighbors_sequential(curr, visit_id, next, grid_w, grid_h)
 		return
 
+	# Divide the array into chunks
 	var bounds: Array[Vector2i] = []
 	var base: int = n / num_chunks
 	var rem: int = n % num_chunks
-	var s := 0
-	for c in num_chunks:
-		var chunk_sz: int = base + (1 if c < rem else 0)
-		var e: int = s + chunk_sz
-		bounds.append(Vector2i(s, e))
-		s = e
+	var start_idx := 0
+	for chunk in num_chunks:
+		var chunk_sz: int = base + (1 if chunk < rem else 0)
+		var end: int = start_idx + chunk_sz
+		bounds.append(Vector2i(start_idx, end))
+		start_idx = end
 
+	# Bind chunks to threads and push start to workerpool
 	var holders: Array[TargetingBfsWorkers.NeighborChunkHolder] = []
 	var tasks: Array[Callable] = []
 	for chunk_idx in range(num_chunks):
-		var b: Vector2i = bounds[chunk_idx]
+		var chunk_boundry: Vector2i = bounds[chunk_idx]
 		var holder := TargetingBfsWorkers.NeighborChunkHolder.new()
 		holders.append(holder)
 		tasks.append(
 			Callable(TargetingBfsWorkers, "neighbor_slice").bind(
-				int(b.x), int(b.y), curr_packed, grid_w, grid_h, holder
+				int(chunk_boundry.x), int(chunk_boundry.y), curr_packed, grid_w, grid_h, holder
 			)
 		)
+	# This run wave internally has a wait to ensure synchronization
 	_worker_pool.run_callables_wave_bounded(tasks)
 
+	# Fetch outputs from threads
 	var merged = Array()
 	for chunk_idx in range(num_chunks):
 		var h: TargetingBfsWorkers.NeighborChunkHolder = holders[chunk_idx]
 		for j in h.packed.size():
 			merged.append(h.packed[j])
 
+	# From the outputs, update if the bfs has seen marked cells
 	for j in merged.size():
 		var nl = merged[j]
 		var f := _cell_flat(nl.x, nl.y)

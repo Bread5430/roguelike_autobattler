@@ -49,8 +49,6 @@ func clear_preview() -> void:
 func _try_commit(path: PackedVector2Array) -> bool:
 	var bc: BeaconController = battle_manager.beacon_controller
 	var tc: Variant = battle_manager.tactical_cursor
-	if tc == null or not tc.has_method("get_selected_unit"):
-		return false
 	var sel: Base_Unit = tc.get_selected_unit()
 	if sel == null or not sel.faction or sel.curr_hp <= 0:
 		return false
@@ -58,7 +56,7 @@ func _try_commit(path: PackedVector2Array) -> bool:
 	var assign_r: float = bc.assign_radius
 	if sel.global_position.distance_to(origin) > assign_r:
 		return false
-	var allies: Array = []
+	var beaconed_units: Array = []
 	var up = battle_manager.unit_parent
 	for c in up.get_children():
 		if not c is Base_Unit:
@@ -69,7 +67,7 @@ func _try_commit(path: PackedVector2Array) -> bool:
 		if u.faction != sel.faction:
 			continue
 		if u.global_position.distance_to(origin) <= assign_r:
-			allies.append(u)
-	if allies.is_empty():
+			beaconed_units.append(u)
+	if beaconed_units.is_empty():
 		return false
-	return bc.register_beacon(path, allies) >= 0
+	return bc.register_beacon(path, beaconed_units) >= 0
