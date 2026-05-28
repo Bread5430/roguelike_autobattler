@@ -1,6 +1,7 @@
 extends Base_Spell
 
 var _confirmed: Array[Vector2] = []
+var _preview_indicator: Node2D
 
 
 func handles_casting_input() -> bool:
@@ -20,6 +21,7 @@ func on_casting_click(world_pos: Vector2) -> Dictionary:
 
 func on_casting_cancel() -> void:
 	_confirmed.clear()
+	clear_preview()
 	if battle_manager and battle_manager.beacon_controller:
 		battle_manager.beacon_controller.clear_preview_line()
 
@@ -31,9 +33,12 @@ func preview(world_pos: Vector2) -> void:
 	if bc == null:
 		return
 	if _confirmed.is_empty():
+		# First click preview: show beacon assignment radius at cursor.
+		_show_radius_preview(world_pos, bc.assign_radius)
 		# Do not draw a full line before the first click.
 		bc.clear_preview_line()
 		return
+	_hide_radius_preview()
 	bc.preview_path(_confirmed, world_pos)
 
 
@@ -42,9 +47,39 @@ func cast(_world_pos: Vector2) -> void:
 
 
 func clear_preview() -> void:
+	_hide_radius_preview()
 	#battle_manager.beacon_controller.clear_preview_line()
 	# Keep the preview line until the end of combat
 	pass
+
+
+func _show_radius_preview(world_pos: Vector2, radius: float) -> void:
+	var unit_parent := battle_manager.get_node("Unit_Parent")
+	if not is_instance_valid(_preview_indicator):
+		_preview_indicator = _make_preview_node(radius)
+		unit_parent.add_child(_preview_indicator)
+	var circle := _preview_indicator as SpellPreviewCircle
+	if circle:
+		circle.radius = radius
+	_preview_indicator.global_position = world_pos
+	_preview_indicator.visible = true
+
+
+func _hide_radius_preview() -> void:
+	if is_instance_valid(_preview_indicator):
+		_preview_indicator.visible = false
+		_preview_indicator.queue_free()
+	_preview_indicator = null
+
+
+func _make_preview_node(radius: float) -> Node2D:
+	var circle := SpellPreviewCircle.new()
+	circle.name = "BeaconPreviewIndicator"
+	circle.z_index = 100
+	circle.radius = radius
+	circle.fill_color = Color(0.35, 0.85, 1.0, 0.24)
+	circle.stroke_color = Color(0.35, 0.85, 1.0, 0.9)
+	return circle
 
 
 func _try_commit(path: PackedVector2Array) -> bool:

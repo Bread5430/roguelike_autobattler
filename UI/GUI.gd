@@ -160,13 +160,16 @@ func handle_game_area_click(event: InputEvent):
 			return
 	var anchor_cell := _get_cell_at_world_position(world_pos)
 	if not anchor_cell:
+		_clear_preview_highlight()
 		return
 	if mb.button_index == MOUSE_BUTTON_LEFT:
+		# Fast cursor movement + click can bypass the hover-frame update, leaving
+		# previous preview colors behind. Clear old preview before recomputing.
+		if objectCells.size() > 0:
+			_reset_highlight(objectCells)
 		targetCell = anchor_cell
 		# If no unit is selected (or we just ran out), don't attempt placement math.
 		if curr_unit_inst == null or curr_unit == null:
-			if objectCells.size() > 0:
-				_reset_highlight(objectCells)
 			objectCells = [anchor_cell]
 			anchor_cell.change_color(Color.YELLOW)
 			isValid = false
@@ -207,6 +210,10 @@ func check_cell():
 	var world_mouse := _get_world_mouse_position()
 	curr_mouse_tile = (world_mouse - unit_board.global_position) / Vector2(unit_board.cellWidth, unit_board.cellHeight)
 	var new_target := _get_cell_at_world_position(world_mouse)
+	if new_target == null:
+		targetCell = null
+		_clear_preview_highlight()
+		return
 	if new_target and new_target != targetCell:
 		targetCell = new_target
 		if objectCells.size() > 0:
@@ -218,6 +225,13 @@ func check_cell():
 		else:
 			objectCells = [new_target]
 			new_target.change_color(Color.YELLOW)
+
+
+func _clear_preview_highlight() -> void:
+	if objectCells.size() > 0:
+		_reset_highlight(objectCells)
+	objectCells.clear()
+	isValid = false
 
 
 func remove_from_board(top_corner: Vector2i, size: Vector2) -> void:
