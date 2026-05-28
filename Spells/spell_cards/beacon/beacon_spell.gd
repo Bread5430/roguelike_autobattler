@@ -42,8 +42,9 @@ func cast(_world_pos: Vector2) -> void:
 
 
 func clear_preview() -> void:
-	if battle_manager and battle_manager.beacon_controller:
-		battle_manager.beacon_controller.clear_preview_line()
+	#battle_manager.beacon_controller.clear_preview_line()
+	# Keep the preview line until the end of combat
+	pass
 
 
 func _try_commit(path: PackedVector2Array) -> bool:

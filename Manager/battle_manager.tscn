@@ -52,6 +52,7 @@ script = ExtResource("8_vbtom")
 
 [node name="BeaconController" type="Node2D" parent="."]
 script = ExtResource("10_beacon")
+waypoint_arrive_distance = 10.0
 
 [connection signal="timeout" from="flow_visualizer/Redraw_Timer" to="flow_visualizer" method="_on_redraw_timer_timeout"]
 [connection signal="timeout" from="Manager_Update" to="." method="_on_manager_update_timeout"]

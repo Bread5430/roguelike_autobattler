@@ -15,8 +15,10 @@ var _next_beacon_id: int = 1
 var _beacons: Dictionary = {}
 ## unit Object instance_id -> beacon_id
 var _unit_to_beacon: Dictionary = {}
-## unit instance_id -> current goal vertex index along path (>= 1)
+## unit instance_id -> current target waypoint index in path (>= 1)
 var _unit_waypoint_idx: Dictionary = {}
+## unit instance_id -> original world-space offset from path[0] at beacon assignment time
+var _unit_offset_from_origin: Dictionary = {}
 var _panic_cache_by_uid: Dictionary = {}
 var _panic_cache_target_iter: int = -1
 var _steer_cache_by_uid: Dictionary = {}
@@ -82,8 +84,8 @@ func is_enemy_within_panic_radius(unit: Base_Unit) -> bool:
 		_panic_cache_by_uid.clear()
 	elif _panic_cache_by_uid.has(uid):
 		return bool(_panic_cache_by_uid[uid])
-	var nearby: Array = target_man.get_targets(!unit.faction, unit.position, 1, maxi(int(panic_radius), 1))
-	var has_enemy := not nearby.is_empty()
+	var nearby_target = target_man.get_closest_target(!unit.faction, unit.position, maxi(int(panic_radius), 1))
+	var has_enemy: bool = nearby_target != null
 	_panic_cache_by_uid[uid] = has_enemy
 	return has_enemy
 
@@ -101,30 +103,31 @@ func compute_steering(unit: Base_Unit) -> Vector2:
 	if _steer_cache_by_uid.has(uid):
 		return _steer_cache_by_uid[uid]
 	
-	# fetch the beacon that a unit is using
 	var path := get_path_for_unit(unit)
 	if path.size() < 2:
 		_steer_cache_by_uid[uid] = Vector2.ZERO
 		return Vector2.ZERO
-		
-	# Determine which section of the path the unit is on by incrementing the waypoint index to the last one traveled to
+
 	var wp_idx: int = int(_unit_waypoint_idx.get(uid, 1))
 	wp_idx = clampi(wp_idx, 1, path.size() - 1)
-	var to_goal: Vector2 = path[wp_idx] - unit.global_position
-	var eps_sq := waypoint_arrive_distance * waypoint_arrive_distance
-	while to_goal.length_squared() <= eps_sq and wp_idx < path.size() - 1:
+	var offset: Vector2 = _unit_offset_from_origin.get(uid, Vector2.ZERO)
+	var arrive_margin_sq := waypoint_arrive_distance * waypoint_arrive_distance
+
+	while true:
+		var target_point: Vector2 = path[wp_idx] + offset
+		var to_goal: Vector2 = target_point - unit.global_position
+		if to_goal.length_squared() > arrive_margin_sq:
+			var move_dir := to_goal.normalized()
+			_steer_cache_by_uid[uid] = move_dir
+			return move_dir
+		elif wp_idx >= path.size() - 1:
+			# Final waypoint reached: release beacon assignment for this unit.
+			remove_unit_beacon(unit)
+			_steer_cache_by_uid[uid] = Vector2.ZERO
+			return Vector2.ZERO
 		wp_idx += 1
 		_unit_waypoint_idx[uid] = wp_idx
-		to_goal = path[wp_idx] - unit.global_position
-	
-	# Check if unit is at the end of the path
-	if (wp_idx >= path.size() - 1 and to_goal.length_squared() <= eps_sq) or to_goal.length_squared() < 0.0001:
-		_steer_cache_by_uid[uid] = Vector2.ZERO
-		return Vector2.ZERO
-	
-	to_goal = to_goal.normalized()
-	_steer_cache_by_uid[uid] = to_goal
-	return to_goal
+	return Vector2.ZERO
 
 
 ## Returns beacon id, or -1 if nothing was registered.
@@ -151,12 +154,15 @@ func register_beacon(path: PackedVector2Array, units: Array, panic_r: float = -1
 
 	var def := StatusEffectLibrary.beacon_following()
 	var stack_key := str(beacon_id)
+	var origin: Vector2 = path_copy[0]
 	for bu in owned_units:
 		remove_unit_beacon(bu)
 	for bu in owned_units:
 		bu.apply_status_effect(def, stack_key, 1, def.default_duration)
-		_unit_to_beacon[bu.get_instance_id()] = beacon_id
-		_unit_waypoint_idx[bu.get_instance_id()] = 1
+		var uid := bu.get_instance_id()
+		_unit_to_beacon[uid] = beacon_id
+		_unit_waypoint_idx[uid] = 1
+		_unit_offset_from_origin[uid] = bu.global_position - origin
 
 	_beacons[beacon_id] = {"path": path_copy, "units": owned_units}
 	_steer_cache_by_uid.clear()
@@ -176,10 +182,12 @@ func remove_unit_beacon(unit: Base_Unit) -> void:
 	if entry == null:
 		_unit_to_beacon.erase(uid)
 		_unit_waypoint_idx.erase(uid)
+		_unit_offset_from_origin.erase(uid)
 		return
 	unit.remove_status_effect(&"beacon_following", str(beacon_id))
 	_unit_to_beacon.erase(uid)
 	_unit_waypoint_idx.erase(uid)
+	_unit_offset_from_origin.erase(uid)
 	var arr: Array = entry["units"]
 	arr.erase(unit)
 	if arr.is_empty():
@@ -198,5 +206,6 @@ func _remove_beacon(beacon_id: int) -> void:
 			(u as Base_Unit).remove_status_effect(&"beacon_following", stack_key)
 			_unit_to_beacon.erase((u as Base_Unit).get_instance_id())
 			_unit_waypoint_idx.erase((u as Base_Unit).get_instance_id())
+			_unit_offset_from_origin.erase((u as Base_Unit).get_instance_id())
 	_beacons.erase(beacon_id)
 	_steer_cache_by_uid.clear()

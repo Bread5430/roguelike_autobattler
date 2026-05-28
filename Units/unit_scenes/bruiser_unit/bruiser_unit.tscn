@@ -70,7 +70,7 @@ animations = [{
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_eggw2"]
-radius = 7.0
+radius = 6.0
 
 [sub_resource type="Animation" id="Animation_rbyda"]
 resource_name = "dead"
@@ -103,7 +103,7 @@ base_damage = 4
 base_speed = 80
 
 [node name="AnimatedSprite2D" parent="." index="0"]
-position = Vector2(1, 0)
+position = Vector2(0, -1)
 sprite_frames = SubResource("SpriteFrames_louiq")
 animation = &"walk"
 

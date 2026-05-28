@@ -1,11 +1,11 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=4 format=3 uid="uid://crwju857j5s5m"]
 
-[ext_resource type="Texture2D" path="res://Assets/CardSprites/attack_speed_field.png" id="1_tex"]
+[ext_resource type="Texture2D" uid="uid://dsu3du010egdt" path="res://Assets/CardSprites/beacon_spell.png" id="1_1s33i"]
 [ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2_sc"]
-[ext_resource type="PackedScene" path="res://Spells/spell_cards/beacon/BeaconSpell.tscn" id="3_spell"]
+[ext_resource type="PackedScene" uid="uid://ca0m2jc1gyrn" path="res://Spells/spell_cards/beacon/BeaconSpell.tscn" id="3_spell"]
 
 [node name="BeaconSpellcard" type="Sprite2D"]
-texture = ExtResource("1_tex")
+texture = ExtResource("1_1s33i")
 script = ExtResource("2_sc")
 related_spell_effect = ExtResource("3_spell")
 mana_cost = 10

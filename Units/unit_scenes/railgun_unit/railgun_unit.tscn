@@ -71,7 +71,7 @@ animations = [{
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_eggw2"]
-radius = 7.0
+radius = 4.12311
 
 [sub_resource type="Animation" id="Animation_rbyda"]
 resource_name = "dead"
@@ -102,7 +102,6 @@ max_hp = 5
 base_speed = 100
 
 [node name="AnimatedSprite2D" parent="." index="0"]
-position = Vector2(1, 0)
 sprite_frames = SubResource("SpriteFrames_louiq")
 animation = &"die"
 

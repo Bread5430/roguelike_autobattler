@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://ca0m2jc1gyrn"]
 
-[ext_resource type="Script" path="res://Spells/spell_cards/beacon/beacon_spell.gd" id="1_beacon"]
+[ext_resource type="Script" uid="uid://dmi5vmx71gcb8" path="res://Spells/spell_cards/beacon/beacon_spell.gd" id="1_beacon"]
 
 [node name="BeaconSpell" type="Node"]
 script = ExtResource("1_beacon")

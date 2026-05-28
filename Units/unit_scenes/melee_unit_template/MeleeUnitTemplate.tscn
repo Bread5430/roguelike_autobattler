@@ -69,7 +69,7 @@ animations = [{
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_eggw2"]
-radius = 7.0
+radius = 5.0
 
 [sub_resource type="Animation" id="Animation_rbyda"]
 resource_name = "dead"
