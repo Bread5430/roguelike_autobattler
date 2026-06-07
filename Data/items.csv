@@ -15,3 +15,4 @@ attack_speed_aura,res://Spells/spell_cards/attack_speed_field/attack_speed_aura_
 ground_slow_field,res://Spells/spell_cards/slow_field/ground_slow_field_spellcard.tscn,SPELL
 dot_ramp,res://Spells/spell_cards/ramping_dot/dot_ramp_spellcard.tscn,SPELL
 beacon_spell,res://Spells/spell_cards/beacon/beacon_spellcard.tscn,SPELL
+aegis_spell,res://Spells/spell_cards/aegis/aegis_spellcard.tscn,SPELL

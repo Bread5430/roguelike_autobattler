@@ -26,3 +26,7 @@ static func stunned() -> StunnedDef:
 
 static func beacon_following() -> BeaconFollowingDef:
 	return BeaconFollowingDef.new()
+
+
+static func aegis() -> AegisDef:
+	return AegisDef.new()

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://0aqyfb33vf53"]
+
+[ext_resource type="Script" uid="uid://ccxwo0i21jkrc" path="res://Spells/spell_cards/aegis/aegis_spell.gd" id="1_aegis"]
+
+[node name="AegisSpell" type="Node"]
+script = ExtResource("1_aegis")

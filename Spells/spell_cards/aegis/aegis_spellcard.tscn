@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://crokkfp3sniwr"]
+
+[ext_resource type="Texture2D" uid="uid://bp8ag0rfcudqj" path="res://Assets/CardSprites/aegis.png" id="1_rr8ks"]
+[ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2_card"]
+[ext_resource type="PackedScene" uid="uid://0aqyfb33vf53" path="res://Spells/spell_cards/aegis/AegisSpell.tscn" id="3_spell"]
+
+[node name="AegisSpellcard" type="Sprite2D"]
+texture = ExtResource("1_rr8ks")
+script = ExtResource("2_card")
+related_spell_effect = ExtResource("3_spell")
+mana_cost = 15
+cooldown = 10
+item_name = "aegis_spell"
+max_stack_size = 1
+spell_slots = 1
+metadata/_custom_type_script = "uid://d2esp2apkum71"
