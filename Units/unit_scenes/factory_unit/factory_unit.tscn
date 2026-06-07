@@ -1,0 +1,144 @@
+[gd_scene load_steps=19 format=3 uid="uid://l84r7sc0h3ge"]
+
+[ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_unit"]
+[ext_resource type="Script" uid="uid://cvom04sravfxr" path="res://Units/unit_scenes/factory_unit/factory_shooter.gd" id="2_shooter"]
+[ext_resource type="Script" uid="uid://gjma7qhqsw26" path="res://Units/unit_scenes/factory_unit/factory_fsm.gd" id="3_fsm"]
+[ext_resource type="Texture2D" uid="uid://br7263x8dngnr" path="res://Assets/UnitSprites/factory_unit.png" id="3_n5cox"]
+[ext_resource type="Script" uid="uid://bfh0eex83r6af" path="res://Units/unit_scenes/ranged_unit_template/basic_ranged.gd" id="5_n5cox"]
+[ext_resource type="PackedScene" uid="uid://bky3sgnwr1jl6" path="res://Units/unit_scenes/splash_template/splash_projectile.tscn" id="7_tv3q8"]
+[ext_resource type="Script" uid="uid://bdywqo7h316og" path="res://Units/unit_scenes/factory_unit/factory_cannon.gd" id="9_p2xrt"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tv3q8"]
+atlas = ExtResource("3_n5cox")
+region = Rect2(0, 32, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_al7on"]
+atlas = ExtResource("3_n5cox")
+region = Rect2(16, 32, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8ygci"]
+atlas = ExtResource("3_n5cox")
+region = Rect2(32, 32, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p2xrt"]
+atlas = ExtResource("3_n5cox")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jova4"]
+atlas = ExtResource("3_n5cox")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kjav3"]
+atlas = ExtResource("3_n5cox")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gsomk"]
+atlas = ExtResource("3_n5cox")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_factory"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tv3q8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_al7on")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8ygci")
+}],
+"loop": true,
+"name": &"die",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p2xrt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jova4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kjav3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gsomk")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 2.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_n5cox"]
+
+[sub_resource type="Animation" id="Animation_dead"]
+resource_name = "dead"
+tracks/0/type = "method"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(1),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"queue_free"
+}]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_factory"]
+_data = {
+&"dead": SubResource("Animation_dead")
+}
+
+[node name="FactoryUnit" instance=ExtResource("1_unit")]
+script = ExtResource("2_shooter")
+is_factory = true
+unit_glossary_id = "factory"
+max_hp = 100
+base_damage = 10
+base_speed = 20
+
+[node name="AnimatedSprite2D" parent="." index="0"]
+scale = Vector2(1.5, 1.5)
+sprite_frames = SubResource("SpriteFrames_factory")
+animation = &"die"
+
+[node name="CollisionShape2D" parent="." index="1"]
+shape = SubResource("CircleShape2D_n5cox")
+
+[node name="AnimationPlayer" parent="." index="2"]
+libraries = {
+&"": SubResource("AnimationLibrary_factory")
+}
+
+[node name="FSM" parent="." index="3"]
+script = ExtResource("3_fsm")
+
+[node name="Laser_Turret" type="Node2D" parent="." index="6"]
+position = Vector2(-6, -4)
+script = ExtResource("5_n5cox")
+attack_range = 200
+metadata/_custom_type_script = "uid://cunpela4keaek"
+
+[node name="Attack_CD" type="Timer" parent="Laser_Turret" index="0"]
+wait_time = 0.3
+one_shot = true
+
+[node name="visble_time" type="Timer" parent="Laser_Turret" index="1"]
+wait_time = 0.05
+one_shot = true
+
+[node name="Cannon_Turret" type="Node2D" parent="." index="7"]
+position = Vector2(-6, -4)
+script = ExtResource("9_p2xrt")
+proj_scene = ExtResource("7_tv3q8")
+attack_range = 300
+metadata/_custom_type_script = "uid://cunpela4keaek"
+
+[node name="Attack_CD" type="Timer" parent="Cannon_Turret" index="0"]
+wait_time = 1.5
+one_shot = true

@@ -17,6 +17,7 @@ enum GameState {
 @onready var viewport = $Viewport
 @onready var gui = $UICanvas/Gui
 @onready var map_generator = $MapManager
+@onready var player_health: PlayerHealthManager = $PlayerHealthManager
 
 var current_state: GameState = GameState.MAP_EXPLORATION
 var current_battle_node: MapNode
@@ -44,6 +45,7 @@ func post_ready():
 func connect_systems():
 	gui.preperation_ended.connect(_end_prep_phase)
 	battle_manager.battle_ended.connect(_on_battle_ended)
+	battle_manager.factory_destroyed.connect(_on_factory_destroyed)
 	map_generator.selected_node.connect(_on_map_node_selected)
 	
 
@@ -181,6 +183,14 @@ func handle_battle_defeat():
 	# return to map
 	change_state(GameState.MAP_EXPLORATION)
 
+
+func _on_factory_destroyed() -> void:
+	handle_game_over()
+
+
+func handle_game_over() -> void:
+	pass  # TODO: run-ending game over screen / restart
+
 # =============================================================================
 # BATTLE COMPLETE STATE
 # =============================================================================
@@ -265,6 +275,8 @@ func start_new_campaign():
 	
 	# Reset systems
 	current_battle_node = null
+	if player_health:
+		player_health.reset_for_new_campaign()
 	
 	# Generate new map
 	if map_generator:

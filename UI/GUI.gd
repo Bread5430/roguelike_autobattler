@@ -13,6 +13,7 @@ var unit_board : GridContainer
 @onready var end_prep : Button = $End_Prep
 @onready var tactical_cursor = $TacticalCursor
 @onready var item_details_card: ItemDetailsCard = $ItemDetailsCard
+@onready var player_health_bar: PanelContainer = $PlayerHealthBar
 var item_details_builder := ItemDetailsBuilder.new()
 
 #### CASTING MODE (battle)
@@ -76,6 +77,9 @@ func post_ready():
 
 	spell_bar.battle_manager = battle_manager
 	battle_manager.tactical_cursor = tactical_cursor
+	var gsm := get_parent().get_parent()
+	if gsm != null and gsm.has_node("PlayerHealthManager"):
+		player_health_bar.setup(gsm.get_node("PlayerHealthManager") as PlayerHealthManager)
 	inventory.inspect_requested.connect(_on_inventory_inspect_requested)
 	spell_bar.spell_slot_clicked.connect(_on_spell_slot_clicked)
 	spell_bar.spell_slot_right_clicked.connect(_on_spell_slot_right_clicked)

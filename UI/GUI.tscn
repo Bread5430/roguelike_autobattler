@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://klgd83iitkqd" path="res://UI/Inventory.tscn" id="4_n3xue"]
 [ext_resource type="PackedScene" uid="uid://dxxq8sug7uh1n" path="res://UI/TacticalCursor.tscn" id="5_tactical"]
 [ext_resource type="PackedScene" path="res://UI/ItemDetailsCard.tscn" id="6_item_details"]
+[ext_resource type="PackedScene" uid="uid://c8phfactoryhealth" path="res://UI/PlayerHealthBar.tscn" id="7_health"]
 
 [node name="Gui" type="Control"]
 layout_mode = 3
@@ -16,6 +17,9 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_u7efx")
 selector_rect_debug = false
+
+[node name="PlayerHealthBar" parent="." instance=ExtResource("7_health")]
+layout_mode = 1
 
 [node name="Inventory" parent="." instance=ExtResource("4_n3xue")]
 layout_mode = 0

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://ooyule8c5gdc"]
+[gd_scene load_steps=11 format=3 uid="uid://ooyule8c5gdc"]
 
 [ext_resource type="PackedScene" uid="uid://b2hkuu4ohgbnk" path="res://Manager/battle_manager.tscn" id="1_b7jtx"]
 [ext_resource type="Script" uid="uid://dtlxst4r4hl5x" path="res://Manager/game_state_manager.gd" id="1_rks66"]
@@ -9,9 +9,13 @@
 [ext_resource type="Script" uid="uid://bqf80g2fr8wd5" path="res://Manager/input_coordinator.gd" id="6_coord"]
 [ext_resource type="PackedScene" uid="uid://ddv7kwodp285" path="res://Testing/dev_console.tscn" id="7_devc"]
 [ext_resource type="Script" uid="uid://c2oq0joo2w8a" path="res://Manager/generic_worker_pool.gd" id="8_pool"]
+[ext_resource type="Script" uid="uid://dose1lowdwe81" path="res://Manager/player_health_manager.gd" id="9_health"]
 
 [node name="GameStateManager" type="Node"]
 script = ExtResource("1_rks66")
+
+[node name="PlayerHealthManager" type="Node" parent="."]
+script = ExtResource("9_health")
 
 [node name="GenericWorkerPool" type="Node" parent="."]
 script = ExtResource("8_pool")
@@ -40,16 +44,16 @@ script = ExtResource("5_drtnq")
 [node name="Gui" parent="UICanvas" node_paths=PackedStringArray("battle_manager") instance=ExtResource("5_4wcpc")]
 battle_manager = NodePath("../../BattleManager")
 
-[node name="Inventory" parent="UICanvas/Gui" index="0"]
+[node name="Inventory" parent="UICanvas/Gui" index="1"]
 starter_items = Array[String](["chaff_swarm", "splash_unit", "one_ranged", "four_melee", "arc_unit", "arc_launcher", "router_card", "ground_slow_field", "dot_ramp", "attack_speed_aura", "sniper_card", "bruiser_card", "exploder_card", "railgun_card", "beacon_spell", "aegis_spell"])
 starter_items_count = Array[int]([3, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1])
 columns = 7
 rows = 5
 
-[node name="SpellBar" parent="UICanvas/Gui" index="1"]
+[node name="SpellBar" parent="UICanvas/Gui" index="2"]
 visible = true
 
-[node name="TacticalCursor" parent="UICanvas/Gui" index="4"]
+[node name="TacticalCursor" parent="UICanvas/Gui" index="5"]
 mouse_filter = 2
 
 [editable path="UICanvas/Gui"]
