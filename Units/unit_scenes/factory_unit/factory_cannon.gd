@@ -1,5 +1,6 @@
 extends Attack_Base
 
+@export var target_rank: int = 1
 @export var proj_scene : PackedScene
 @export var proj_pool : Node
 
@@ -11,7 +12,24 @@ extends Attack_Base
 func set_proj_pool(pool : Node):
 	proj_pool = pool
 
+
+func check_new_targets() -> bool:
+	var targets = target_cmp.get_N_targets(2)
+	var new_target: Base_Unit = null
+
+	# If there are multiple targets, shoot at the further one
+	if target_rank < targets.size():
+		new_target = targets[target_rank] as Base_Unit
+	if new_target == target_unit:
+		return false
+	target_unit = new_target
+	_last_retarget_frame = Engine.get_physics_frames()
+	return true
+
+
 func do_attack():
+	if not _target_is_valid_for_attack() or proj_pool == null or proj_scene == null:
+		return
 	# Spawn a projectile instance, and pass it the information of its target
 	
 	var new_projectile = proj_pool.spawn_projectile(proj_scene)

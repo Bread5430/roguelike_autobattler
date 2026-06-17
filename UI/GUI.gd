@@ -287,7 +287,11 @@ func start_prep_phase():
 	end_prep.show()
 	end_prep.disabled = false
 	spell_bar.show()
-	
+
+
+func enter_map_exploration() -> void:
+	spell_bar.hide()
+
 
 func _on_end_prep_pressed() -> void:
 	if enemy_formation_editor_mode:

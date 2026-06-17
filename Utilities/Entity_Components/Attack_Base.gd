@@ -13,6 +13,11 @@ var can_attack = true
 const RETARGET_INTERVAL_FRAMES := 3
 var _last_retarget_frame: int = -1
 
+
+func _ready() -> void:
+	if attack_cd != null and not attack_cd.timeout.is_connected(_on_attack_cd_timeout):
+		attack_cd.timeout.connect(_on_attack_cd_timeout)
+
 ####### Primary Functions
 
 func in_range() -> bool:

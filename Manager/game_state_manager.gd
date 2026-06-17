@@ -76,6 +76,8 @@ func change_state(new_state: GameState):
 func enable_map_interaction():
 	"""Enable map interaction and disable battle systems"""
 
+	gui.enter_map_exploration()
+
 	map_generator.set_process_input(true)
 	map_generator.show()
 	

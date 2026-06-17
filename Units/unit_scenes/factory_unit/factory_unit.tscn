@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://cvom04sravfxr" path="res://Units/unit_scenes/factory_unit/factory_shooter.gd" id="2_shooter"]
 [ext_resource type="Script" uid="uid://gjma7qhqsw26" path="res://Units/unit_scenes/factory_unit/factory_fsm.gd" id="3_fsm"]
 [ext_resource type="Texture2D" uid="uid://br7263x8dngnr" path="res://Assets/UnitSprites/factory_unit.png" id="3_n5cox"]
-[ext_resource type="Script" uid="uid://bfh0eex83r6af" path="res://Units/unit_scenes/ranged_unit_template/basic_ranged.gd" id="5_n5cox"]
+[ext_resource type="Script" uid="uid://b6d2dhxeb2q73" path="res://Units/unit_scenes/factory_unit/factory_laser.gd" id="5_n5cox"]
 [ext_resource type="PackedScene" uid="uid://bky3sgnwr1jl6" path="res://Units/unit_scenes/splash_template/splash_projectile.tscn" id="7_tv3q8"]
 [ext_resource type="Script" uid="uid://bdywqo7h316og" path="res://Units/unit_scenes/factory_unit/factory_cannon.gd" id="9_p2xrt"]
 
@@ -133,7 +133,7 @@ wait_time = 0.05
 one_shot = true
 
 [node name="Cannon_Turret" type="Node2D" parent="." index="7"]
-position = Vector2(-6, -4)
+position = Vector2(6, -4)
 script = ExtResource("9_p2xrt")
 proj_scene = ExtResource("7_tv3q8")
 attack_range = 300
