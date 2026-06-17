@@ -14,6 +14,8 @@ var unit_board : GridContainer
 @onready var tactical_cursor = $TacticalCursor
 @onready var item_details_card: ItemDetailsCard = $ItemDetailsCard
 @onready var player_health_bar: PanelContainer = $PlayerHealthBar
+@onready var battle_rewards_ui: BattleRewardsUI = $BattleRewardsUI
+@onready var passthrough_helper: Node = $Passthough_Helper
 var item_details_builder := ItemDetailsBuilder.new()
 
 #### CASTING MODE (battle)
@@ -79,7 +81,12 @@ func post_ready():
 	battle_manager.tactical_cursor = tactical_cursor
 	var gsm := get_parent().get_parent()
 	if gsm != null and gsm.has_node("PlayerHealthManager"):
-		player_health_bar.setup(gsm.get_node("PlayerHealthManager") as PlayerHealthManager)
+		var health_manager := gsm.get_node("PlayerHealthManager") as PlayerHealthManager
+		player_health_bar.setup(health_manager)
+		if battle_rewards_ui:
+			battle_rewards_ui.setup(health_manager, passthrough_helper)
+			battle_rewards_ui.instant_gold_claimed.connect(_on_battle_reward_gold_claimed)
+			battle_rewards_ui.unit_picked.connect(_on_battle_reward_unit_picked)
 	inventory.inspect_requested.connect(_on_inventory_inspect_requested)
 	spell_bar.spell_slot_clicked.connect(_on_spell_slot_clicked)
 	spell_bar.spell_slot_right_clicked.connect(_on_spell_slot_right_clicked)
@@ -291,6 +298,26 @@ func start_prep_phase():
 
 func enter_map_exploration() -> void:
 	spell_bar.hide()
+	toggle_inventory(true)
+
+
+func show_battle_rewards(payload: Dictionary) -> void:
+	if item_details_card:
+		item_details_card.hide_details()
+	toggle_inventory(false)
+	if battle_rewards_ui:
+		await battle_rewards_ui.open(payload)
+
+
+func _on_battle_reward_gold_claimed(amount: int) -> void:
+	var gsm := get_parent().get_parent()
+	if gsm and gsm.has_method("add_gold"):
+		gsm.add_gold(amount)
+
+
+func _on_battle_reward_unit_picked(item_id: String) -> void:
+	if inventory:
+		inventory.add_item(item_id, 1)
 
 
 func _on_end_prep_pressed() -> void:
@@ -894,6 +921,9 @@ func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 		if button_rect.has_point(mouse_pos):
 			return true
 	
-	# Add other UI elements here as needed
+	if battle_rewards_ui and battle_rewards_ui.visible:
+		var rewards_rect = battle_rewards_ui.get_global_rect()
+		if rewards_rect.has_point(mouse_pos):
+			return true
 	
 	return false

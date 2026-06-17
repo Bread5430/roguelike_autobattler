@@ -21,6 +21,7 @@ enum GameState {
 
 var current_state: GameState = GameState.MAP_EXPLORATION
 var current_battle_node: MapNode
+var run_gold: int = 0
 
 # =============================================================================
 # INITIALIZATION AND SETUP
@@ -160,6 +161,8 @@ func _end_prep_phase():
 func start_battle_sequence():
 	"""Start the actual battle"""
 	print("Battle started at node %d" % current_battle_node.id)
+	if player_health:
+		player_health.snapshot_health_for_battle()
 	battle_manager.start_battle()
 	# The battle will run until _on_battle_ended is called
 
@@ -207,48 +210,88 @@ func handle_battle_completion():
 	# Mark node as completed
 	map_generator.complete_current_battle()
 	
-	# Give rewards, show victory screen, etc.
-	award_battle_rewards()
-	
-	# Check if campaign is complete
-	if current_battle_node.node_type == "end":
-		change_state(GameState.CAMPAIGN_COMPLETE)
-	else:
-		# Brief pause then return to map
-		await get_tree().create_timer(2.0).timeout
-		change_state(GameState.MAP_EXPLORATION)
+	var is_campaign_end := current_battle_node.node_type == "end"
+	var reward_payload := calculate_battle_rewards()
+	print("Battle rewards: %s" % str(reward_payload))
+	await gui.show_battle_rewards(reward_payload)
 	
 	current_battle_node = null
+	
+	if is_campaign_end:
+		change_state(GameState.CAMPAIGN_COMPLETE)
+	else:
+		change_state(GameState.MAP_EXPLORATION)
+
+func add_gold(amount: int) -> void:
+	if amount <= 0:
+		return
+	run_gold += amount
+	print("Gold gained: +%d (total: %d)" % [amount, run_gold])
 
 func award_battle_rewards():
-	"""Award rewards based on battle performance"""
-	var rewards = calculate_battle_rewards()
-	print("Battle rewards: %s" % str(rewards))
-	
-	# TODO: Implement your reward system here
-	# e.g., add gold, experience, new units, etc.
+	"""Deprecated: rewards are applied interactively via battle rewards UI."""
+	pass
 
 func calculate_battle_rewards() -> Dictionary:
-	"""Calculate rewards based on node difficulty and performance"""
-	var base_rewards = {
-		"gold": 100,
-		"experience": 50
-	}
+	"""Calculate rewards based on node difficulty and performance."""
+	var gold_amount := 100
 	
-	# Scale by difficulty
 	match current_battle_node.difficulty:
 		"light":
-			base_rewards.gold *= 1
+			gold_amount = int(gold_amount * 1)
 		"medium":
-			base_rewards.gold *= 1.5
+			gold_amount = int(gold_amount * 1.5)
 		"heavy":
-			base_rewards.gold *= 2
+			gold_amount = int(gold_amount * 2)
 	
-	# Scale by stage
-	base_rewards.gold += current_battle_node.stage * 10
-	base_rewards.experience += current_battle_node.stage * 5
+	gold_amount += current_battle_node.stage * 10
 	
-	return base_rewards
+	var unit_options := _pick_random_unit_reward_options(3)
+	
+	return {
+		"entries": [
+			{
+				"id": "gold",
+				"kind": "instant",
+				"label": "Collect gold (+%d)" % gold_amount,
+				"gold": gold_amount,
+				"claimed": false
+			},
+			{
+				"id": "unit_pick",
+				"kind": "unit_choice",
+				"label": "Recruit a unit",
+				"options": unit_options,
+				"claimed": false
+			}
+		]
+	}
+
+func _get_unit_reward_pool() -> Array[String]:
+	var pool: Array[String] = []
+	for map_item in ITEM_NAME.unit_role_map:
+		var item_id: String = map_item[1]
+		var scene: PackedScene = ITEM_NAME.item_lookup(item_id)
+		if scene == null:
+			continue
+		var path := scene.resource_path
+		if "Spells/" in path:
+			continue
+		pool.append(item_id)
+	return pool
+
+func _pick_random_unit_reward_options(count: int) -> Array[String]:
+	var pool := _get_unit_reward_pool()
+	if pool.is_empty():
+		return []
+	var shuffled := pool.duplicate()
+	shuffled.shuffle()
+	var options: Array[String] = []
+	for i in mini(count, shuffled.size()):
+		options.append(shuffled[i])
+	while options.size() < count and not pool.is_empty():
+		options.append(pool[options.size() % pool.size()])
+	return options
 
 # =============================================================================
 # CAMPAIGN COMPLETE STATE
@@ -277,6 +320,7 @@ func start_new_campaign():
 	
 	# Reset systems
 	current_battle_node = null
+	run_gold = 0
 	if player_health:
 		player_health.reset_for_new_campaign()
 	

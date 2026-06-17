@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://dy1rgpvj3afyd"]
+[gd_scene load_steps=8 format=3 uid="uid://dy1rgpvj3afyd"]
 
 [ext_resource type="Script" uid="uid://bysfs5te4mpkk" path="res://UI/GUI.gd" id="1_u7efx"]
 [ext_resource type="Script" uid="uid://csmfu6ekj5t6l" path="res://UI/passthrough_helper.gd" id="3_dl5f7"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://dxxq8sug7uh1n" path="res://UI/TacticalCursor.tscn" id="5_tactical"]
 [ext_resource type="PackedScene" path="res://UI/ItemDetailsCard.tscn" id="6_item_details"]
 [ext_resource type="PackedScene" uid="uid://c8phfactoryhealth" path="res://UI/PlayerHealthBar.tscn" id="7_health"]
+[ext_resource type="PackedScene" path="res://UI/BattleRewardsUI.tscn" id="8_rewards"]
 
 [node name="Gui" type="Control"]
 layout_mode = 3
@@ -59,5 +60,13 @@ layout_mode = 1
 [node name="ItemDetailsCard" parent="." instance=ExtResource("6_item_details")]
 layout_mode = 1
 anchors_preset = 0
+
+[node name="BattleRewardsUI" parent="." instance=ExtResource("8_rewards")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [connection signal="pressed" from="End_Prep" to="." method="_on_end_prep_pressed"]
