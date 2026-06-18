@@ -409,7 +409,11 @@ func _grant_all_unit_cards_to_inventory(qty: int) -> void:
 			continue
 		var inst = sc.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
 		if inst is Unit_Card:
-			inst.setup_unit()
+			var card := inst as Unit_Card
+			if card.enemy_formation_only:
+				card.queue_free()
+				continue
+			card.setup_unit()
 			inventory.add_item(item_id, qty)
 		if inst:
 			inst.queue_free()

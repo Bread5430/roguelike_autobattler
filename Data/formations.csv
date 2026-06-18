@@ -2,8 +2,8 @@ Name,Level,X,Y,W,H,Role,Group,Exact_Unit
 rockets,heavy,0,0,2,2,1,1,chaff_swarm
 ,,0,18,2,2,1,1,chaff_swarm
 ,,4,4,2,2,1,1,chaff_swarm
-,,6,4,2,2,1,1,router_card
-,,6,13,2,2,1,1,router_card
+,,6,4,2,2,1,1,static_router_card
+,,6,13,2,2,1,1,static_router_card
 ,,7,2,1,2,1,1,splash_unit
 ,,7,7,1,2,1,1,splash_unit
 ,,7,11,1,2,1,1,splash_unit
@@ -11,8 +11,8 @@ rockets,heavy,0,0,2,2,1,1,chaff_swarm
 ,,9,5,1,4,1,1,four_melee
 mid_push,medium,5,3,4,1,1,1,four_melee
 ,,5,15,4,1,1,1,four_melee
-,,6,4,2,2,1,1,router_card
-,,6,13,2,2,1,1,router_card
+,,6,4,2,2,1,1,static_router_card
+,,6,13,2,2,1,1,static_router_card
 ,,10,8,2,2,1,1,chaff_swarm
 ,,11,6,2,2,1,1,railgun_card
 ,,11,10,2,2,1,1,railgun_card
@@ -24,7 +24,7 @@ rail_wall,light,4,2,2,2,1,1,railgun_card
 ,,4,11,2,2,1,1,railgun_card
 ,,4,15,2,2,1,1,railgun_card
 ,,6,0,1,4,1,1,four_melee
-,,6,4,2,2,1,1,router_card
+,,6,4,2,2,1,1,static_router_card
 ,,6,8,1,4,1,1,four_melee
-,,6,13,2,2,1,1,router_card
+,,6,13,2,2,1,1,static_router_card
 ,,6,16,1,4,1,1,four_melee

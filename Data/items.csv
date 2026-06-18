@@ -10,6 +10,7 @@ arc_launcher,res://Units/unit_cards/arc_launcher/arc_launcher.tscn,CLEAR
 bruiser_card,res://Units/unit_cards/bruiser_card/bruiser_card.tscn,TANK
 exploder_card,res://Units/unit_cards/exploder_card/exploder_card.tscn,TANK
 router_card,res://Units/unit_cards/router_card/router_card.tscn,ROUTER
+static_router_card,res://Units/unit_cards/stationary_router_card/static_router_card.tscn,ROUTER
 circular_aoe,res://Spells/spell_cards/circle_aoe/circular_aoe_spellcard.tscn,SPELL
 attack_speed_aura,res://Spells/spell_cards/attack_speed_field/attack_speed_aura_spellcard.tscn,SPELL
 ground_slow_field,res://Spells/spell_cards/slow_field/ground_slow_field_spellcard.tscn,SPELL

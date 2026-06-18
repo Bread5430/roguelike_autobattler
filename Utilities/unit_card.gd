@@ -7,6 +7,8 @@ class_name Unit_Card
 var rotated_placement_size : Vector2 
 
 @export var related_unit : PackedScene
+## When true, only spawned via enemy formations — excluded from player inventory grants and battle rewards.
+@export var enemy_formation_only: bool = false
 ## When true, other routers cannot be placed overlapping this card's [member router_exclusion_radius] (deployment only).
 @export var is_router_card: bool = false
 ## World pixels: minimum center-to-center spacing vs other routers' zones ([code]r_self + r_other[/code]).

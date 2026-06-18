@@ -1,0 +1,134 @@
+[gd_scene load_steps=18 format=3 uid="uid://bewsgu5sudjqs"]
+
+[ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_vwfem"]
+[ext_resource type="Script" uid="uid://ceyfbxm75cf3s" path="res://Units/unit_scenes/stationary_router_unit/stationary_router_unit.gd" id="2_p8xm2"]
+[ext_resource type="Texture2D" uid="uid://bilk24nv5skh5" path="res://Assets/UnitSprites/router_unit.png" id="3_1pvk8"]
+[ext_resource type="Script" uid="uid://dh4tqvn6emwhy" path="res://Units/unit_scenes/ranged_unit_template/ranged_unit_fsm.gd" id="4_cdkdv"]
+[ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="5_xyvpw"]
+[ext_resource type="Script" uid="uid://bfh0eex83r6af" path="res://Units/unit_scenes/ranged_unit_template/basic_ranged.gd" id="6_gxp8o"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_y1ocy"]
+atlas = ExtResource("3_1pvk8")
+region = Rect2(0, 32, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_40ata"]
+atlas = ExtResource("3_1pvk8")
+region = Rect2(16, 32, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ue6il"]
+atlas = ExtResource("3_1pvk8")
+region = Rect2(32, 32, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ctcih"]
+atlas = ExtResource("3_1pvk8")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_056n4"]
+atlas = ExtResource("3_1pvk8")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0mm47"]
+atlas = ExtResource("3_1pvk8")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1bjvm"]
+atlas = ExtResource("3_1pvk8")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_louiq"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_y1ocy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_40ata")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ue6il")
+}],
+"loop": true,
+"name": &"die",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ctcih")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_056n4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0mm47")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1bjvm")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 4.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_eggw2"]
+radius = 7.0
+
+[sub_resource type="Animation" id="Animation_rbyda"]
+resource_name = "dead"
+tracks/0/type = "method"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(1),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"queue_free"
+}]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_p2yhk"]
+_data = {
+&"dead": SubResource("Animation_rbyda")
+}
+
+[node name="stationary_router_unit" instance=ExtResource("1_vwfem")]
+script = ExtResource("2_p8xm2")
+ally_death_stun_duration = 10.0
+aura_radius = 10000.0
+aura_refresh_duration = 2.0
+unit_glossary_id = "static_router_unit"
+max_hp = 40
+
+[node name="AnimatedSprite2D" parent="." index="0"]
+position = Vector2(1, 0)
+sprite_frames = SubResource("SpriteFrames_louiq")
+animation = &"walk"
+
+[node name="CollisionShape2D" parent="." index="1"]
+shape = SubResource("CircleShape2D_eggw2")
+
+[node name="AnimationPlayer" parent="." index="2"]
+libraries = {
+&"": SubResource("AnimationLibrary_p2yhk")
+}
+
+[node name="FSM" parent="." index="3"]
+script = ExtResource("4_cdkdv")
+
+[node name="Ranged_Attack" parent="." index="5" instance=ExtResource("5_xyvpw")]
+script = ExtResource("6_gxp8o")
+attack_range = 200
+
+[node name="Attack_CD" parent="Ranged_Attack" index="0"]
+wait_time = 0.5
+
+[node name="visble_time" type="Timer" parent="Ranged_Attack" index="1"]
+wait_time = 0.05
+one_shot = true
+
+[connection signal="timeout" from="Ranged_Attack/visble_time" to="Ranged_Attack" method="_on_visble_time_timeout"]
+
+[editable path="Ranged_Attack"]

@@ -1,0 +1,19 @@
+[gd_scene load_steps=5 format=3 uid="uid://dp1o0oo6by0n4"]
+
+[ext_resource type="PackedScene" uid="uid://bvvvuetwc36b3" path="res://Utilities/unit_card.tscn" id="1_fnbf4"]
+[ext_resource type="Texture2D" uid="uid://b4qagg8un066v" path="res://Assets/CardSprites/router_card.png" id="2_ra8v4"]
+[ext_resource type="Script" uid="uid://17na640pehp4" path="res://Units/unit_cards/stationary_router_card/static_router_card.gd" id="3_fnbf4"]
+[ext_resource type="PackedScene" uid="uid://bewsgu5sudjqs" path="res://Units/unit_scenes/stationary_router_unit/stationary_router_unit.tscn" id="4_ra8v4"]
+
+[node name="stationary_router_card" instance=ExtResource("1_fnbf4")]
+texture = ExtResource("2_ra8v4")
+script = ExtResource("3_fnbf4")
+num_units = 1
+placement_size = Vector2(2, 2)
+related_unit = ExtResource("4_ra8v4")
+enemy_formation_only = true
+is_router_card = true
+router_exclusion_radius = 0.0
+item_name = "static_router_card"
+max_stack_size = 5
+unit_slots = 1

@@ -169,7 +169,8 @@ func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -
 		return null
 
 	var unit_item_inst = selected_unit_scene.instantiate()
-	if not unit_item_inst.has_method("setup_unit"):
+	if not unit_item_inst is Unit_Card:
+		push_warning("Formation entry resolved to non-card scene: %s" % selected_unit_scene.resource_path)
 		unit_item_inst.queue_free()
 		return null
 	unit_item_inst.setup_unit()

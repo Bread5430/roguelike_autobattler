@@ -277,6 +277,12 @@ func _get_unit_reward_pool() -> Array[String]:
 		var path := scene.resource_path
 		if "Spells/" in path:
 			continue
+		var probe = scene.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+		if probe is Unit_Card and (probe as Unit_Card).enemy_formation_only:
+			probe.queue_free()
+			continue
+		if probe:
+			probe.queue_free()
 		pool.append(item_id)
 	return pool
 
