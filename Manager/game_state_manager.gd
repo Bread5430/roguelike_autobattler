@@ -100,9 +100,40 @@ func _on_map_node_selected(node: MapNode):
 	if node.completed:
 		print("Node %d has already been visited." % node.id)
 		return
-	else:
-		current_battle_node = node
-		change_state(GameState.BATTLE_PREPARATION)
+
+	current_battle_node = node
+	match node.content_type:
+		MapNode.ContentType.BATTLE:
+			change_state(GameState.BATTLE_PREPARATION)
+		MapNode.ContentType.RANDOM_EVENT:
+			_enter_random_event_node(node)
+		MapNode.ContentType.REPAIR_SITE:
+			_enter_repair_site_node(node)
+		MapNode.ContentType.SHOP:
+			_enter_shop_node(node)
+		_:
+			push_warning("Unknown map node content type at node %d" % node.id)
+			change_state(GameState.BATTLE_PREPARATION)
+
+func _enter_random_event_node(node: MapNode) -> void:
+	# TODO: Show random event UI.
+	print("TODO: Random event UI at node %d" % node.id)
+	_complete_special_node_visit(node)
+
+func _enter_repair_site_node(node: MapNode) -> void:
+	# TODO: Show repair site UI.
+	print("TODO: Repair site UI at node %d" % node.id)
+	_complete_special_node_visit(node)
+
+func _enter_shop_node(node: MapNode) -> void:
+	# TODO: Show shop UI.
+	print("TODO: Shop UI at node %d" % node.id)
+	_complete_special_node_visit(node)
+
+func _complete_special_node_visit(node: MapNode) -> void:
+	map_generator.complete_current_battle()
+	current_battle_node = null
+	change_state(GameState.MAP_EXPLORATION)
 
 # =============================================================================
 # BATTLE PREPARATION STATE

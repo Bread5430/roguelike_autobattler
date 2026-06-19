@@ -10,6 +10,11 @@ extends Node2D
 @export var grid_rows := 4
 @export_range(0.0, 1.0) var grid_cell_fill_chance := 0.9
 
+@export_group("Special Node Distribution")
+@export var random_event_node_count := 2
+@export var repair_site_node_count := 1
+@export var shop_node_count := 1
+
 @export_group("Visual Settings")
 @export var node_radius := 15.0
 @export var draw_connections := true
@@ -32,14 +37,18 @@ var completed_nodes: Array[MapNode] = []
 var is_player_moving := false
 var pending_node: MapNode
 
-# Visual colors
-var NODE_COLORS = {
-	"normal": Color.BLUE,
-	"start": Color.GREEN,
-	"end": Color.RED,
-	"current": Color.YELLOW,
-	"completed": Color.GRAY,
-	"available": Color.CYAN
+const CONTENT_TYPE_COLORS := {
+	MapNode.ContentType.BATTLE: Color(0.2, 0.45, 0.95),
+	MapNode.ContentType.RANDOM_EVENT: Color(0.65, 0.25, 0.85),
+	MapNode.ContentType.REPAIR_SITE: Color(0.95, 0.55, 0.15),
+	MapNode.ContentType.SHOP: Color(0.95, 0.85, 0.2),
+}
+
+const CONTENT_TYPE_LABELS := {
+	MapNode.ContentType.BATTLE: "B",
+	MapNode.ContentType.RANDOM_EVENT: "?",
+	MapNode.ContentType.REPAIR_SITE: "R",
+	MapNode.ContentType.SHOP: "$",
 }
 
 # Signals
@@ -71,6 +80,7 @@ func generate_map():
 	connect_grid_neighbors()
 	ensure_reachability_bridges()
 	identify_start_end_nodes()
+	assign_special_node_types()
 	calculate_difficulty_progression()
 	update_node_availability()
 	
@@ -189,6 +199,49 @@ func identify_start_end_nodes():
 	current_node = start_node
 	
 	end_node.node_type = "end"
+
+func assign_special_node_types() -> void:
+	"""After generation, all nodes are battles; convert some into special node types."""
+	var eligible: Array[MapNode] = []
+	for node in nodes:
+		node.content_type = MapNode.ContentType.BATTLE
+		if node != start_node and node != end_node:
+			eligible.append(node)
+	eligible.shuffle()
+
+	var next_idx := 0
+	next_idx = _assign_content_type_from_pool(eligible, next_idx, MapNode.ContentType.RANDOM_EVENT, random_event_node_count)
+	next_idx = _assign_content_type_from_pool(eligible, next_idx, MapNode.ContentType.REPAIR_SITE, repair_site_node_count)
+	_assign_content_type_from_pool(eligible, next_idx, MapNode.ContentType.SHOP, shop_node_count)
+
+	print(
+		"Special nodes assigned — events: %d, repair: %d, shop: %d, battle: %d"
+		% [_count_nodes_with_content_type(MapNode.ContentType.RANDOM_EVENT),
+		   _count_nodes_with_content_type(MapNode.ContentType.REPAIR_SITE),
+		   _count_nodes_with_content_type(MapNode.ContentType.SHOP),
+		   _count_nodes_with_content_type(MapNode.ContentType.BATTLE)]
+	)
+
+func _assign_content_type_from_pool(
+	pool: Array[MapNode],
+	start_idx: int,
+	target_type: MapNode.ContentType,
+	count: int
+) -> int:
+	var assigned := 0
+	var idx := start_idx
+	while assigned < count and idx < pool.size():
+		pool[idx].content_type = target_type
+		assigned += 1
+		idx += 1
+	return idx
+
+func _count_nodes_with_content_type(target_type: MapNode.ContentType) -> int:
+	var total := 0
+	for node in nodes:
+		if node.content_type == target_type:
+			total += 1
+	return total
 
 func calculate_difficulty_progression():
 	"""Calculate difficulty and stage for each node based on distance from start"""
@@ -325,13 +378,65 @@ func draw_connections_visual():
 		draw_line(connection.from_node.global_position, connection.to_node.global_position, color, width)
 
 func draw_nodes_visual():
-	"""Draw all nodes with appropriate colors"""
+	"""Draw all nodes with shape and color based on content type and state."""
 	for node in nodes:
-		var color = get_node_color(node)
-		draw_circle(node.global_position, node_radius, color)
-		
-		# Draw border
-		draw_arc(node.global_position, node_radius, 0, TAU, 32, Color.WHITE, 2.0)
+		var color := get_node_color(node)
+		draw_node_shape(node, color)
+		draw_node_border(node)
+
+func draw_node_shape(node: MapNode, color: Color) -> void:
+	var pos := node.global_position
+	var r := node_radius
+	match node.content_type:
+		MapNode.ContentType.RANDOM_EVENT:
+			draw_colored_polygon(
+				PackedVector2Array([
+					pos + Vector2(0, -r),
+					pos + Vector2(r, 0),
+					pos + Vector2(0, r),
+					pos + Vector2(-r, 0),
+				]),
+				color
+			)
+		MapNode.ContentType.REPAIR_SITE:
+			draw_circle(pos, r, color)
+			var arm := r * 0.55
+			var thickness := r * 0.22
+			draw_rect(Rect2(pos.x - arm, pos.y - thickness * 0.5, arm * 2.0, thickness), Color.WHITE)
+			draw_rect(Rect2(pos.x - thickness * 0.5, pos.y - arm, thickness, arm * 2.0), Color.WHITE)
+		MapNode.ContentType.SHOP:
+			draw_rect(Rect2(pos.x - r, pos.y - r, r * 2.0, r * 2.0), color)
+		_:
+			draw_circle(pos, r, color)
+
+func draw_node_border(node: MapNode) -> void:
+	var pos := node.global_position
+	var r := node_radius
+	var border_color := Color.WHITE
+	var border_width := 2.0
+	if node == current_node:
+		border_color = Color.YELLOW
+		border_width = 3.0
+	elif node.available:
+		border_color = Color.CYAN
+		border_width = 2.5
+	match node.content_type:
+		MapNode.ContentType.RANDOM_EVENT:
+			draw_polyline(
+				PackedVector2Array([
+					pos + Vector2(0, -r),
+					pos + Vector2(r, 0),
+					pos + Vector2(0, r),
+					pos + Vector2(-r, 0),
+					pos + Vector2(0, -r),
+				]),
+				border_color,
+				border_width
+			)
+		MapNode.ContentType.SHOP:
+			draw_rect(Rect2(pos.x - r, pos.y - r, r * 2.0, r * 2.0), border_color, false, border_width)
+		_:
+			draw_arc(pos, r, 0, TAU, 32, border_color, border_width)
 
 func draw_node_labels_visual():
 	"""Draw labels on nodes"""
@@ -339,25 +444,26 @@ func draw_node_labels_visual():
 	var font_size = 12
 	
 	for node in nodes:
-		var label = str(node.id)
+		var label = CONTENT_TYPE_LABELS.get(node.content_type, str(node.id))
 		var text_size = font.get_string_size(label, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
 		var text_pos = node.global_position - text_size / 2
 		draw_string(font, text_pos, label, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color.WHITE)
 
 func get_node_color(node: MapNode) -> Color:
-	"""Get the appropriate color for a node based on its state"""
+	"""Get fill color from content type, modulated by path role and visit state."""
+	if node == start_node:
+		return Color.GREEN
+	if node == end_node:
+		return Color.RED
+
+	var base_color: Color = CONTENT_TYPE_COLORS.get(node.content_type, Color.BLUE)
 	if node.completed:
-		return NODE_COLORS.completed
-	elif node == current_node:
-		return NODE_COLORS.current
-	elif node.available:
-		return NODE_COLORS.available
-	elif node == start_node:
-		return NODE_COLORS.start
-	elif node == end_node:
-		return NODE_COLORS.end
-	else:
-		return NODE_COLORS.normal
+		return base_color.lerp(Color.GRAY, 0.65)
+	if node == current_node:
+		return base_color.lerp(Color.YELLOW, 0.45)
+	if node.available:
+		return base_color.lightened(0.15)
+	return base_color.darkened(0.15)
 
 # =============================================================================
 # INPUT HANDLING
@@ -429,11 +535,14 @@ func save_map_state() -> Dictionary:
 	"""Save current map state for persistence"""
 	var state = {
 		"completed_node_ids": [],
-		"current_node_id": current_node.id if current_node else -1
+		"current_node_id": current_node.id if current_node else -1,
+		"node_content_types": {},
 	}
 	
 	for node in completed_nodes:
 		state.completed_node_ids.append(node.id)
+	for node in nodes:
+		state.node_content_types[node.id] = node.content_type
 	
 	return state
 
@@ -456,6 +565,11 @@ func load_map_state(state: Dictionary):
 		if node.id == current_id:
 			current_node = node
 			break
+
+	var saved_content_types: Dictionary = state.get("node_content_types", {})
+	for node in nodes:
+		if saved_content_types.has(node.id):
+			node.content_type = saved_content_types[node.id]
 	
 	# Update availability and player global_position
 	update_node_availability()
