@@ -18,10 +18,13 @@ enum GameState {
 @onready var gui = $UICanvas/Gui
 @onready var map_generator = $MapManager
 @onready var player_health: PlayerHealthManager = $PlayerHealthManager
+@onready var shop_control: ShopControl = $ShopControl
 
 var current_state: GameState = GameState.MAP_EXPLORATION
 var current_battle_node: MapNode
 var run_gold: int = 0
+var run_components: int = 0
+var shop_visit_active: bool = false
 
 # =============================================================================
 # INITIALIZATION AND SETUP
@@ -35,6 +38,8 @@ func _ready():
 	post_ready()
 	
 func post_ready():
+	if shop_control:
+		shop_control.setup(self)
 	for i in get_children():
 		if i.has_method("post_ready"):
 			i.post_ready()
@@ -101,7 +106,20 @@ func _on_map_node_selected(node: MapNode):
 		print("Node %d has already been visited." % node.id)
 		return
 
+	if shop_visit_active:
+		if node == current_battle_node:
+			return
+		gui.close_shop()
+		end_shop_visit()
+		current_battle_node = node
+		_route_map_node(node)
+		return
+
 	current_battle_node = node
+	_route_map_node(node)
+
+
+func _route_map_node(node: MapNode) -> void:
 	match node.content_type:
 		MapNode.ContentType.BATTLE:
 			change_state(GameState.BATTLE_PREPARATION)
@@ -125,10 +143,20 @@ func _enter_repair_site_node(node: MapNode) -> void:
 	print("TODO: Repair site UI at node %d" % node.id)
 	_complete_special_node_visit(node)
 
-func _enter_shop_node(node: MapNode) -> void:
-	# TODO: Show shop UI.
-	print("TODO: Shop UI at node %d" % node.id)
-	_complete_special_node_visit(node)
+func _enter_shop_node(_node: MapNode) -> void:
+	open_shop_visit()
+
+
+func open_shop_visit() -> void:
+	shop_visit_active = true
+	var stock := shop_control.generate_stock()
+	gui.open_shop(stock)
+
+
+func end_shop_visit() -> void:
+	if current_battle_node:
+		map_generator.complete_map_node(current_battle_node)
+	shop_visit_active = false
 
 func _complete_special_node_visit(node: MapNode) -> void:
 	map_generator.complete_current_battle()
@@ -259,6 +287,23 @@ func add_gold(amount: int) -> void:
 	run_gold += amount
 	print("Gold gained: +%d (total: %d)" % [amount, run_gold])
 
+
+func spend_gold(amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if run_gold < amount:
+		return false
+	run_gold -= amount
+	print("Gold spent: -%d (total: %d)" % [amount, run_gold])
+	return true
+
+
+func add_components(amount: int) -> void:
+	if amount <= 0:
+		return
+	run_components += amount
+	print("Components gained: +%d (total: %d)" % [amount, run_components])
+
 func award_battle_rewards():
 	"""Deprecated: rewards are applied interactively via battle rewards UI."""
 	pass
@@ -358,6 +403,10 @@ func start_new_campaign():
 	# Reset systems
 	current_battle_node = null
 	run_gold = 0
+	run_components = 0
+	shop_visit_active = false
+	if gui:
+		gui.close_shop()
 	if player_health:
 		player_health.reset_for_new_campaign()
 	
@@ -371,7 +420,9 @@ func save_campaign_progress() -> Dictionary:
 	"""Save current campaign progress"""
 	var save_data = {
 		"current_state": current_state,
-		"current_battle_node_id": current_battle_node.id if current_battle_node else -1
+		"current_battle_node_id": current_battle_node.id if current_battle_node else -1,
+		"run_gold": run_gold,
+		"run_components": run_components,
 	}
 	
 	# Add map state
@@ -397,6 +448,9 @@ func load_campaign_progress(save_data: Dictionary):
 			if node.id == battle_node_id:
 				current_battle_node = node
 				break
+
+	run_gold = int(save_data.get("run_gold", 0))
+	run_components = int(save_data.get("run_components", 0))
 
 func get_campaign_progress() -> Dictionary:
 	"""Get current campaign progress for UI display"""

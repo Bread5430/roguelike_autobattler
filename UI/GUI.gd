@@ -15,6 +15,8 @@ var unit_board : GridContainer
 @onready var item_details_card: ItemDetailsCard = $ItemDetailsCard
 @onready var player_health_bar: PanelContainer = $PlayerHealthBar
 @onready var battle_rewards_ui: BattleRewardsUI = $BattleRewardsUI
+@onready var shop_ui: ShopUI = $ShopUI
+@onready var shop_toggle_button: Button = $ShopToggleButton
 @onready var passthrough_helper: Node = $Passthough_Helper
 var item_details_builder := ItemDetailsBuilder.new()
 
@@ -87,6 +89,18 @@ func post_ready():
 			battle_rewards_ui.setup(health_manager, passthrough_helper)
 			battle_rewards_ui.instant_gold_claimed.connect(_on_battle_reward_gold_claimed)
 			battle_rewards_ui.unit_picked.connect(_on_battle_reward_unit_picked)
+		if shop_ui:
+			shop_ui.setup(passthrough_helper)
+			shop_ui.purchase_requested.connect(_on_shop_purchase_requested)
+			shop_ui.refresh_requested.connect(_on_shop_refresh_requested)
+			shop_ui.scrap_mode_entered.connect(_on_shop_scrap_mode_entered)
+			shop_ui.scrap_mode_exited.connect(_on_shop_scrap_mode_exited)
+		if shop_toggle_button:
+			shop_toggle_button.visible = false
+			shop_toggle_button.disabled = true
+			shop_toggle_button.pressed.connect(_on_shop_toggle_pressed)
+		if inventory:
+			inventory.scrap_item_requested.connect(_on_inventory_scrap_item_requested)
 	inventory.inspect_requested.connect(_on_inventory_inspect_requested)
 	spell_bar.spell_slot_clicked.connect(_on_spell_slot_clicked)
 	spell_bar.spell_slot_right_clicked.connect(_on_spell_slot_right_clicked)
@@ -298,7 +312,110 @@ func start_prep_phase():
 
 func enter_map_exploration() -> void:
 	spell_bar.hide()
+	if not _is_shop_visit_active():
+		toggle_inventory(true)
+
+
+func open_shop(stock: Dictionary) -> void:
+	if item_details_card:
+		item_details_card.hide_details()
+	toggle_inventory(false)
+	if shop_toggle_button:
+		shop_toggle_button.visible = true
+		shop_toggle_button.disabled = false
+		shop_toggle_button.text = "Hide Shop"
+	var gsm := _get_game_state_manager()
+	var gold = gsm.run_gold if gsm else 0
+	var components = gsm.run_components if gsm else 0
+	if shop_ui:
+		shop_ui.open(stock, gold, components)
+	_sync_shop_map_input(shop_ui.is_panel_visible() if shop_ui else true)
+
+
+func close_shop() -> void:
+	if shop_ui:
+		shop_ui.close()
+	if shop_toggle_button:
+		shop_toggle_button.visible = false
+		shop_toggle_button.disabled = true
+	if inventory:
+		inventory.set_scrap_mode(false)
 	toggle_inventory(true)
+	passthrough_helper.unblock_input()
+	var gsm := _get_game_state_manager()
+	if gsm and gsm.map_generator:
+		gsm.map_generator.set_process_input(true)
+
+
+func _on_shop_toggle_pressed() -> void:
+	if not shop_ui or not shop_ui.visible:
+		return
+	shop_ui.toggle_panel_visibility()
+	if shop_ui.is_panel_visible():
+		shop_toggle_button.text = "Hide Shop"
+	else:
+		shop_toggle_button.text = "Show Shop"
+	_sync_shop_map_input(shop_ui.is_panel_visible())
+
+
+func _sync_shop_map_input(shop_panel_visible: bool) -> void:
+	var gsm := _get_game_state_manager()
+	if shop_panel_visible:
+		passthrough_helper.block_input()
+		if gsm and gsm.map_generator:
+			gsm.map_generator.set_process_input(false)
+	else:
+		passthrough_helper.unblock_input()
+		if gsm and gsm.shop_visit_active and gsm.map_generator:
+			gsm.map_generator.set_process_input(true)
+
+
+func _on_shop_purchase_requested(slot_data: Dictionary, row_key: String, slot_index: int) -> void:
+	var gsm := _get_game_state_manager()
+	if gsm == null or gsm.shop_control == null or inventory == null or shop_ui == null:
+		return
+	if not gsm.shop_control.try_purchase(slot_data, inventory):
+		return
+	shop_ui.mark_slot_sold(row_key, slot_index)
+	shop_ui.refresh_currency(gsm.run_gold, gsm.run_components)
+
+
+func _on_shop_refresh_requested() -> void:
+	var gsm := _get_game_state_manager()
+	if gsm == null or gsm.shop_control == null or shop_ui == null:
+		return
+	var updated = gsm.shop_control.refresh_stock(shop_ui.get_stock())
+	shop_ui.set_stock(updated, gsm.run_gold)
+	shop_ui.mark_refresh_used(gsm.run_gold)
+
+
+func _on_shop_scrap_mode_entered() -> void:
+	if inventory:
+		inventory.set_scrap_mode(true)
+
+
+func _on_shop_scrap_mode_exited() -> void:
+	if inventory:
+		inventory.set_scrap_mode(false)
+
+
+func _on_inventory_scrap_item_requested(item_id: String) -> void:
+	var gsm := _get_game_state_manager()
+	if gsm == null or gsm.shop_control == null or inventory == null or shop_ui == null:
+		return
+	if gsm.shop_control.process_scrap(item_id, inventory) <= 0:
+		return
+	shop_ui.refresh_currency(gsm.run_gold, gsm.run_components)
+	shop_ui.exit_scrap_mode()
+
+
+func _get_game_state_manager() -> Node:
+	return get_parent().get_parent()
+
+
+func _is_shop_visit_active() -> bool:
+	var gsm := _get_game_state_manager()
+	return gsm != null and gsm.shop_visit_active
 
 
 func show_battle_rewards(payload: Dictionary) -> void:
@@ -928,6 +1045,16 @@ func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 	if battle_rewards_ui and battle_rewards_ui.visible:
 		var rewards_rect = battle_rewards_ui.get_global_rect()
 		if rewards_rect.has_point(mouse_pos):
+			return true
+
+	if shop_ui and shop_ui.visible:
+		var shop_rect = shop_ui.get_global_rect()
+		if shop_rect.has_point(mouse_pos):
+			return true
+
+	if shop_toggle_button and shop_toggle_button.visible and not shop_toggle_button.disabled:
+		var toggle_rect = shop_toggle_button.get_global_rect()
+		if toggle_rect.has_point(mouse_pos):
 			return true
 	
 	return false

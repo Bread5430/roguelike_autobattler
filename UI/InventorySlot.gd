@@ -68,6 +68,11 @@ func _on_pressed():
 	print("Selected button")
 	if item == null:
 		return
+
+	if parent_inventory.scrap_mode:
+		parent_inventory.scrap_item_requested.emit(item_name)
+		accept_event()
+		return
   
 	#var remove_after_use = item_inst.on_select()
   

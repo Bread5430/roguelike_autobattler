@@ -2,6 +2,7 @@ extends Control
 
 class_name Inventory
 signal inspect_requested(item_inst: Item, item_name: String, source_global_pos: Vector2)
+signal scrap_item_requested(item_id: String)
 
 var slots : Array[InventorySlot]
 
@@ -14,6 +15,7 @@ var slots : Array[InventorySlot]
 @export var slot_autoload : PackedScene 
 
 var can_open_inventory = true
+var scrap_mode := false
 
 func _ready():
 	toggle_window(false)
@@ -37,6 +39,8 @@ func post_ready():
 		add_item(starter_items[i],starter_items_count[i])
 
 func _process(delta: float) -> void:
+	if scrap_mode:
+		return
 	if Input.is_action_just_pressed("inventory") and can_open_inventory:
 		toggle_window(!visible)
 		accept_event()
@@ -104,6 +108,23 @@ func get_number_of_item (itemID : String) -> int:
 			total += slot.quantity
   
 	return total
+
+
+func remove_all_of_item(item_id: String) -> int:
+	var removed := 0
+	for slot in slots:
+		if slot.item_name == item_id and slot.quantity > 0:
+			removed += slot.quantity
+			slot.set_item("", null, 0)
+	return removed
+
+
+func set_scrap_mode(enabled: bool) -> void:
+	scrap_mode = enabled
+	if enabled:
+		toggle_window(true)
+	elif visible:
+		toggle_window(false)
 
 
 func clear_all_slots() -> void:

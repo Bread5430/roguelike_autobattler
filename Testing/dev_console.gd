@@ -240,6 +240,13 @@ func execute_command(command: String):
 			else:
 				log_message("MapManager not found", "red")
 		
+		"goto_node", "go_node":
+			if map_manager and map_manager.has_method("enable_debug_teleport_on_click"):
+				map_manager.enable_debug_teleport_on_click()
+				log_message("Click a map node to move the player there (ignores availability)", "green")
+			else:
+				log_message("MapManager not found", "red")
+		
 		"god_mode", "godmode":
 			log_message("God mode not implemented yet", "orange")
 		
@@ -278,6 +285,7 @@ func show_help():
 	log_message("zoom <level> - Set camera zoom level")
 	log_message("node_info - Show current node information")
 	log_message("complete_node - Complete current node")
+	log_message("goto_node - Click next map node to move the player there (debug)")
 	log_message("timescale <value> - Set game speed (1.0 = normal)")
 	log_message("save - Show current save state")
 	log_message("formation_editor on [name [level]] | formation_editor off — enemy formation CSV editor (deployment)")

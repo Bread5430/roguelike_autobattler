@@ -36,6 +36,8 @@ var completed_nodes: Array[MapNode] = []
 # Player movement state
 var is_player_moving := false
 var pending_node: MapNode
+var debug_teleport_on_click := false
+var _debug_bypass_availability := false
 
 const CONTENT_TYPE_COLORS := {
 	MapNode.ContentType.BATTLE: Color(0.2, 0.45, 0.95),
@@ -281,15 +283,30 @@ func update_node_availability():
 	for node in nodes:
 		node.available = false
 	
-	# Make nodes connected to completed nodes available
+	# Neighbors of completed nodes are reachable.
 	for completed_node in completed_nodes:
 		for connected_node in completed_node.connections:
+			if not connected_node.completed:
+				connected_node.available = true
+	
+	# Standing at an uncompleted node also exposes its neighbors (e.g. debug teleport).
+	if current_node and current_node not in completed_nodes:
+		for connected_node in current_node.connections:
 			if not connected_node.completed:
 				connected_node.available = true
 
 func complete_current_battle():
 	current_node.completed = true
 	completed_nodes.append(current_node)
+	update_node_availability()
+
+
+func complete_map_node(node: MapNode) -> void:
+	if node == null or node.completed:
+		return
+	node.completed = true
+	if node not in completed_nodes:
+		completed_nodes.append(node)
 	update_node_availability()
 
 # =============================================================================
@@ -300,17 +317,29 @@ func _on_player_movement_finished():
 	"""Called when player finishes moving to a node"""
 	is_player_moving = false
 	
-	if pending_node and pending_node.available:
+	if pending_node and (pending_node.available or _debug_bypass_availability):
+		var was_debug_teleport := _debug_bypass_availability
 		# Player has reached the node, now update other nodes
 		current_node = pending_node
+		_debug_bypass_availability = false
+		
+		if was_debug_teleport:
+			update_node_availability()
 		
 		queue_redraw()
 		
 		# Update other nodes
 		selected_node.emit(pending_node)
 		pending_node = null
-	else: 
+	else:
+		_debug_bypass_availability = false
+		pending_node = null
 		push_warning("Attempted to start battle at unavailable node")
+
+
+func enable_debug_teleport_on_click() -> void:
+	"""Debug: next map node click moves the player there, ignoring availability."""
+	debug_teleport_on_click = true
 
 
 func move_player_to_node(target_node: MapNode):
@@ -482,17 +511,15 @@ func handle_node_click(click_global_position: Vector2):
 	
 	for node in nodes:
 		if click_global_position.distance_to(node.global_position) <= node_radius:
-			if node.available:
-				# Check if player needs to move first
-				if player_sprite and is_player_moving == false:
-					# Player needs to move to this node first
-					pending_node = node
-					move_player_to_node(node)
-				elif current_node != node: # Handle revisiting current node case
-					move_player_to_node(node)
-				
+			var can_visit := node.available or debug_teleport_on_click
+			if can_visit:
+				if debug_teleport_on_click:
+					debug_teleport_on_click = false
+					_debug_bypass_availability = true
+				pending_node = node
+				move_player_to_node(node)
 			else:
-				print("Node %d is available to visit" % node.id)
+				print("Node %d is not available to visit" % node.id)
 			break
 
 # =============================================================================

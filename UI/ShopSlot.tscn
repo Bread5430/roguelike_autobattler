@@ -1,0 +1,55 @@
+[gd_scene load_steps=2 format=3 uid="uid://dahdioegxj2bd"]
+
+[ext_resource type="Script" uid="uid://dgg8j0w73d0dv" path="res://UI/shop_slot.gd" id="1_slot"]
+
+[node name="ShopSlot" type="Button"]
+custom_minimum_size = Vector2(110, 130)
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_slot")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="SaleLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 11
+text = "SALE"
+horizontal_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Margin/VBox"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="Margin/VBox"]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Item"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="PriceLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "0g"
+horizontal_alignment = 1
