@@ -73,6 +73,12 @@ func _on_pressed():
 		parent_inventory.scrap_item_requested.emit(item_name)
 		accept_event()
 		return
+
+	if parent_inventory.craft_mode:
+		if item_inst is Unit_Card:
+			parent_inventory.craft_item_requested.emit(item_name)
+		accept_event()
+		return
   
 	#var remove_after_use = item_inst.on_select()
   

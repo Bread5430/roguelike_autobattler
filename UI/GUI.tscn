@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://dy1rgpvj3afyd"]
+[gd_scene load_steps=11 format=3 uid="uid://dy1rgpvj3afyd"]
 
 [ext_resource type="Script" uid="uid://bysfs5te4mpkk" path="res://UI/GUI.gd" id="1_u7efx"]
 [ext_resource type="Script" uid="uid://csmfu6ekj5t6l" path="res://UI/passthrough_helper.gd" id="3_dl5f7"]
@@ -7,8 +7,10 @@
 [ext_resource type="PackedScene" uid="uid://dxxq8sug7uh1n" path="res://UI/TacticalCursor.tscn" id="5_tactical"]
 [ext_resource type="PackedScene" path="res://UI/ItemDetailsCard.tscn" id="6_item_details"]
 [ext_resource type="PackedScene" uid="uid://c8phfactoryhealth" path="res://UI/PlayerHealthBar.tscn" id="7_health"]
+[ext_resource type="PackedScene" path="res://UI/RunResourcesHUD.tscn" id="7_resources"]
 [ext_resource type="PackedScene" path="res://UI/BattleRewardsUI.tscn" id="8_rewards"]
 [ext_resource type="PackedScene" path="res://UI/ShopUI.tscn" id="9_shop"]
+[ext_resource type="PackedScene" path="res://UI/RestUI.tscn" id="10_rest"]
 
 [node name="Gui" type="Control"]
 layout_mode = 3
@@ -21,6 +23,9 @@ script = ExtResource("1_u7efx")
 selector_rect_debug = false
 
 [node name="PlayerHealthBar" parent="." instance=ExtResource("7_health")]
+layout_mode = 1
+
+[node name="RunResourcesHUD" parent="." instance=ExtResource("7_resources")]
 layout_mode = 1
 
 [node name="Inventory" parent="." instance=ExtResource("4_n3xue")]
@@ -91,5 +96,27 @@ offset_bottom = 20.0
 grow_vertical = 2
 disabled = true
 text = "Hide Shop"
+
+[node name="RestUI" parent="." instance=ExtResource("10_rest")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RestToggleButton" type="Button" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 8.0
+offset_top = -20.0
+offset_right = 108.0
+offset_bottom = 20.0
+grow_vertical = 2
+disabled = true
+text = "Hide Rest"
 
 [connection signal="pressed" from="End_Prep" to="." method="_on_end_prep_pressed"]

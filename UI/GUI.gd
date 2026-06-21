@@ -14,9 +14,12 @@ var unit_board : GridContainer
 @onready var tactical_cursor = $TacticalCursor
 @onready var item_details_card: ItemDetailsCard = $ItemDetailsCard
 @onready var player_health_bar: PanelContainer = $PlayerHealthBar
+@onready var run_resources_hud: RunResourcesHUD = $RunResourcesHUD
 @onready var battle_rewards_ui: BattleRewardsUI = $BattleRewardsUI
 @onready var shop_ui: ShopUI = $ShopUI
 @onready var shop_toggle_button: Button = $ShopToggleButton
+@onready var rest_ui: RestUI = $RestUI
+@onready var rest_toggle_button: Button = $RestToggleButton
 @onready var passthrough_helper: Node = $Passthough_Helper
 var item_details_builder := ItemDetailsBuilder.new()
 
@@ -99,8 +102,22 @@ func post_ready():
 			shop_toggle_button.visible = false
 			shop_toggle_button.disabled = true
 			shop_toggle_button.pressed.connect(_on_shop_toggle_pressed)
+		if rest_ui:
+			rest_ui.setup(passthrough_helper)
+			rest_ui.upgrade_requested.connect(_on_rest_upgrade_requested)
+			rest_ui.repair_requested.connect(_on_rest_repair_requested)
+			rest_ui.craft_mode_entered.connect(_on_rest_craft_mode_entered)
+			rest_ui.craft_mode_exited.connect(_on_rest_craft_mode_exited)
+			rest_ui.refresh_requested.connect(_on_rest_refresh_requested)
+		if rest_toggle_button:
+			rest_toggle_button.visible = false
+			rest_toggle_button.disabled = true
+			rest_toggle_button.pressed.connect(_on_rest_toggle_pressed)
 		if inventory:
 			inventory.scrap_item_requested.connect(_on_inventory_scrap_item_requested)
+			inventory.craft_item_requested.connect(_on_inventory_craft_item_requested)
+		if gsm.has_signal("run_currency_changed"):
+			gsm.run_currency_changed.connect(_on_run_currency_changed)
 	inventory.inspect_requested.connect(_on_inventory_inspect_requested)
 	spell_bar.spell_slot_clicked.connect(_on_spell_slot_clicked)
 	spell_bar.spell_slot_right_clicked.connect(_on_spell_slot_right_clicked)
@@ -308,11 +325,14 @@ func start_prep_phase():
 	end_prep.show()
 	end_prep.disabled = false
 	spell_bar.show()
+	run_resources_hud.set_map_visible(false)
 
 
 func enter_map_exploration() -> void:
 	spell_bar.hide()
-	if not _is_shop_visit_active():
+	run_resources_hud.set_map_visible(true)
+	_refresh_run_resources_hud()
+	if not _is_shop_visit_active() and not _is_rest_visit_active():
 		toggle_inventory(true)
 
 
@@ -345,6 +365,114 @@ func close_shop() -> void:
 	var gsm := _get_game_state_manager()
 	if gsm and gsm.map_generator:
 		gsm.map_generator.set_process_input(true)
+
+
+func open_rest(offers: Dictionary) -> void:
+	if item_details_card:
+		item_details_card.hide_details()
+	toggle_inventory(false)
+	if rest_toggle_button:
+		rest_toggle_button.visible = true
+		rest_toggle_button.disabled = false
+		rest_toggle_button.text = "Hide Rest"
+	var gsm := _get_game_state_manager()
+	var components = gsm.run_components if gsm else 0
+	if rest_ui:
+		if gsm and gsm.rest_control:
+			rest_ui.repair_cost = gsm.rest_control.repair_cost
+			rest_ui.craft_cost = gsm.rest_control.craft_cost
+			rest_ui.refresh_cost = gsm.rest_control.refresh_cost
+		rest_ui.open(offers, components)
+	_sync_rest_map_input(rest_ui.is_panel_visible() if rest_ui else true)
+
+
+func close_rest() -> void:
+	if rest_ui:
+		rest_ui.close()
+	if rest_toggle_button:
+		rest_toggle_button.visible = false
+		rest_toggle_button.disabled = true
+	if inventory:
+		inventory.set_craft_mode(false)
+	toggle_inventory(true)
+	passthrough_helper.unblock_input()
+	var gsm := _get_game_state_manager()
+	if gsm and gsm.map_generator:
+		gsm.map_generator.set_process_input(true)
+
+
+func _on_rest_toggle_pressed() -> void:
+	if not rest_ui or not rest_ui.visible:
+		return
+	rest_ui.toggle_panel_visibility()
+	if rest_ui.is_panel_visible():
+		rest_toggle_button.text = "Hide Rest"
+	else:
+		rest_toggle_button.text = "Show Rest"
+	_sync_rest_map_input(rest_ui.is_panel_visible())
+
+
+func _sync_rest_map_input(rest_panel_visible: bool) -> void:
+	var gsm := _get_game_state_manager()
+	if rest_panel_visible:
+		passthrough_helper.block_input()
+		if gsm and gsm.map_generator:
+			gsm.map_generator.set_process_input(false)
+	else:
+		passthrough_helper.unblock_input()
+		if gsm and gsm.rest_visit_active and gsm.map_generator:
+			gsm.map_generator.set_process_input(true)
+
+
+func _on_rest_repair_requested() -> void:
+	var gsm := _get_game_state_manager()
+	if gsm == null or gsm.rest_control == null or rest_ui == null:
+		return
+	var offers := rest_ui.get_offers()
+	if not gsm.rest_control.try_repair(offers):
+		return
+	rest_ui.set_offers(offers, gsm.run_components)
+
+
+func _on_rest_craft_mode_entered() -> void:
+	if inventory:
+		inventory.set_craft_mode(true)
+
+
+func _on_rest_craft_mode_exited() -> void:
+	if inventory:
+		inventory.set_craft_mode(false)
+
+
+func _on_inventory_craft_item_requested(item_id: String) -> void:
+	var gsm := _get_game_state_manager()
+	if gsm == null or gsm.rest_control == null or inventory == null or rest_ui == null:
+		return
+	var offers := rest_ui.get_offers()
+	if not gsm.rest_control.try_craft_unit(item_id, inventory, offers):
+		return
+	rest_ui.set_offers(offers, gsm.run_components)
+	rest_ui.exit_craft_mode()
+
+
+func _on_rest_refresh_requested() -> void:
+	var gsm := _get_game_state_manager()
+	if gsm == null or gsm.rest_control == null or rest_ui == null:
+		return
+	var offers := rest_ui.get_offers()
+	var updated = gsm.rest_control.refresh_upgrades(offers)
+	rest_ui.set_offers(updated, gsm.run_components)
+
+
+func _on_rest_upgrade_requested(slot_data: Dictionary, slot_index: int) -> void:
+	var gsm := _get_game_state_manager()
+	if gsm == null or gsm.rest_control == null or rest_ui == null:
+		return
+	var offers := rest_ui.get_offers()
+	if not gsm.rest_control.try_purchase_upgrade(slot_data, offers):
+		return
+	rest_ui.mark_upgrade_purchased(slot_index)
+	rest_ui.set_offers(offers, gsm.run_components)
 
 
 func _on_shop_toggle_pressed() -> void:
@@ -409,6 +537,18 @@ func _on_inventory_scrap_item_requested(item_id: String) -> void:
 	shop_ui.exit_scrap_mode()
 
 
+func _on_run_currency_changed(gold: int, components: int) -> void:
+	if run_resources_hud.visible:
+		run_resources_hud.update_values(gold, components)
+	if rest_ui and rest_ui.visible:
+		rest_ui.refresh_display(components)
+
+
+func _refresh_run_resources_hud() -> void:
+	var gsm := _get_game_state_manager()
+	run_resources_hud.update_values(gsm.run_gold, gsm.run_components)
+
+
 func _get_game_state_manager() -> Node:
 	return get_parent().get_parent()
 
@@ -416,6 +556,11 @@ func _get_game_state_manager() -> Node:
 func _is_shop_visit_active() -> bool:
 	var gsm := _get_game_state_manager()
 	return gsm != null and gsm.shop_visit_active
+
+
+func _is_rest_visit_active() -> bool:
+	var gsm := _get_game_state_manager()
+	return gsm != null and gsm.rest_visit_active
 
 
 func show_battle_rewards(payload: Dictionary) -> void:
@@ -1055,6 +1200,16 @@ func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 	if shop_toggle_button and shop_toggle_button.visible and not shop_toggle_button.disabled:
 		var toggle_rect = shop_toggle_button.get_global_rect()
 		if toggle_rect.has_point(mouse_pos):
+			return true
+
+	if rest_ui and rest_ui.visible:
+		var rest_rect = rest_ui.get_global_rect()
+		if rest_rect.has_point(mouse_pos):
+			return true
+
+	if rest_toggle_button and rest_toggle_button.visible and not rest_toggle_button.disabled:
+		var rest_toggle_rect = rest_toggle_button.get_global_rect()
+		if rest_toggle_rect.has_point(mouse_pos):
 			return true
 	
 	return false

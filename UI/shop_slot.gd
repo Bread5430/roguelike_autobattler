@@ -44,6 +44,28 @@ func _refresh_display() -> void:
 		disabled = true
 		return
 
+	var purchased: bool = slot_data.get("purchased", false)
+	if kind == "upgrade":
+		_icon.texture = null
+		disabled = purchased
+		_sale_label.visible = on_sale and not purchased
+		if on_sale:
+			_sale_label.text = "SALE"
+		if purchased:
+			_name_label.text = "Upgrade (TODO)"
+			_price_label.text = "Purchased"
+			modulate = Color(0.55, 0.55, 0.55, 1.0)
+		else:
+			modulate = Color.WHITE
+			_name_label.text = "Upgrade (TODO)"
+			var price := _effective_price(base_price, on_sale)
+			var suffix := _price_suffix()
+			if on_sale:
+				_price_label.text = "%d%s  (%d%s)" % [price, suffix, base_price, suffix]
+			else:
+				_price_label.text = "%d%s" % [price, suffix]
+		return
+
 	disabled = sold
 	_sale_label.visible = on_sale and not sold
 	if on_sale:
@@ -57,10 +79,11 @@ func _refresh_display() -> void:
 		modulate = Color.WHITE
 		_name_label.text = _display_name_for_item(item_id)
 		var price := _effective_price(base_price, on_sale)
+		var suffix := _price_suffix()
 		if on_sale:
-			_price_label.text = "%d  (%d)" % [price, base_price]
+			_price_label.text = "%d%s  (%d%s)" % [price, suffix, base_price, suffix]
 		else:
-			_price_label.text = str(price)
+			_price_label.text = "%d%s" % [price, suffix]
 
 	_set_icon_for_item(item_id, kind)
 
@@ -72,11 +95,18 @@ func _effective_price(base_price: int, on_sale: bool) -> int:
 
 
 func get_effective_price() -> int:
-	if slot_data.get("sold", false):
+	if slot_data.get("sold", false) or slot_data.get("purchased", false):
 		return 0
-	if str(slot_data.get("kind", "")) == "relic":
+	var kind := str(slot_data.get("kind", ""))
+	if kind == "relic":
 		return 0
 	return _effective_price(int(slot_data.get("base_price", 0)), slot_data.get("on_sale", false))
+
+
+func _price_suffix() -> String:
+	if str(slot_data.get("currency", "")) == "components":
+		return "c"
+	return "g"
 
 
 func mark_sold() -> void:
@@ -84,8 +114,13 @@ func mark_sold() -> void:
 	_refresh_display()
 
 
+func mark_purchased() -> void:
+	slot_data["purchased"] = true
+	_refresh_display()
+
+
 func reroll(new_data: Dictionary) -> void:
-	if slot_data.get("sold", false):
+	if slot_data.get("sold", false) or slot_data.get("purchased", false):
 		return
 	slot_data = new_data.duplicate(true)
 	_refresh_display()
@@ -133,7 +168,7 @@ func _display_name_for_item(item_id: String) -> String:
 
 
 func _on_pressed() -> void:
-	if slot_data.get("sold", false):
+	if slot_data.get("sold", false) or slot_data.get("purchased", false):
 		return
 	if str(slot_data.get("kind", "")) == "relic":
 		return

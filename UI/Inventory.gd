@@ -3,6 +3,7 @@ extends Control
 class_name Inventory
 signal inspect_requested(item_inst: Item, item_name: String, source_global_pos: Vector2)
 signal scrap_item_requested(item_id: String)
+signal craft_item_requested(item_id: String)
 
 var slots : Array[InventorySlot]
 
@@ -16,6 +17,7 @@ var slots : Array[InventorySlot]
 
 var can_open_inventory = true
 var scrap_mode := false
+var craft_mode := false
 
 func _ready():
 	toggle_window(false)
@@ -39,7 +41,7 @@ func post_ready():
 		add_item(starter_items[i],starter_items_count[i])
 
 func _process(delta: float) -> void:
-	if scrap_mode:
+	if scrap_mode or craft_mode:
 		return
 	if Input.is_action_just_pressed("inventory") and can_open_inventory:
 		toggle_window(!visible)
@@ -122,8 +124,18 @@ func remove_all_of_item(item_id: String) -> int:
 func set_scrap_mode(enabled: bool) -> void:
 	scrap_mode = enabled
 	if enabled:
+		craft_mode = false
 		toggle_window(true)
-	elif visible:
+	elif visible and not craft_mode:
+		toggle_window(false)
+
+
+func set_craft_mode(enabled: bool) -> void:
+	craft_mode = enabled
+	if enabled:
+		scrap_mode = false
+		toggle_window(true)
+	elif visible and not scrap_mode:
 		toggle_window(false)
 
 

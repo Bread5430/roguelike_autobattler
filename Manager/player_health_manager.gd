@@ -47,5 +47,13 @@ func apply_damage(amount: int) -> void:
 		game_over.emit()
 
 
+func restore_health_fraction(fraction: float) -> void:
+	if fraction <= 0.0:
+		return
+	var amount := int(round(float(max_health) * fraction))
+	curr_health = mini(max_health, curr_health + amount)
+	_emit_health_changed()
+
+
 func _emit_health_changed() -> void:
 	health_changed.emit(curr_health, max_health)
