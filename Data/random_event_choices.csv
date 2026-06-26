@@ -1,0 +1,9 @@
+event_id,choice_id,label,cost_kind,cost_amount,cost_filter,reward_kind,reward_amount,reward_item_id,reward_pool
+scrap_dealer,pay_gold,Pay 75 gold for a random spell,gold,75,,item_random,,,shop_spells
+scrap_dealer,sacrifice_unit,Sacrifice a random unit for 100 gold,inventory_random,1,unit,gold,100,,
+scrap_dealer,give_components,Give 3 components for a random unit,components,3,,item_random,,,shop_units
+wandering_merchant,buy_unit,Buy a random unit for 120 gold,gold,120,,item_random,,,shop_units
+wandering_merchant,sell_spell,Trade a random spell for 80 gold,inventory_random,1,spell,gold,80,,
+wandering_merchant,free_sample,Take a free sample (no cost),none,0,,components,2,,
+blood_altar,blood_price,Offer 25% of your health for 150 gold,health,25,,gold,150,,
+blood_altar,refuse,Walk away,none,0,,none,0,,

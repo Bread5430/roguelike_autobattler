@@ -20,6 +20,8 @@ var unit_board : GridContainer
 @onready var shop_toggle_button: Button = $ShopToggleButton
 @onready var rest_ui: RestUI = $RestUI
 @onready var rest_toggle_button: Button = $RestToggleButton
+@onready var random_event_ui: RandomEventUI = $RandomEventUI
+@onready var event_toggle_button: Button = $EventToggleButton
 @onready var passthrough_helper: Node = $Passthough_Helper
 var item_details_builder := ItemDetailsBuilder.new()
 
@@ -113,6 +115,13 @@ func post_ready():
 			rest_toggle_button.visible = false
 			rest_toggle_button.disabled = true
 			rest_toggle_button.pressed.connect(_on_rest_toggle_pressed)
+		if random_event_ui:
+			random_event_ui.setup(passthrough_helper)
+			random_event_ui.choice_selected.connect(_on_event_choice_selected)
+		if event_toggle_button:
+			event_toggle_button.visible = false
+			event_toggle_button.disabled = true
+			event_toggle_button.pressed.connect(_on_event_toggle_pressed)
 		if inventory:
 			inventory.scrap_item_requested.connect(_on_inventory_scrap_item_requested)
 			inventory.craft_item_requested.connect(_on_inventory_craft_item_requested)
@@ -332,7 +341,7 @@ func enter_map_exploration() -> void:
 	spell_bar.hide()
 	run_resources_hud.set_map_visible(true)
 	_refresh_run_resources_hud()
-	if not _is_shop_visit_active() and not _is_rest_visit_active():
+	if not _is_shop_visit_active() and not _is_rest_visit_active() and not _is_event_visit_active():
 		toggle_inventory(true)
 
 
@@ -399,6 +408,63 @@ func close_rest() -> void:
 	var gsm := _get_game_state_manager()
 	if gsm and gsm.map_generator:
 		gsm.map_generator.set_process_input(true)
+
+
+func open_random_event(payload: Dictionary) -> void:
+	if item_details_card:
+		item_details_card.hide_details()
+	toggle_inventory(false)
+	if event_toggle_button:
+		event_toggle_button.visible = true
+		event_toggle_button.disabled = false
+		event_toggle_button.text = "Hide Event"
+	if random_event_ui:
+		random_event_ui.open(payload)
+	_sync_event_map_input(random_event_ui.is_panel_visible() if random_event_ui else true)
+
+
+func close_random_event() -> void:
+	if random_event_ui:
+		random_event_ui.close()
+	if event_toggle_button:
+		event_toggle_button.visible = false
+		event_toggle_button.disabled = true
+	toggle_inventory(true)
+	passthrough_helper.unblock_input()
+	var gsm := _get_game_state_manager()
+	if gsm and gsm.map_generator:
+		gsm.map_generator.set_process_input(true)
+
+
+func _on_event_toggle_pressed() -> void:
+	if not random_event_ui or not random_event_ui.visible:
+		return
+	random_event_ui.toggle_panel_visibility()
+	if random_event_ui.is_panel_visible():
+		event_toggle_button.text = "Hide Event"
+	else:
+		event_toggle_button.text = "Show Event"
+	_sync_event_map_input(random_event_ui.is_panel_visible())
+
+
+func _sync_event_map_input(_event_panel_visible: bool) -> void:
+	passthrough_helper.block_input()
+	var gsm := _get_game_state_manager()
+	if gsm and gsm.map_generator:
+		gsm.map_generator.set_process_input(false)
+
+
+func _on_event_choice_selected(choice_id: String) -> void:
+	var gsm := _get_game_state_manager()
+	if gsm == null or gsm.random_event_control == null or random_event_ui == null:
+		return
+	var payload := random_event_ui.get_payload()
+	if not gsm.random_event_control.try_resolve_choice(payload, choice_id, inventory):
+		var refreshed = gsm.random_event_control.refresh_choice_enabled_flags(payload, inventory)
+		random_event_ui.set_payload(refreshed)
+		return
+	gsm.end_event_visit()
+	_refresh_run_resources_hud()
 
 
 func _on_rest_toggle_pressed() -> void:
@@ -561,6 +627,11 @@ func _is_shop_visit_active() -> bool:
 func _is_rest_visit_active() -> bool:
 	var gsm := _get_game_state_manager()
 	return gsm != null and gsm.rest_visit_active
+
+
+func _is_event_visit_active() -> bool:
+	var gsm := _get_game_state_manager()
+	return gsm != null and gsm.event_visit_active
 
 
 func show_battle_rewards(payload: Dictionary) -> void:
@@ -1210,6 +1281,16 @@ func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 	if rest_toggle_button and rest_toggle_button.visible and not rest_toggle_button.disabled:
 		var rest_toggle_rect = rest_toggle_button.get_global_rect()
 		if rest_toggle_rect.has_point(mouse_pos):
+			return true
+
+	if random_event_ui and random_event_ui.visible:
+		var event_rect = random_event_ui.get_global_rect()
+		if event_rect.has_point(mouse_pos):
+			return true
+
+	if event_toggle_button and event_toggle_button.visible and not event_toggle_button.disabled:
+		var event_toggle_rect = event_toggle_button.get_global_rect()
+		if event_toggle_rect.has_point(mouse_pos):
 			return true
 	
 	return false

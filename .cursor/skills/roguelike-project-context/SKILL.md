@@ -35,6 +35,7 @@ Dense summaries of specific features or subsystems: `.cursor/docs/systems/<name>
 | `.cursor/docs/systems/status-effects.md` | `StatusEffectDef`, `apply_status_effect`, `STATUS_EFFECT_DATA`, `status_effects.csv`, DoT/aura/slow spells, stacking, `get_active_status_effects_for_ui` |
 | `.cursor/docs/systems/beacon-spell-fsm.md` | BeaconSpell 3-click flow, BeaconController, beaconed FSM state, panic/cache behavior |
 | `.cursor/docs/systems/battle-rewards-ui.md` | Post-victory `BattleRewardsUI`, reward payload entries, gold/unit submenu, `run_gold`, repair damage stub, modal click blocking |
+| `.cursor/docs/systems/random-events.md` | `RANDOM_EVENT_DATA`, CSV event/choice schema, `RandomEventControl`, `RandomEventUI`, map `RANDOM_EVENT` nodes, resource exchange costs/rewards, `event_visit_active` |
 
 ## Usage
 

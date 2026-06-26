@@ -112,6 +112,37 @@ func get_number_of_item (itemID : String) -> int:
 	return total
 
 
+func get_owned_item_ids(filter: String = "any") -> Array[String]:
+	var owned: Array[String] = []
+	for slot in slots:
+		if slot.item_name.is_empty() or slot.quantity <= 0:
+			continue
+		if _item_matches_filter(slot.item_name, filter):
+			owned.append(slot.item_name)
+	return owned
+
+
+func _item_matches_filter(item_id: String, filter: String) -> bool:
+	var normalized := filter.strip_edges().to_lower()
+	if normalized.is_empty() or normalized == "any":
+		return true
+	var scene: PackedScene = ITEM_NAME.item_lookup(item_id)
+	if scene == null:
+		return false
+	var path := scene.resource_path
+	if normalized == "spell":
+		return "Spells/" in path
+	if normalized == "unit":
+		if "Spells/" in path:
+			return false
+		var inst = scene.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+		var is_unit := inst is Unit_Card
+		if inst:
+			inst.queue_free()
+		return is_unit
+	return true
+
+
 func remove_all_of_item(item_id: String) -> int:
 	var removed := 0
 	for slot in slots:

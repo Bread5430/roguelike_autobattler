@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bl3dra1ycsbid"
+
+[deps]
+
+files=["res://Data/random_event_choices.choice.translation", "res://Data/random_event_choices.label.translation", "res://Data/random_event_choices.cost.translation", "res://Data/random_event_choices.cost.translation", "res://Data/random_event_choices.cost.translation", "res://Data/random_event_choices.reward.translation", "res://Data/random_event_choices.reward.translation", "res://Data/random_event_choices.reward.translation", "res://Data/random_event_choices.reward.translation"]
+
+source_file="res://Data/random_event_choices.csv"
+dest_files=["res://Data/random_event_choices.choice.translation", "res://Data/random_event_choices.label.translation", "res://Data/random_event_choices.cost.translation", "res://Data/random_event_choices.cost.translation", "res://Data/random_event_choices.cost.translation", "res://Data/random_event_choices.reward.translation", "res://Data/random_event_choices.reward.translation", "res://Data/random_event_choices.reward.translation", "res://Data/random_event_choices.reward.translation"]
+
+[params]
+
+compress=true
+delimiter=0

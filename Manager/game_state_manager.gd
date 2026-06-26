@@ -20,6 +20,7 @@ enum GameState {
 @onready var player_health: PlayerHealthManager = $PlayerHealthManager
 @onready var shop_control: ShopControl = $ShopControl
 @onready var rest_control: RestControl = $RestControl
+@onready var random_event_control: RandomEventControl = $RandomEventControl
 
 var current_state: GameState = GameState.MAP_EXPLORATION
 var current_battle_node: MapNode
@@ -27,6 +28,7 @@ var run_gold: int = 0
 var run_components: int = 0
 var shop_visit_active: bool = false
 var rest_visit_active: bool = false
+var event_visit_active: bool = false
 
 signal run_currency_changed(gold: int, components: int)
 
@@ -46,6 +48,8 @@ func post_ready():
 		shop_control.setup(self)
 	if rest_control:
 		rest_control.setup(self)
+	if random_event_control:
+		random_event_control.setup(self)
 	for i in get_children():
 		if i.has_method("post_ready"):
 			i.post_ready()
@@ -130,6 +134,9 @@ func _on_map_node_selected(node: MapNode):
 		_route_map_node(node)
 		return
 
+	if event_visit_active:
+		return
+
 	current_battle_node = node
 	_route_map_node(node)
 
@@ -148,10 +155,23 @@ func _route_map_node(node: MapNode) -> void:
 			push_warning("Unknown map node content type at node %d" % node.id)
 			change_state(GameState.BATTLE_PREPARATION)
 
-func _enter_random_event_node(node: MapNode) -> void:
-	# TODO: Show random event UI.
-	print("TODO: Random event UI at node %d" % node.id)
-	_complete_special_node_visit(node)
+func _enter_random_event_node(_node: MapNode) -> void:
+	open_event_visit()
+
+
+func open_event_visit() -> void:
+	event_visit_active = true
+	var payload := random_event_control.build_event_payload(current_battle_node)
+	gui.open_random_event(payload)
+
+
+func end_event_visit() -> void:
+	if current_battle_node:
+		map_generator.complete_map_node(current_battle_node)
+	event_visit_active = false
+	current_battle_node = null
+	gui.close_random_event()
+	change_state(GameState.MAP_EXPLORATION)
 
 func _enter_repair_site_node(_node: MapNode) -> void:
 	open_rest_visit()
@@ -449,10 +469,12 @@ func start_new_campaign():
 	run_components = 0
 	shop_visit_active = false
 	rest_visit_active = false
+	event_visit_active = false
 	_emit_run_currency_changed()
 	if gui:
 		gui.close_shop()
 		gui.close_rest()
+		gui.close_random_event()
 	if player_health:
 		player_health.reset_for_new_campaign()
 	

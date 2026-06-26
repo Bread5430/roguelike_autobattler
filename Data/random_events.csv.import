@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bpnq3vulncvxp"
+
+[deps]
+
+files=["res://Data/random_events.title.translation", "res://Data/random_events.flavor.translation", "res://Data/random_events.image.translation", "res://Data/random_events.weight.translation", "res://Data/random_events.min.translation"]
+
+source_file="res://Data/random_events.csv"
+dest_files=["res://Data/random_events.title.translation", "res://Data/random_events.flavor.translation", "res://Data/random_events.image.translation", "res://Data/random_events.weight.translation", "res://Data/random_events.min.translation"]
+
+[params]
+
+compress=true
+delimiter=0

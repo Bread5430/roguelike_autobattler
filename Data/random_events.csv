@@ -1,0 +1,4 @@
+event_id,title,flavor_text,image_path,weight,min_stage
+scrap_dealer,Scrap Dealer,"A tinkerer eyes your spare parts and rattles a coin purse.",res://Assets/CardSprites/circle_aoe_spell.png,10,1
+wandering_merchant,Wandering Merchant,"A hooded trader unfurls a dusty satchel of wares.",res://Assets/CardSprites/attack_speed_field.png,8,1
+blood_altar,Blood Altar,"A crimson altar hums softly. It demands a sacrifice.",res://Assets/CardSprites/dot_spell.png,6,1
