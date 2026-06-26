@@ -270,6 +270,15 @@ func execute_command(command: String):
 		"formation_load":
 			_cmd_formation_load(args)
 
+		"add_card":
+			_cmd_add_card(args)
+
+		"add_gold":
+			_cmd_add_gold(args)
+
+		"add_components":
+			_cmd_add_components(args)
+
 		_:
 			log_message("Unknown command: '%s'. Type 'help' for commands." % cmd, "red")
 
@@ -290,6 +299,9 @@ func show_help():
 	log_message("save - Show current save state")
 	log_message("formation_editor on [name [level]] | formation_editor off — enemy formation CSV editor (deployment)")
 	log_message("formation_load <name> — load formation (editor: player board; normal prep: enemy side)")
+	log_message("add_card <cardId> <count> — add unit/spell cards to inventory")
+	log_message("add_gold <amount> — add run gold")
+	log_message("add_components <amount> — add run components")
 
 func _cmd_formation_editor(args: Array) -> void:
 	if args.is_empty():
@@ -330,6 +342,78 @@ func _cmd_formation_load(args: Array) -> void:
 		log_message(str(err), "red")
 	else:
 		log_message("Loaded formation: %s" % formation_name, "green")
+
+
+func _get_game_state_manager() -> Node:
+	var gsm := get_parent()
+	if gsm and gsm.has_method("add_gold"):
+		return gsm
+	return get_tree().root.find_child("GameStateManager", true, false)
+
+
+func _get_inventory() -> Inventory:
+	var gui := get_tree().root.find_child("Gui", true, false) as Control
+	if gui == null:
+		return null
+	return gui.get_node_or_null("Inventory") as Inventory
+
+
+func _cmd_add_card(args: Array) -> void:
+	if args.size() < 2:
+		log_message("Usage: add_card <cardId> <count>", "orange")
+		return
+	var card_id := str(args[0])
+	var count := int(args[1])
+	if count <= 0:
+		log_message("Count must be greater than 0", "red")
+		return
+	if ITEM_NAME.item_lookup(card_id) == null:
+		log_message("Unknown card id: '%s'" % card_id, "red")
+		return
+	var inventory := _get_inventory()
+	if inventory == null:
+		log_message("Inventory not found", "red")
+		return
+	var before := inventory.get_number_of_item(card_id)
+	inventory.add_item(card_id, count)
+	var added := inventory.get_number_of_item(card_id) - before
+	if added <= 0:
+		log_message("Could not add '%s' (inventory may be full)" % card_id, "red")
+		return
+	log_message("Added %d x %s (inventory total: %d)" % [added, card_id, inventory.get_number_of_item(card_id)], "green")
+
+
+func _cmd_add_gold(args: Array) -> void:
+	if args.is_empty():
+		log_message("Usage: add_gold <amount>", "orange")
+		return
+	var amount := int(args[0])
+	if amount <= 0:
+		log_message("Amount must be greater than 0", "red")
+		return
+	var gsm := _get_game_state_manager()
+	if gsm == null:
+		log_message("GameStateManager not found", "red")
+		return
+	gsm.add_gold(amount)
+	log_message("Added %d gold (total: %d)" % [amount, gsm.run_gold], "green")
+
+
+func _cmd_add_components(args: Array) -> void:
+	if args.is_empty():
+		log_message("Usage: add_components <amount>", "orange")
+		return
+	var amount := int(args[0])
+	if amount <= 0:
+		log_message("Amount must be greater than 0", "red")
+		return
+	var gsm := _get_game_state_manager()
+	if gsm == null:
+		log_message("GameStateManager not found", "red")
+		return
+	gsm.add_components(amount)
+	log_message("Added %d components (total: %d)" % [amount, gsm.run_components], "green")
+
 
 func teleport_camera(x: float, y: float):
 	"""Teleport camera to position"""

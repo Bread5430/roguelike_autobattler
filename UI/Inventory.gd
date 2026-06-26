@@ -75,9 +75,9 @@ func add_item (itemID : String, count : int):
 
 func remove_item (itemID : String, count: int) -> bool:
 	var item = ITEM_NAME.item_lookup(itemID)
-	var slot = get_slot_to_remove(item)
+	var slot = get_slot_to_remove(itemID)
   
-	if slot == null or slot.item == item or slot.quantity < count:
+	if slot == null or slot.item != item or slot.quantity < count:
 		return false
   
 	slot.remove_item(count)

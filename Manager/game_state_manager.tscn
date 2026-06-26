@@ -46,7 +46,7 @@ position = Vector2(-2, 2)
 anchor_mode = 0
 script = ExtResource("4_4wcpc")
 camera_move_speed = 200
-camera_default_size = Vector2(1600, 900)
+camera_default_size = Vector2(1280, 720)
 camera_scroll_speed = 0.15
 
 [node name="UICanvas" type="CanvasLayer" parent="."]

@@ -341,6 +341,9 @@ func enter_map_exploration() -> void:
 	spell_bar.hide()
 	run_resources_hud.set_map_visible(true)
 	_refresh_run_resources_hud()
+	end_prep.hide()
+	end_prep.disabled = true
+	deployment_mode = false
 	if not _is_shop_visit_active() and not _is_rest_visit_active() and not _is_event_visit_active():
 		toggle_inventory(true)
 
