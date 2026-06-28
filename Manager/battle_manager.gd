@@ -40,9 +40,14 @@ var _factory_destroyed_handled: bool = false
 func setup_battle(battle_params : Dictionary):
 	"""Generate enemies for the current battle"""
 	if battle_params.has("stage") and battle_params.has("difficulty"):
+		var modifiers := {
+			"is_blockade": battle_params.get("is_blockade", false),
+			"is_chaser_pressured_exit": battle_params.get("is_chaser_pressured_exit", false),
+		}
 		enemy_spawner.get_enemy_spawns(
 			battle_params["stage"],
-			battle_params["difficulty"]
+			battle_params["difficulty"],
+			modifiers
 		)
 	#else:
 	

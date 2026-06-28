@@ -36,6 +36,7 @@ Dense summaries of specific features or subsystems: `.cursor/docs/systems/<name>
 | `.cursor/docs/systems/beacon-spell-fsm.md` | BeaconSpell 3-click flow, BeaconController, beaconed FSM state, panic/cache behavior |
 | `.cursor/docs/systems/battle-rewards-ui.md` | Post-victory `BattleRewardsUI`, reward payload entries, gold/unit submenu, `run_gold`, repair damage stub, modal click blocking |
 | `.cursor/docs/systems/random-events.md` | `RANDOM_EVENT_DATA`, CSV event/choice schema, `RandomEventControl`, `RandomEventUI`, map `RANDOM_EVENT` nodes, resource exchange costs/rewards, `event_visit_active` |
+| `.cursor/docs/systems/chasing-enemy-blockades.md` | `ChasingEnemyController`, capsule sweep, `BLOCKADE` nodes, `chaser_blockaded` exit pressure, `ChaserHUD`, blockade combat/rewards |
 
 ## Usage
 

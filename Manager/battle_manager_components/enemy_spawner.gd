@@ -24,7 +24,7 @@ var bm
 var recently_seen_units = {}
 var used_tiles = {}
 
-func get_enemy_spawns(stage: int, difficulty: String) -> Array:
+func get_enemy_spawns(stage: int, difficulty: String, modifiers: Dictionary = {}) -> Array:
 	# Reset spawned tiles
 	used_tiles = {}
 	
@@ -32,11 +32,15 @@ func get_enemy_spawns(stage: int, difficulty: String) -> Array:
 	for u in recently_seen_units.keys():
 		recently_seen_units[u] = int(recently_seen_units[u]/2)
 	
+	var spawn_difficulty := difficulty
+	if modifiers.get("is_blockade", false) or modifiers.get("is_chaser_pressured_exit", false):
+		spawn_difficulty = "heavy"
+	
 	# Get a random formation
-	if not FORMATION_MAP.LEVELS.has(difficulty):
-		push_warning("Invalid difficulty: %s" % difficulty)
+	if not FORMATION_MAP.LEVELS.has(spawn_difficulty):
+		push_warning("Invalid difficulty: %s" % spawn_difficulty)
 		return []
-	var formation = FORMATION_MAP.random_formation(difficulty)
+	var formation = FORMATION_MAP.random_formation(spawn_difficulty)
 	
 	# Start filling in the formation with spawns
 	var all_spawn_positions: Array = []
@@ -46,6 +50,13 @@ func get_enemy_spawns(stage: int, difficulty: String) -> Array:
 		var spawn_pos : Vector2 = spawn_single_formation_entry(parsed, seen_groups)
 		if spawn_pos != null:
 			all_spawn_positions.append(spawn_pos)
+	
+	if modifiers.get("is_blockade", false) or modifiers.get("is_chaser_pressured_exit", false):
+		var bonus_formation = FORMATION_MAP.random_formation("light")
+		for parsed in bonus_formation:
+			var spawn_pos : Vector2 = spawn_single_formation_entry(parsed, seen_groups)
+			if spawn_pos != null:
+				all_spawn_positions.append(spawn_pos)
 	
 	return all_spawn_positions
 	

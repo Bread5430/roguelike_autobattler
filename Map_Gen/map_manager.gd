@@ -15,6 +15,13 @@ extends Node2D
 @export var repair_site_node_count := 1
 @export var shop_node_count := 1
 
+@export_group("Chasing Enemy")
+@export var chaser_total_steps := 8
+## Vertical half-extent of the capsule. 0 = auto (half map height + node radius).
+@export var chaser_half_height := 0.0
+@export var chaser_capsule_length := 5000.0
+@export var chaser_fill_color := Color(0.9, 0.15, 0.15, 0.35)
+
 @export_group("Visual Settings")
 @export var node_radius := 15.0
 @export var draw_connections := true
@@ -39,11 +46,14 @@ var pending_node: MapNode
 var debug_teleport_on_click := false
 var _debug_bypass_availability := false
 
+var chaser := ChasingEnemyController.new()
+
 const CONTENT_TYPE_COLORS := {
 	MapNode.ContentType.BATTLE: Color(0.2, 0.45, 0.95),
 	MapNode.ContentType.RANDOM_EVENT: Color(0.65, 0.25, 0.85),
 	MapNode.ContentType.REPAIR_SITE: Color(0.95, 0.55, 0.15),
 	MapNode.ContentType.SHOP: Color(0.95, 0.85, 0.2),
+	MapNode.ContentType.BLOCKADE: Color(0.35, 0.08, 0.08),
 }
 
 const CONTENT_TYPE_LABELS := {
@@ -51,10 +61,12 @@ const CONTENT_TYPE_LABELS := {
 	MapNode.ContentType.RANDOM_EVENT: "?",
 	MapNode.ContentType.REPAIR_SITE: "R",
 	MapNode.ContentType.SHOP: "$",
+	MapNode.ContentType.BLOCKADE: "X",
 }
 
 # Signals
 signal selected_node(node: MapNode)
+signal chaser_step_changed(state: Dictionary)
 
 ######### MANAGER CODE ########
 
@@ -84,6 +96,7 @@ func generate_map():
 	identify_start_end_nodes()
 	assign_special_node_types()
 	calculate_difficulty_progression()
+	_reset_chaser()
 	update_node_availability()
 	
 	print("Map generation complete. Nodes: %d, Connections: %d" % [nodes.size(), connections.size()])
@@ -207,6 +220,7 @@ func assign_special_node_types() -> void:
 	var eligible: Array[MapNode] = []
 	for node in nodes:
 		node.content_type = MapNode.ContentType.BATTLE
+		node.chaser_blockaded = false
 		if node != start_node and node != end_node:
 			eligible.append(node)
 	eligible.shuffle()
@@ -309,6 +323,28 @@ func complete_map_node(node: MapNode) -> void:
 		completed_nodes.append(node)
 	update_node_availability()
 
+
+func _reset_chaser() -> void:
+	chaser.total_steps = chaser_total_steps
+	chaser.capsule_length = chaser_capsule_length
+	chaser.fill_color = chaser_fill_color
+	var half_h := chaser_half_height
+	if half_h <= 0.0:
+		half_h = map_size.y * 0.5 + node_radius
+	var start_x := -map_size.x * 0.25
+	var end_x := map_size.x * 1.25
+	chaser.reset(start_x, end_x, map_size.y * 0.5, half_h)
+
+
+func on_map_node_completed() -> void:
+	if chaser.advance_step(nodes, end_node, node_radius):
+		chaser_step_changed.emit(get_chaser_ui_state())
+	queue_redraw()
+
+
+func get_chaser_ui_state() -> Dictionary:
+	return chaser.get_ui_state()
+
 # =============================================================================
 # PLAYER MOVEMENT
 # =============================================================================
@@ -385,6 +421,8 @@ func draw_map():
 	"""Draw the complete map graph"""
 	if draw_connections:
 		draw_connections_visual()
+
+	chaser.draw_capsule(self)
 	
 	draw_nodes_visual()
 	
@@ -435,8 +473,17 @@ func draw_node_shape(node: MapNode, color: Color) -> void:
 			draw_rect(Rect2(pos.x - thickness * 0.5, pos.y - arm, thickness, arm * 2.0), Color.WHITE)
 		MapNode.ContentType.SHOP:
 			draw_rect(Rect2(pos.x - r, pos.y - r, r * 2.0, r * 2.0), color)
+		MapNode.ContentType.BLOCKADE:
+			draw_colored_polygon(_hex_points(pos, r), color)
 		_:
 			draw_circle(pos, r, color)
+
+func _hex_points(center: Vector2, r: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in range(6):
+		var angle := PI / 3.0 * float(i) - PI / 6.0
+		pts.append(center + Vector2(cos(angle), sin(angle)) * r)
+	return pts
 
 func draw_node_border(node: MapNode) -> void:
 	var pos := node.global_position
@@ -464,8 +511,14 @@ func draw_node_border(node: MapNode) -> void:
 			)
 		MapNode.ContentType.SHOP:
 			draw_rect(Rect2(pos.x - r, pos.y - r, r * 2.0, r * 2.0), border_color, false, border_width)
+		MapNode.ContentType.BLOCKADE:
+			var hex_pts := _hex_points(pos, r)
+			hex_pts.append(hex_pts[0])
+			draw_polyline(hex_pts, border_color, border_width)
 		_:
 			draw_arc(pos, r, 0, TAU, 32, border_color, border_width)
+	if node == end_node and node.chaser_blockaded:
+		draw_arc(pos, r + 4.0, 0, TAU, 32, Color(0.15, 0.05, 0.05), 4.0)
 
 func draw_node_labels_visual():
 	"""Draw labels on nodes"""
@@ -564,12 +617,15 @@ func save_map_state() -> Dictionary:
 		"completed_node_ids": [],
 		"current_node_id": current_node.id if current_node else -1,
 		"node_content_types": {},
+		"node_chaser_blockaded": {},
+		"chaser_current_step": chaser.current_step,
 	}
 	
 	for node in completed_nodes:
 		state.completed_node_ids.append(node.id)
 	for node in nodes:
 		state.node_content_types[node.id] = node.content_type
+		state.node_chaser_blockaded[node.id] = node.chaser_blockaded
 	
 	return state
 
@@ -594,9 +650,21 @@ func load_map_state(state: Dictionary):
 			break
 
 	var saved_content_types: Dictionary = state.get("node_content_types", {})
+	var saved_chaser_blockaded: Dictionary = state.get("node_chaser_blockaded", {})
 	for node in nodes:
 		if saved_content_types.has(node.id):
 			node.content_type = saved_content_types[node.id]
+		if saved_chaser_blockaded.has(node.id):
+			node.chaser_blockaded = saved_chaser_blockaded[node.id]
+
+	chaser.current_step = int(state.get("chaser_current_step", 0))
+	chaser.total_steps = chaser_total_steps
+	chaser.capsule_length = chaser_capsule_length
+	chaser.fill_color = chaser_fill_color
+	var half_h := chaser_half_height
+	if half_h <= 0.0:
+		half_h = map_size.y * 0.5 + node_radius
+	chaser.map_half_height = half_h
 	
 	# Update availability and player global_position
 	update_node_availability()

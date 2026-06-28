@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://dy1rgpvj3afyd"]
+[gd_scene load_steps=13 format=3 uid="uid://dy1rgpvj3afyd"]
 
 [ext_resource type="Script" uid="uid://bysfs5te4mpkk" path="res://UI/GUI.gd" id="1_u7efx"]
 [ext_resource type="Script" uid="uid://csmfu6ekj5t6l" path="res://UI/passthrough_helper.gd" id="3_dl5f7"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://UI/ItemDetailsCard.tscn" id="6_item_details"]
 [ext_resource type="PackedScene" uid="uid://c8phfactoryhealth" path="res://UI/PlayerHealthBar.tscn" id="7_health"]
 [ext_resource type="PackedScene" path="res://UI/RunResourcesHUD.tscn" id="7_resources"]
+[ext_resource type="PackedScene" path="res://UI/ChaserHUD.tscn" id="7_chaser"]
 [ext_resource type="PackedScene" path="res://UI/BattleRewardsUI.tscn" id="8_rewards"]
 [ext_resource type="PackedScene" path="res://UI/ShopUI.tscn" id="9_shop"]
 [ext_resource type="PackedScene" path="res://UI/RestUI.tscn" id="10_rest"]
@@ -28,6 +29,9 @@ layout_mode = 1
 
 [node name="RunResourcesHUD" parent="." instance=ExtResource("7_resources")]
 layout_mode = 1
+
+[node name="ChaserHUD" parent="." instance=ExtResource("7_chaser")]
+layout_mode = 0
 
 [node name="Inventory" parent="." instance=ExtResource("4_n3xue")]
 layout_mode = 0

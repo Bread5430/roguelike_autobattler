@@ -55,16 +55,22 @@ script = ExtResource("5_drtnq")
 [node name="Gui" parent="UICanvas" node_paths=PackedStringArray("battle_manager") instance=ExtResource("5_4wcpc")]
 battle_manager = NodePath("../../BattleManager")
 
-[node name="Inventory" parent="UICanvas/Gui" index="2"]
+[node name="ChaserHUD" parent="UICanvas/Gui" index="2"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 212.0
+offset_bottom = 76.0
+
+[node name="Inventory" parent="UICanvas/Gui" index="3"]
 starter_items = Array[String](["chaff_swarm", "splash_unit", "one_ranged", "four_melee", "arc_unit", "arc_launcher", "router_card", "ground_slow_field", "dot_ramp", "attack_speed_aura", "sniper_card", "bruiser_card", "exploder_card", "railgun_card", "beacon_spell", "aegis_spell"])
 starter_items_count = Array[int]([3, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1])
 columns = 7
 rows = 5
 
-[node name="SpellBar" parent="UICanvas/Gui" index="3"]
+[node name="SpellBar" parent="UICanvas/Gui" index="4"]
 visible = true
 
-[node name="TacticalCursor" parent="UICanvas/Gui" index="6"]
+[node name="TacticalCursor" parent="UICanvas/Gui" index="7"]
 mouse_filter = 2
 
 [editable path="UICanvas/Gui"]

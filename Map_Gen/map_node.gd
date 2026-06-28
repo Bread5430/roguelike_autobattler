@@ -6,6 +6,7 @@ enum ContentType {
 	RANDOM_EVENT,
 	REPAIR_SITE,
 	SHOP,
+	BLOCKADE,
 }
 
 var id: int
@@ -15,6 +16,8 @@ var connections: Array[MapNode] = []
 ## Path role on the campaign graph: normal, start, or end.
 var node_type: String = "normal"
 var content_type: ContentType = ContentType.BATTLE
+## Exit nodes swept by the chaser keep exit role but use harder combat when true.
+var chaser_blockaded: bool = false
 var difficulty: String = "easy"
 var stage: int = 1
 var completed: bool = false

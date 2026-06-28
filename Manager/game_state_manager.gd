@@ -63,7 +63,7 @@ func connect_systems():
 	battle_manager.battle_ended.connect(_on_battle_ended)
 	battle_manager.factory_destroyed.connect(_on_factory_destroyed)
 	map_generator.selected_node.connect(_on_map_node_selected)
-	
+	map_generator.chaser_step_changed.connect(_on_chaser_step_changed)
 
 func change_state(new_state: GameState):
 	"""Change the current game state"""
@@ -106,6 +106,15 @@ func enable_map_interaction():
 	viewport.reset_zoom()
 	
 	print("Map exploration enabled. Available nodes: %d" % map_generator.get_available_nodes().size())
+	gui.refresh_chaser_hud()
+
+
+func _on_chaser_step_changed(_state: Dictionary) -> void:
+	gui.refresh_chaser_hud()
+
+
+func _notify_map_node_completed() -> void:
+	map_generator.on_map_node_completed()
 
 func _on_map_node_selected(node: MapNode):
 	"""Handle when player selects a map node"""
@@ -143,7 +152,7 @@ func _on_map_node_selected(node: MapNode):
 
 func _route_map_node(node: MapNode) -> void:
 	match node.content_type:
-		MapNode.ContentType.BATTLE:
+		MapNode.ContentType.BATTLE, MapNode.ContentType.BLOCKADE:
 			change_state(GameState.BATTLE_PREPARATION)
 		MapNode.ContentType.RANDOM_EVENT:
 			_enter_random_event_node(node)
@@ -168,6 +177,7 @@ func open_event_visit() -> void:
 func end_event_visit() -> void:
 	if current_battle_node:
 		map_generator.complete_map_node(current_battle_node)
+		_notify_map_node_completed()
 	event_visit_active = false
 	current_battle_node = null
 	gui.close_random_event()
@@ -186,6 +196,7 @@ func open_rest_visit() -> void:
 func end_rest_visit() -> void:
 	if current_battle_node:
 		map_generator.complete_map_node(current_battle_node)
+		_notify_map_node_completed()
 	rest_visit_active = false
 
 func _enter_shop_node(_node: MapNode) -> void:
@@ -201,6 +212,7 @@ func open_shop_visit() -> void:
 func end_shop_visit() -> void:
 	if current_battle_node:
 		map_generator.complete_map_node(current_battle_node)
+		_notify_map_node_completed()
 	shop_visit_active = false
 
 func _complete_special_node_visit(node: MapNode) -> void:
@@ -236,14 +248,21 @@ func setup_battle_environment():
 	battle_manager.clear_battlefield()
 	
 	# Setup battle-specific parameters based on node
+	var is_blockade := current_battle_node.content_type == MapNode.ContentType.BLOCKADE
+	var is_chaser_pressured_exit := (
+		current_battle_node.node_type == "end"
+		and current_battle_node.chaser_blockaded
+	)
 	battle_manager.setup_battle({
 		"stage": current_battle_node.stage,
-		"difficulty": current_battle_node.difficulty,
-		"node_type": current_battle_node.node_type
+		"difficulty": _resolve_battle_difficulty(current_battle_node),
+		"node_type": current_battle_node.node_type,
+		"is_blockade": is_blockade,
+		"is_chaser_pressured_exit": is_chaser_pressured_exit,
 	})
 	
 	print("stage " + str(current_battle_node.stage) + 
-		" difficulty " + current_battle_node.difficulty +
+		" difficulty " + _resolve_battle_difficulty(current_battle_node) +
 		" node_type "+ current_battle_node.node_type)
 	
 	gui.start_prep_phase()
@@ -313,6 +332,7 @@ func handle_battle_completion():
 	
 	# Mark node as completed
 	map_generator.complete_current_battle()
+	_notify_map_node_completed()
 	
 	var is_campaign_end := current_battle_node.node_type == "end"
 	var reward_payload := calculate_battle_rewards()
@@ -373,9 +393,10 @@ func award_battle_rewards():
 
 func calculate_battle_rewards() -> Dictionary:
 	"""Calculate rewards based on node difficulty and performance."""
+	var is_blockade := current_battle_node.content_type == MapNode.ContentType.BLOCKADE
 	var gold_amount := 100
 	
-	match current_battle_node.difficulty:
+	match _resolve_battle_difficulty(current_battle_node):
 		"light":
 			gold_amount = int(gold_amount * 1)
 		"medium":
@@ -384,27 +405,44 @@ func calculate_battle_rewards() -> Dictionary:
 			gold_amount = int(gold_amount * 2)
 	
 	gold_amount += current_battle_node.stage * 10
+	if is_blockade:
+		gold_amount = int(gold_amount * 1.5)
 	
-	var unit_options := _pick_random_unit_reward_options(3)
+	var entries: Array = [
+		{
+			"id": "gold",
+			"kind": "instant",
+			"label": "Collect gold (+%d)" % gold_amount,
+			"gold": gold_amount,
+			"claimed": false
+		},
+	]
+	if not is_blockade:
+		var unit_options := _pick_random_unit_reward_options(3)
+		entries.append({
+			"id": "unit_pick",
+			"kind": "unit_choice",
+			"label": "Recruit a unit",
+			"options": unit_options,
+			"claimed": false
+		})
 	
-	return {
-		"entries": [
-			{
-				"id": "gold",
-				"kind": "instant",
-				"label": "Collect gold (+%d)" % gold_amount,
-				"gold": gold_amount,
-				"claimed": false
-			},
-			{
-				"id": "unit_pick",
-				"kind": "unit_choice",
-				"label": "Recruit a unit",
-				"options": unit_options,
-				"claimed": false
-			}
-		]
-	}
+	return {"entries": entries}
+
+
+func _resolve_battle_difficulty(node: MapNode) -> String:
+	var base := node.difficulty
+	if node.content_type == MapNode.ContentType.BLOCKADE:
+		match base:
+			"light":
+				return "medium"
+			"medium", "heavy":
+				return "heavy"
+	if node.node_type == "end" and node.chaser_blockaded:
+		# TODO: Replace exit with a dedicated boss fight; make boss harder when blockaded.
+		return "heavy"
+	return base
+
 
 func _get_unit_reward_pool() -> Array[String]:
 	var pool: Array[String] = []

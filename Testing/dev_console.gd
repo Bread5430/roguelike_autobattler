@@ -234,11 +234,7 @@ func execute_command(command: String):
 			show_node_info()
 		
 		"complete_node":
-			if map_manager and map_manager.has_method("complete_node"):
-				map_manager.complete_node()
-				log_message("Current node completed", "green")
-			else:
-				log_message("MapManager not found", "red")
+			_cmd_complete_node()
 		
 		"goto_node", "go_node":
 			if map_manager and map_manager.has_method("enable_debug_teleport_on_click"):
@@ -293,7 +289,7 @@ func show_help():
 	log_message("teleport <x> <y> - Teleport camera to position")
 	log_message("zoom <level> - Set camera zoom level")
 	log_message("node_info - Show current node information")
-	log_message("complete_node - Complete current node")
+	log_message("complete_node - Force current battle to end in victory (prep or combat)")
 	log_message("goto_node - Click next map node to move the player there (debug)")
 	log_message("timescale <value> - Set game speed (1.0 = normal)")
 	log_message("save - Show current save state")
@@ -356,6 +352,17 @@ func _get_inventory() -> Inventory:
 	if gui == null:
 		return null
 	return gui.get_node_or_null("Inventory") as Inventory
+
+
+func _cmd_complete_node() -> void:
+	var gsm := _get_game_state_manager()
+	if gsm == null:
+		log_message("GameStateManager not found", "red")
+		return
+	if gsm.has_method("force_battle_victory") and gsm.force_battle_victory():
+		log_message("Battle ended in victory", "green")
+	else:
+		log_message("No active battle (must be in prep or combat)", "orange")
 
 
 func _cmd_add_card(args: Array) -> void:

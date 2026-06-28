@@ -1,10 +1,14 @@
-[gd_scene load_steps=3 format=3 uid="uid://bkofyitbtwadk"]
+[gd_scene load_steps=4 format=3 uid="uid://bkofyitbtwadk"]
 
 [ext_resource type="Script" uid="uid://cuso4ib3bh6bh" path="res://Map_Gen/map_manager.gd" id="1_y3ekc"]
 [ext_resource type="PackedScene" uid="uid://bji4ahs5o67mv" path="res://Map_Gen/player_location.tscn" id="2_3sbnt"]
+[ext_resource type="Script" uid="uid://cjof2dvm7faew" path="res://Map_Gen/chasing_enemy_controller.gd" id="3_ys86k"]
 
 [node name="MapManager" type="Node2D" node_paths=PackedStringArray("player_sprite")]
 script = ExtResource("1_y3ekc")
-player_sprite = NodePath("PlayerLocaiton")
+player_sprite = NodePath("PlayerLocation")
 
-[node name="PlayerLocaiton" parent="." instance=ExtResource("2_3sbnt")]
+[node name="PlayerLocation" parent="." instance=ExtResource("2_3sbnt")]
+
+[node name="Chasing_Enemy_Controller" type="Node2D" parent="."]
+script = ExtResource("3_ys86k")

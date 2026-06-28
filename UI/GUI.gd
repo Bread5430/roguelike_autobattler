@@ -15,6 +15,7 @@ var unit_board : GridContainer
 @onready var item_details_card: ItemDetailsCard = $ItemDetailsCard
 @onready var player_health_bar: PanelContainer = $PlayerHealthBar
 @onready var run_resources_hud: RunResourcesHUD = $RunResourcesHUD
+@onready var chaser_hud: ChaserHUD = $ChaserHUD
 @onready var battle_rewards_ui: BattleRewardsUI = $BattleRewardsUI
 @onready var shop_ui: ShopUI = $ShopUI
 @onready var shop_toggle_button: Button = $ShopToggleButton
@@ -335,12 +336,15 @@ func start_prep_phase():
 	end_prep.disabled = false
 	spell_bar.show()
 	run_resources_hud.set_map_visible(false)
+	chaser_hud.set_map_visible(false)
 
 
 func enter_map_exploration() -> void:
 	spell_bar.hide()
 	run_resources_hud.set_map_visible(true)
+	chaser_hud.set_map_visible(true)
 	_refresh_run_resources_hud()
+	refresh_chaser_hud()
 	end_prep.hide()
 	end_prep.disabled = true
 	deployment_mode = false
@@ -616,6 +620,15 @@ func _on_run_currency_changed(gold: int, components: int) -> void:
 func _refresh_run_resources_hud() -> void:
 	var gsm := _get_game_state_manager()
 	run_resources_hud.update_values(gsm.run_gold, gsm.run_components)
+
+
+func refresh_chaser_hud() -> void:
+	var gsm := _get_game_state_manager()
+	if gsm == null or gsm.map_generator == null or chaser_hud == null:
+		return
+	if not chaser_hud.visible:
+		return
+	chaser_hud.update_from_state(gsm.map_generator.get_chaser_ui_state())
 
 
 func _get_game_state_manager() -> Node:
