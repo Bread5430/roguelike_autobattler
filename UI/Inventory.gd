@@ -50,6 +50,8 @@ func _process(delta: float) -> void:
 
 func toggle_window (open : bool):
 	visible = open
+	if open:
+		move_to_front()
 	
 	if visible:
 		for slot in inventory_grid.get_children():

@@ -5,6 +5,7 @@ signal purchase_requested(slot_data: Dictionary, row_key: String, slot_index: in
 signal refresh_requested
 signal scrap_mode_entered
 signal scrap_mode_exited
+signal leave_requested
 
 const SHOP_SLOT_SCENE := preload("res://UI/ShopSlot.tscn")
 const REFRESH_COST := 50
@@ -17,6 +18,7 @@ const REFRESH_COST := 50
 @onready var _spell_row: HBoxContainer = $MainPanel/Margin/VBox/SpellRow
 @onready var _relic_row: HBoxContainer = $MainPanel/Margin/VBox/RelicRow
 @onready var _refresh_button: Button = $MainPanel/Margin/VBox/FooterRow/RefreshButton
+@onready var _leave_button: Button = $MainPanel/Margin/VBox/FooterRow/LeaveButton
 @onready var _scraper_button: Button = $MainPanel/Margin/VBox/FooterRow/ScraperButton
 @onready var _scrap_overlay: Control = $ScrapOverlay
 @onready var _scrap_backdrop: ColorRect = $ScrapOverlay/ScrapBackdrop
@@ -43,6 +45,7 @@ func _ready() -> void:
 	_backdrop.gui_input.connect(_on_backdrop_gui_input)
 	_scrap_backdrop.gui_input.connect(_on_backdrop_gui_input)
 	_refresh_button.pressed.connect(_on_refresh_pressed)
+	_leave_button.pressed.connect(_on_leave_pressed)
 	_scraper_button.pressed.connect(_on_scraper_pressed)
 	_scrap_return_button.pressed.connect(_on_scrap_return_pressed)
 
@@ -177,6 +180,12 @@ func _on_refresh_pressed() -> void:
 	refresh_requested.emit()
 
 
+func _on_leave_pressed() -> void:
+	if _scrap_mode:
+		return
+	leave_requested.emit()
+
+
 func _on_scraper_pressed() -> void:
 	if _scrap_mode:
 		return
@@ -207,6 +216,7 @@ func _set_panel_visible(show_panel: bool) -> void:
 
 func _set_shop_controls_enabled(enabled: bool) -> void:
 	_refresh_button.disabled = not enabled or _refresh_used
+	_leave_button.disabled = not enabled
 	_scraper_button.disabled = not enabled
 	for slot in _all_slots():
 		slot.disabled = not enabled or slot.slot_data.get("sold", false) or str(slot.slot_data.get("kind", "")) == "relic"

@@ -6,6 +6,7 @@ signal repair_requested
 signal craft_mode_entered
 signal craft_mode_exited
 signal refresh_requested
+signal leave_requested
 
 const SHOP_SLOT_SCENE := preload("res://UI/ShopSlot.tscn")
 
@@ -21,6 +22,7 @@ const SHOP_SLOT_SCENE := preload("res://UI/ShopSlot.tscn")
 @onready var _repair_button: Button = $MainPanel/Margin/VBox/ActionRow/RepairButton
 @onready var _craft_button: Button = $MainPanel/Margin/VBox/ActionRow/CraftButton
 @onready var _refresh_button: Button = $MainPanel/Margin/VBox/ActionRow/RefreshButton
+@onready var _leave_button: Button = $MainPanel/Margin/VBox/ActionRow/LeaveButton
 @onready var _craft_overlay: Control = $CraftOverlay
 @onready var _craft_backdrop: ColorRect = $CraftOverlay/CraftBackdrop
 @onready var _craft_return_button: Button = $CraftOverlay/CraftPanel/Margin/VBox/ReturnButton
@@ -45,6 +47,7 @@ func _ready() -> void:
 	_repair_button.pressed.connect(_on_repair_pressed)
 	_craft_button.pressed.connect(_on_craft_pressed)
 	_refresh_button.pressed.connect(_on_refresh_pressed)
+	_leave_button.pressed.connect(_on_leave_pressed)
 	_craft_return_button.pressed.connect(_on_craft_return_pressed)
 
 
@@ -180,6 +183,12 @@ func _on_refresh_pressed() -> void:
 	refresh_requested.emit()
 
 
+func _on_leave_pressed() -> void:
+	if _craft_mode:
+		return
+	leave_requested.emit()
+
+
 func _on_craft_return_pressed() -> void:
 	exit_craft_mode()
 
@@ -206,6 +215,7 @@ func _set_rest_controls_enabled(enabled: bool) -> void:
 	_repair_button.disabled = not enabled
 	_craft_button.disabled = not enabled
 	_refresh_button.disabled = not enabled
+	_leave_button.disabled = not enabled
 	for slot in _upgrade_slots:
 		var purchased: bool = slot.slot_data.get("purchased", false)
 		slot.disabled = not enabled or purchased

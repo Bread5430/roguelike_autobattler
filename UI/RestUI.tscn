@@ -95,6 +95,10 @@ text = "Craft duplicate (3c)"
 layout_mode = 2
 text = "Refresh upgrades (1c)"
 
+[node name="LeaveButton" type="Button" parent="MainPanel/Margin/VBox/ActionRow"]
+layout_mode = 2
+text = "Leave"
+
 [node name="CraftOverlay" type="Control" parent="."]
 visible = false
 layout_mode = 1

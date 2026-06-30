@@ -44,6 +44,17 @@ func try_resolve_choice(payload: Dictionary, choice_id: String, inventory: Inven
 	return true
 
 
+func has_neutral_leave_choice(payload: Dictionary) -> bool:
+	for choice in payload.get("choices", []):
+		if not choice is Dictionary:
+			continue
+		var cost_kind := str(choice.get("cost_kind", ""))
+		var reward_kind := str(choice.get("reward_kind", ""))
+		if cost_kind == "none" and reward_kind == "none":
+			return true
+	return false
+
+
 func refresh_choice_enabled_flags(payload: Dictionary, inventory: Inventory) -> Dictionary:
 	var refreshed := payload.duplicate(true)
 	var choices: Array = []

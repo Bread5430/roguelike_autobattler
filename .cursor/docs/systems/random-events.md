@@ -79,6 +79,8 @@ Buttons disable when the player cannot afford the cost.
 
 - Map node switching blocked while `event_visit_active` (must resolve event first).
 - Unlike shop/rest, hiding the event panel does **not** re-enable map clicks — `_sync_event_map_input` always blocks map input during the visit.
+- Leaving a random event without a trade/reward is only possible when the event defines a neutral choice (`cost_kind=none`, `reward_kind=none`, e.g. blood_altar "Walk away"). Events without such a choice require picking one of the offered options.
+- Shop and rest allow leaving without purchases/repairs via **Leave** or by clicking another map node; map input stays enabled during those visits.
 - Extend `GUI.is_mouse_over_ui_element` for event UI + toggle button (same pattern as shop/rest).
 
 ## Follow-ups (not v1)

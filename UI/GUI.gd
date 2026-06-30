@@ -9,6 +9,7 @@ var selector_rect : Rect2
 @export var battle_manager : Control
 var inventory : Inventory
 var unit_board : GridContainer
+var gsm 
 @onready var spell_bar : SpellBar = $SpellBar
 @onready var end_prep : Button = $End_Prep
 @onready var tactical_cursor = $TacticalCursor
@@ -87,7 +88,7 @@ func post_ready():
 
 	spell_bar.battle_manager = battle_manager
 	battle_manager.tactical_cursor = tactical_cursor
-	var gsm := get_parent().get_parent()
+	gsm = get_parent().get_parent()
 	if gsm != null and gsm.has_node("PlayerHealthManager"):
 		var health_manager := gsm.get_node("PlayerHealthManager") as PlayerHealthManager
 		player_health_bar.setup(health_manager)
@@ -101,6 +102,7 @@ func post_ready():
 			shop_ui.refresh_requested.connect(_on_shop_refresh_requested)
 			shop_ui.scrap_mode_entered.connect(_on_shop_scrap_mode_entered)
 			shop_ui.scrap_mode_exited.connect(_on_shop_scrap_mode_exited)
+			shop_ui.leave_requested.connect(_on_shop_leave_requested)
 		if shop_toggle_button:
 			shop_toggle_button.visible = false
 			shop_toggle_button.disabled = true
@@ -112,6 +114,7 @@ func post_ready():
 			rest_ui.craft_mode_entered.connect(_on_rest_craft_mode_entered)
 			rest_ui.craft_mode_exited.connect(_on_rest_craft_mode_exited)
 			rest_ui.refresh_requested.connect(_on_rest_refresh_requested)
+			rest_ui.leave_requested.connect(_on_rest_leave_requested)
 		if rest_toggle_button:
 			rest_toggle_button.visible = false
 			rest_toggle_button.disabled = true
@@ -348,19 +351,18 @@ func enter_map_exploration() -> void:
 	end_prep.hide()
 	end_prep.disabled = true
 	deployment_mode = false
-	if not _is_shop_visit_active() and not _is_rest_visit_active() and not _is_event_visit_active():
-		toggle_inventory(true)
+	toggle_inventory(true)
 
 
 func open_shop(stock: Dictionary) -> void:
 	if item_details_card:
 		item_details_card.hide_details()
-	toggle_inventory(false)
+	toggle_inventory(true)
 	if shop_toggle_button:
 		shop_toggle_button.visible = true
 		shop_toggle_button.disabled = false
 		shop_toggle_button.text = "Hide Shop"
-	var gsm := _get_game_state_manager()
+	
 	var gold = gsm.run_gold if gsm else 0
 	var components = gsm.run_components if gsm else 0
 	if shop_ui:
@@ -378,26 +380,23 @@ func close_shop() -> void:
 		inventory.set_scrap_mode(false)
 	toggle_inventory(true)
 	passthrough_helper.unblock_input()
-	var gsm := _get_game_state_manager()
-	if gsm and gsm.map_generator:
-		gsm.map_generator.set_process_input(true)
+	gsm.map_generator.set_process_input(true)
 
 
 func open_rest(offers: Dictionary) -> void:
 	if item_details_card:
 		item_details_card.hide_details()
-	toggle_inventory(false)
+	toggle_inventory(true)
 	if rest_toggle_button:
 		rest_toggle_button.visible = true
 		rest_toggle_button.disabled = false
 		rest_toggle_button.text = "Hide Rest"
-	var gsm := _get_game_state_manager()
-	var components = gsm.run_components if gsm else 0
+	
+	var components = gsm.run_components
 	if rest_ui:
-		if gsm and gsm.rest_control:
-			rest_ui.repair_cost = gsm.rest_control.repair_cost
-			rest_ui.craft_cost = gsm.rest_control.craft_cost
-			rest_ui.refresh_cost = gsm.rest_control.refresh_cost
+		rest_ui.repair_cost = gsm.rest_control.repair_cost
+		rest_ui.craft_cost = gsm.rest_control.craft_cost
+		rest_ui.refresh_cost = gsm.rest_control.refresh_cost
 		rest_ui.open(offers, components)
 	_sync_rest_map_input(rest_ui.is_panel_visible() if rest_ui else true)
 
@@ -412,15 +411,13 @@ func close_rest() -> void:
 		inventory.set_craft_mode(false)
 	toggle_inventory(true)
 	passthrough_helper.unblock_input()
-	var gsm := _get_game_state_manager()
-	if gsm and gsm.map_generator:
-		gsm.map_generator.set_process_input(true)
+	gsm.map_generator.set_process_input(true)
 
 
 func open_random_event(payload: Dictionary) -> void:
 	if item_details_card:
 		item_details_card.hide_details()
-	toggle_inventory(false)
+	toggle_inventory(true)
 	if event_toggle_button:
 		event_toggle_button.visible = true
 		event_toggle_button.disabled = false
@@ -438,7 +435,7 @@ func close_random_event() -> void:
 		event_toggle_button.disabled = true
 	toggle_inventory(true)
 	passthrough_helper.unblock_input()
-	var gsm := _get_game_state_manager()
+	
 	if gsm and gsm.map_generator:
 		gsm.map_generator.set_process_input(true)
 
@@ -456,13 +453,13 @@ func _on_event_toggle_pressed() -> void:
 
 func _sync_event_map_input(_event_panel_visible: bool) -> void:
 	passthrough_helper.block_input()
-	var gsm := _get_game_state_manager()
+	
 	if gsm and gsm.map_generator:
 		gsm.map_generator.set_process_input(false)
 
 
 func _on_event_choice_selected(choice_id: String) -> void:
-	var gsm := _get_game_state_manager()
+	
 	if gsm == null or gsm.random_event_control == null or random_event_ui == null:
 		return
 	var payload := random_event_ui.get_payload()
@@ -486,19 +483,22 @@ func _on_rest_toggle_pressed() -> void:
 
 
 func _sync_rest_map_input(rest_panel_visible: bool) -> void:
-	var gsm := _get_game_state_manager()
+	
+	if gsm and gsm.rest_visit_active and gsm.map_generator:
+		gsm.map_generator.set_process_input(true)
 	if rest_panel_visible:
 		passthrough_helper.block_input()
-		if gsm and gsm.map_generator:
-			gsm.map_generator.set_process_input(false)
 	else:
 		passthrough_helper.unblock_input()
-		if gsm and gsm.rest_visit_active and gsm.map_generator:
-			gsm.map_generator.set_process_input(true)
+
+
+func _on_rest_leave_requested() -> void:
+	
+	gsm.leave_rest_visit()
 
 
 func _on_rest_repair_requested() -> void:
-	var gsm := _get_game_state_manager()
+	
 	if gsm == null or gsm.rest_control == null or rest_ui == null:
 		return
 	var offers := rest_ui.get_offers()
@@ -508,19 +508,15 @@ func _on_rest_repair_requested() -> void:
 
 
 func _on_rest_craft_mode_entered() -> void:
-	if inventory:
-		inventory.set_craft_mode(true)
+	inventory.set_craft_mode(true)
 
 
 func _on_rest_craft_mode_exited() -> void:
-	if inventory:
-		inventory.set_craft_mode(false)
+	inventory.set_craft_mode(false)
 
 
 func _on_inventory_craft_item_requested(item_id: String) -> void:
-	var gsm := _get_game_state_manager()
-	if gsm == null or gsm.rest_control == null or inventory == null or rest_ui == null:
-		return
+	
 	var offers := rest_ui.get_offers()
 	if not gsm.rest_control.try_craft_unit(item_id, inventory, offers):
 		return
@@ -529,18 +525,14 @@ func _on_inventory_craft_item_requested(item_id: String) -> void:
 
 
 func _on_rest_refresh_requested() -> void:
-	var gsm := _get_game_state_manager()
-	if gsm == null or gsm.rest_control == null or rest_ui == null:
-		return
+	
 	var offers := rest_ui.get_offers()
 	var updated = gsm.rest_control.refresh_upgrades(offers)
 	rest_ui.set_offers(updated, gsm.run_components)
 
 
 func _on_rest_upgrade_requested(slot_data: Dictionary, slot_index: int) -> void:
-	var gsm := _get_game_state_manager()
-	if gsm == null or gsm.rest_control == null or rest_ui == null:
-		return
+	
 	var offers := rest_ui.get_offers()
 	if not gsm.rest_control.try_purchase_upgrade(slot_data, offers):
 		return
@@ -549,7 +541,7 @@ func _on_rest_upgrade_requested(slot_data: Dictionary, slot_index: int) -> void:
 
 
 func _on_shop_toggle_pressed() -> void:
-	if not shop_ui or not shop_ui.visible:
+	if not shop_ui.visible:
 		return
 	shop_ui.toggle_panel_visibility()
 	if shop_ui.is_panel_visible():
@@ -560,19 +552,22 @@ func _on_shop_toggle_pressed() -> void:
 
 
 func _sync_shop_map_input(shop_panel_visible: bool) -> void:
-	var gsm := _get_game_state_manager()
+	
+	if gsm and gsm.shop_visit_active and gsm.map_generator:
+		gsm.map_generator.set_process_input(true)
 	if shop_panel_visible:
 		passthrough_helper.block_input()
-		if gsm and gsm.map_generator:
-			gsm.map_generator.set_process_input(false)
 	else:
 		passthrough_helper.unblock_input()
-		if gsm and gsm.shop_visit_active and gsm.map_generator:
-			gsm.map_generator.set_process_input(true)
+
+
+func _on_shop_leave_requested() -> void:
+	
+	gsm.leave_shop_visit()
 
 
 func _on_shop_purchase_requested(slot_data: Dictionary, row_key: String, slot_index: int) -> void:
-	var gsm := _get_game_state_manager()
+	
 	if gsm == null or gsm.shop_control == null or inventory == null or shop_ui == null:
 		return
 	if not gsm.shop_control.try_purchase(slot_data, inventory):
@@ -582,28 +577,22 @@ func _on_shop_purchase_requested(slot_data: Dictionary, row_key: String, slot_in
 
 
 func _on_shop_refresh_requested() -> void:
-	var gsm := _get_game_state_manager()
-	if gsm == null or gsm.shop_control == null or shop_ui == null:
-		return
+	
 	var updated = gsm.shop_control.refresh_stock(shop_ui.get_stock())
 	shop_ui.set_stock(updated, gsm.run_gold)
 	shop_ui.mark_refresh_used(gsm.run_gold)
 
 
 func _on_shop_scrap_mode_entered() -> void:
-	if inventory:
-		inventory.set_scrap_mode(true)
+	inventory.set_scrap_mode(true)
 
 
 func _on_shop_scrap_mode_exited() -> void:
-	if inventory:
-		inventory.set_scrap_mode(false)
+	inventory.set_scrap_mode(false)
 
 
 func _on_inventory_scrap_item_requested(item_id: String) -> void:
-	var gsm := _get_game_state_manager()
-	if gsm == null or gsm.shop_control == null or inventory == null or shop_ui == null:
-		return
+	
 	if gsm.shop_control.process_scrap(item_id, inventory) <= 0:
 		return
 	shop_ui.refresh_currency(gsm.run_gold, gsm.run_components)
@@ -618,14 +607,12 @@ func _on_run_currency_changed(gold: int, components: int) -> void:
 
 
 func _refresh_run_resources_hud() -> void:
-	var gsm := _get_game_state_manager()
+	
 	run_resources_hud.update_values(gsm.run_gold, gsm.run_components)
 
 
 func refresh_chaser_hud() -> void:
-	var gsm := _get_game_state_manager()
-	if gsm == null or gsm.map_generator == null or chaser_hud == null:
-		return
+	
 	if not chaser_hud.visible:
 		return
 	chaser_hud.update_from_state(gsm.map_generator.get_chaser_ui_state())
@@ -636,17 +623,17 @@ func _get_game_state_manager() -> Node:
 
 
 func _is_shop_visit_active() -> bool:
-	var gsm := _get_game_state_manager()
+	
 	return gsm != null and gsm.shop_visit_active
 
 
 func _is_rest_visit_active() -> bool:
-	var gsm := _get_game_state_manager()
+	
 	return gsm != null and gsm.rest_visit_active
 
 
 func _is_event_visit_active() -> bool:
-	var gsm := _get_game_state_manager()
+	
 	return gsm != null and gsm.event_visit_active
 
 
@@ -1197,13 +1184,11 @@ func _update_tactical_cursor() -> void:
 
 
 func _on_unit_selected(unit: Base_Unit) -> void:
-	if tactical_cursor:
-		tactical_cursor.set_selected_unit(unit)
+	tactical_cursor.set_selected_unit(unit)
 
 
 func _on_battle_ended_clear_selection(_victory: bool) -> void:
-	if tactical_cursor:
-		tactical_cursor.set_selected_unit(null)
+	tactical_cursor.set_selected_unit(null)
 
 func _on_battle_ended(victory: bool) -> void:
 	_refund_items_after_battle()

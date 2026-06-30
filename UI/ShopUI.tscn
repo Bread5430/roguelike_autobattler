@@ -99,6 +99,10 @@ alignment = 1
 [node name="FooterRow" type="HBoxContainer" parent="MainPanel/Margin/VBox"]
 layout_mode = 2
 
+[node name="LeaveButton" type="Button" parent="MainPanel/Margin/VBox/FooterRow"]
+layout_mode = 2
+text = "Leave"
+
 [node name="RefreshButton" type="Button" parent="MainPanel/Margin/VBox/FooterRow"]
 layout_mode = 2
 text = "Refresh shop (50g)"

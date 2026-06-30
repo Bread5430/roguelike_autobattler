@@ -128,19 +128,13 @@ func _on_map_node_selected(node: MapNode):
 	if shop_visit_active:
 		if node == current_battle_node:
 			return
-		gui.close_shop()
-		end_shop_visit()
-		current_battle_node = node
-		_route_map_node(node)
+		_leave_shop_visit_for_node(node)
 		return
 
 	if rest_visit_active:
 		if node == current_battle_node:
 			return
-		gui.close_rest()
-		end_rest_visit()
-		current_battle_node = node
-		_route_map_node(node)
+		_leave_rest_visit_for_node(node)
 		return
 
 	if event_visit_active:
@@ -149,6 +143,29 @@ func _on_map_node_selected(node: MapNode):
 	current_battle_node = node
 	_route_map_node(node)
 
+
+func _leave_shop_visit_for_node(next_node: MapNode) -> void:
+	gui.close_shop()
+	end_shop_visit()
+	current_battle_node = next_node
+	_route_map_node(next_node)
+
+
+func _leave_rest_visit_for_node(next_node: MapNode) -> void:
+	gui.close_rest()
+	end_rest_visit()
+	current_battle_node = next_node
+	_route_map_node(next_node)
+
+func leave_shop_visit() -> void:
+	gui.close_shop()
+	end_shop_visit()
+	current_battle_node = null
+
+func leave_rest_visit() -> void:
+	gui.close_rest()
+	end_rest_visit()
+	current_battle_node = null
 
 func _route_map_node(node: MapNode) -> void:
 	match node.content_type:
