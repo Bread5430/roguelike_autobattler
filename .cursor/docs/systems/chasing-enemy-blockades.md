@@ -6,21 +6,28 @@ Map pressure system: a semi-transparent capsule sweeps left-to-right after each 
 
 | Path | Role |
 |------|------|
-| `Map_Gen/chasing_enemy_controller.gd` | Step math, coverage test, capsule draw, blockade application |
+| `Map_Gen/chasing_enemy_controller.gd` | Step math, coverage test, capsule draw, future-step preview arcs |
 | `Map_Gen/map_manager.gd` | Chaser config exports, draw order, `on_map_node_completed()`, save/load |
 | `Map_Gen/map_node.gd` | `ContentType.BLOCKADE`, `chaser_blockaded` on exit nodes |
 | `Manager/game_state_manager.gd` | Advance hook, BLOCKADE routing, difficulty/rewards |
-| `Manager/battle_manager_components/enemy_spawner.gd` | Heavy + bonus formation for blockade / pressured exit |
-| `UI/chaser_hud.gd` + `ChaserHUD.tscn` | Step counter, final X label, per-step markers |
 
 ## Flow
 
 1. Map generates; chaser starts at step 0 off the left edge.
 2. Player completes any map node (battle, shop, rest, event).
-3. `MapManager.on_map_node_completed()` advances chaser one step.
+3. `MapManager.on_map_node_completed()` advances chaser one step and `queue_redraw()`.
 4. Nodes under the leading cap become `BLOCKADE` (hex, label `X`).
 5. **Exit node** never changes content type; sets `chaser_blockaded = true` and gets a dark ring overlay.
-6. `chaser_step_changed` → `GUI.refresh_chaser_hud()`.
+
+## On-map step previews
+
+Future chaser positions are drawn directly on the map (no separate HUD panel):
+
+- For each step `current_step + 1` … `total_steps`, draw the leading semicircle at that step’s X.
+- Label each arc with **moves remaining** (`step - current_step`). Final step label appends `!`.
+- Active filled capsule draws on top of preview arcs; nodes draw on top of both.
+
+`ChasingEnemyController.draw_step_preview_curves()`; toggled via `MapManager.chaser_draw_step_previews`.
 
 ## Combat
 
@@ -29,7 +36,10 @@ Map pressure system: a semi-transparent capsule sweeps left-to-right after each 
 
 ## Editor tuning (`MapManager`)
 
-- `chaser_total_steps`, `chaser_half_height` (0 = auto: half map height + node radius), `chaser_capsule_length`, `chaser_fill_color`
+- `chaser_total_steps` — step size `(map_width - cap_radius + one_cell) / steps` per node completion
+- Step 0 starts one grid cell left of the map (`x = -cell_width`); at step `total_steps` the cap's right edge reaches `x = map_width` (`front.x = map_width - half_height`)
+- `chaser_half_height` (0 = auto), `chaser_capsule_length` (0 = auto: map width + one cell), `chaser_fill_color`
+- `chaser_draw_step_previews`, `chaser_preview_color`, `chaser_preview_line_width`, `chaser_preview_label_color`
 
 ## Persistence
 

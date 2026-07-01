@@ -63,7 +63,6 @@ func connect_systems():
 	battle_manager.battle_ended.connect(_on_battle_ended)
 	battle_manager.factory_destroyed.connect(_on_factory_destroyed)
 	map_generator.selected_node.connect(_on_map_node_selected)
-	map_generator.chaser_step_changed.connect(_on_chaser_step_changed)
 
 func change_state(new_state: GameState):
 	"""Change the current game state"""
@@ -106,11 +105,6 @@ func enable_map_interaction():
 	viewport.reset_zoom()
 	
 	print("Map exploration enabled. Available nodes: %d" % map_generator.get_available_nodes().size())
-	gui.refresh_chaser_hud()
-
-
-func _on_chaser_step_changed(_state: Dictionary) -> void:
-	gui.refresh_chaser_hud()
 
 
 func _notify_map_node_completed() -> void:

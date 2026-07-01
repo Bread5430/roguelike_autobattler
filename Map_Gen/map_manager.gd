@@ -19,8 +19,13 @@ extends Node2D
 @export var chaser_total_steps := 8
 ## Vertical half-extent of the capsule. 0 = auto (half map height + node radius).
 @export var chaser_half_height := 0.0
-@export var chaser_capsule_length := 5000.0
+## Body length extending left of the leading edge. 0 = auto (map width + one cell).
+@export var chaser_capsule_length := 0.0
 @export var chaser_fill_color := Color(0.9, 0.15, 0.15, 0.35)
+@export var chaser_draw_step_previews := true
+@export var chaser_preview_color := Color(0.9, 0.2, 0.2, 0.6)
+@export var chaser_preview_line_width := 2.0
+@export var chaser_preview_label_color := Color.WHITE
 
 @export_group("Visual Settings")
 @export var node_radius := 15.0
@@ -324,16 +329,42 @@ func complete_map_node(node: MapNode) -> void:
 	update_node_availability()
 
 
-func _reset_chaser() -> void:
-	chaser.total_steps = chaser_total_steps
-	chaser.capsule_length = chaser_capsule_length
-	chaser.fill_color = chaser_fill_color
+func _get_grid_cell_width() -> float:
+	return map_size.x / float(maxi(1, grid_columns))
+
+
+func _configure_chaser(reset_step: bool = true, restored_step: int = -1) -> void:
 	var half_h := chaser_half_height
 	if half_h <= 0.0:
 		half_h = map_size.y * 0.5 + node_radius
-	var start_x := -map_size.x * 0.25
-	var end_x := map_size.x * 1.25
-	chaser.reset(start_x, end_x, map_size.y * 0.5, half_h)
+	var cell_w := _get_grid_cell_width()
+	var steps := maxi(1, chaser_total_steps)
+	var start_x := -cell_w
+	# Final step: semicircle rightmost point (front.x + half_h) reaches the map's right edge.
+	var end_front_x := map_size.x - half_h
+	var step_size := (end_front_x - start_x) / float(steps)
+	var capsule_len := chaser_capsule_length
+	if capsule_len <= 0.0:
+		capsule_len = map_size.x + cell_w
+	var saved_step := 0
+	if restored_step >= 0:
+		saved_step = restored_step
+	elif not reset_step:
+		saved_step = chaser.current_step
+	chaser.configure(
+		chaser_total_steps,
+		start_x,
+		step_size,
+		map_size.y * 0.5,
+		half_h,
+		capsule_len,
+		chaser_fill_color
+	)
+	chaser.current_step = clampi(saved_step, 0, chaser.total_steps)
+
+
+func _reset_chaser() -> void:
+	_configure_chaser(true)
 
 
 func on_map_node_completed() -> void:
@@ -421,6 +452,14 @@ func draw_map():
 	"""Draw the complete map graph"""
 	if draw_connections:
 		draw_connections_visual()
+
+	if chaser_draw_step_previews:
+		chaser.draw_step_preview_curves(
+			self,
+			chaser_preview_color,
+			chaser_preview_line_width,
+			chaser_preview_label_color
+		)
 
 	chaser.draw_capsule(self)
 	
@@ -657,14 +696,7 @@ func load_map_state(state: Dictionary):
 		if saved_chaser_blockaded.has(node.id):
 			node.chaser_blockaded = saved_chaser_blockaded[node.id]
 
-	chaser.current_step = int(state.get("chaser_current_step", 0))
-	chaser.total_steps = chaser_total_steps
-	chaser.capsule_length = chaser_capsule_length
-	chaser.fill_color = chaser_fill_color
-	var half_h := chaser_half_height
-	if half_h <= 0.0:
-		half_h = map_size.y * 0.5 + node_radius
-	chaser.map_half_height = half_h
+	_configure_chaser(false, int(state.get("chaser_current_step", 0)))
 	
 	# Update availability and player global_position
 	update_node_availability()
