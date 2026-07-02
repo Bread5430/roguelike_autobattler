@@ -29,6 +29,7 @@ var allies_tiles : Array[Array]
 signal battle_ended(victory : bool)
 signal unit_selected(unit: Base_Unit)
 signal factory_destroyed
+signal friendly_unit_died(unit: Base_Unit)
 
 const UNIT_PICK_RADIUS := 20.0
 const FACTORY_UNIT_SCENE := preload("res://Units/unit_scenes/factory_unit/factory_unit.tscn")
@@ -214,6 +215,10 @@ func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vect
 		this_inst.faction = faction
 		unit_parent.add_child(this_inst)
 		#unit_group.append(this_inst)
+		if this_inst is Base_Unit and faction:
+			var ally := this_inst as Base_Unit
+			if not ally.died.is_connected(_on_ally_unit_died):
+				ally.died.connect(_on_ally_unit_died)
 		this_inst.post_ready()
 	
 func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
@@ -257,6 +262,13 @@ func get_unit_under_cursor(world_pos: Vector2) -> Base_Unit:
 
 func get_spell_modification(location : Vector2, modifiable_attributes : Dictionary):
 	spell_manager.spell_modification(location, modifiable_attributes)
+
+
+func _on_ally_unit_died(unit: Base_Unit) -> void:
+	if unit is FactoryUnit:
+		return
+	friendly_unit_died.emit(unit)
+
 
 func _on_manager_update_timeout():
 	if _living_units_for_faction(false).is_empty():

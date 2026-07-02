@@ -1,7 +1,7 @@
 extends GridContainer
 class_name SpellBar
 
-const MAX_SLOTS := 8
+@export var MAX_SLOTS := 8
 const SLOT_SCENE := preload("res://UI/SpellBarSlot.tscn")
 
 var slots: Array[SpellBarSlot] = []

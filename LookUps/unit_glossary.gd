@@ -23,7 +23,7 @@ func _load_csv() -> void:
 		var line := file.get_csv_line()
 		if line.is_empty():
 			continue
-		if line.size() < 6:
+		if line.size() < 7:
 			push_warning("Glossary row too short (%d cols): %s" % [line.size(), line])
 			continue
 		var unit_id := str(line[0]).strip_edges()
@@ -34,7 +34,8 @@ func _load_csv() -> void:
 			"max_hp": int(line[2]),
 			"movement_speed": int(line[3]),
 			"damage": int(line[4]),
-			"explanation_blurb": str(line[5])
+			"scrap_cost": int(line[5]),
+			"explanation_blurb": str(line[6])
 		}
 	file.close()
 
@@ -47,3 +48,9 @@ func get_entry(unit_id: String) -> Dictionary:
 	if has_entry(unit_id):
 		return entries[unit_id].duplicate()
 	return {}
+
+
+func get_scrap_cost(unit_id: String) -> int:
+	if has_entry(unit_id):
+		return int(entries[unit_id].get("scrap_cost", 0))
+	return 0

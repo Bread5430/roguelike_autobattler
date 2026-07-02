@@ -5,6 +5,10 @@
 [sub_resource type="LabelSettings" id="LabelSettings_4fl36"]
 font_size = 40
 
+[sub_resource type="LabelSettings" id="LabelSettings_scrap"]
+font_size = 28
+font_color = Color(0.4, 0.7, 1, 1)
+
 [node name="Button" type="Button"]
 custom_minimum_size = Vector2(100, 100)
 size_flags_horizontal = 4
@@ -39,5 +43,16 @@ offset_top = -23.0
 grow_horizontal = 0
 grow_vertical = 0
 label_settings = SubResource("LabelSettings_4fl36")
+
+[node name="ScrapCostLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = -23.0
+offset_right = 44.0
+grow_vertical = 0
+label_settings = SubResource("LabelSettings_scrap")
 
 [connection signal="pressed" from="." to="." method="_on_pressed"]

@@ -11,6 +11,7 @@ var inventory : Inventory
 var unit_board : GridContainer
 var gsm 
 @onready var spell_bar : SpellBar = $SpellBar
+@onready var scrap_buffer_bar: ScrapBufferBar = $ScrapBufferBar
 @onready var end_prep : Button = $End_Prep
 @onready var tactical_cursor = $TacticalCursor
 @onready var item_details_card: ItemDetailsCard = $ItemDetailsCard
@@ -130,6 +131,11 @@ func post_ready():
 			inventory.craft_item_requested.connect(_on_inventory_craft_item_requested)
 		if gsm.has_signal("run_currency_changed"):
 			gsm.run_currency_changed.connect(_on_run_currency_changed)
+		if gsm.has_node("ScrapBufferManager"):
+			var scrap_buffer := gsm.get_node("ScrapBufferManager") as ScrapBufferManager
+			if scrap_buffer and not scrap_buffer.scrap_changed.is_connected(_on_scrap_buffer_changed):
+				scrap_buffer.scrap_changed.connect(_on_scrap_buffer_changed)
+			refresh_scrap_buffer()
 	inventory.inspect_requested.connect(_on_inventory_inspect_requested)
 	spell_bar.spell_slot_clicked.connect(_on_spell_slot_clicked)
 	spell_bar.spell_slot_right_clicked.connect(_on_spell_slot_right_clicked)
@@ -243,6 +249,8 @@ func handle_game_area_click(event: InputEvent):
 			var item_inst = removed_unit_info[0].instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
 			item_inst.setup_unit()
 			remove_from_board(top_i, size)
+			if item_inst is Unit_Card:
+				_refund_scrap_for_card(item_inst as Unit_Card)
 			inventory.add_item(item_inst.item_name, 1)
 			curr_unit = removed_unit_info[0]
 			curr_unit_inst = item_inst
@@ -337,11 +345,41 @@ func start_prep_phase():
 	end_prep.show()
 	end_prep.disabled = false
 	spell_bar.show()
+	scrap_buffer_bar.show()
 	run_resources_hud.set_map_visible(false)
+	refresh_scrap_buffer()
+
+
+func refresh_scrap_buffer() -> void:
+	if scrap_buffer_bar == null or gsm == null or not gsm.has_node("ScrapBufferManager"):
+		return
+	var scrap_buffer := gsm.get_node("ScrapBufferManager") as ScrapBufferManager
+	if scrap_buffer:
+		scrap_buffer_bar.update_display(scrap_buffer.current_scrap, scrap_buffer.max_scrap)
+
+
+func _on_scrap_buffer_changed(current: int, max_val: int) -> void:
+	if scrap_buffer_bar:
+		scrap_buffer_bar.update_display(current, max_val)
+
+
+func _spend_scrap_for_card(card: Unit_Card) -> void:
+	if gsm == null or not gsm.has_node("ScrapBufferManager") or card == null:
+		return
+	var scrap_buffer := gsm.get_node("ScrapBufferManager") as ScrapBufferManager
+	scrap_buffer.spend_scrap(card.get_total_scrap_cost())
+
+
+func _refund_scrap_for_card(card: Unit_Card) -> void:
+	if gsm == null or not gsm.has_node("ScrapBufferManager") or card == null:
+		return
+	var scrap_buffer := gsm.get_node("ScrapBufferManager") as ScrapBufferManager
+	scrap_buffer.refund_scrap(card.get_total_scrap_cost())
 
 
 func enter_map_exploration() -> void:
 	spell_bar.hide()
+	scrap_buffer_bar.hide()
 	run_resources_hud.set_map_visible(true)
 	_refresh_run_resources_hud()
 	end_prep.hide()
@@ -830,6 +868,8 @@ func _place_unit_card_programmatic(p_scene: PackedScene, top_left: Vector2i, rot
 		})
 
 	battle_manager.add_unit_to_board(item_inst, objectCells[0].position, unit_vec, true)
+	if item_inst is Unit_Card:
+		_spend_scrap_for_card(item_inst as Unit_Card)
 	_reset_highlight(objectCells)
 	item_inst.queue_free()
 	curr_unit_inst = null
@@ -1026,6 +1066,8 @@ func _place_unit():
 			"size": unit_size,
 		})
 	battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, unit_vec, true)
+	if curr_unit_inst is Unit_Card:
+		_spend_scrap_for_card(curr_unit_inst as Unit_Card)
 	_reset_highlight(objectCells)
 
 	# Allow the player to keep placing this unit as long as there still are cards left
@@ -1240,6 +1282,11 @@ func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 	if spell_bar and spell_bar.visible:
 		var spell_rect = spell_bar.get_global_rect()
 		if spell_rect.has_point(mouse_pos):
+			return true
+	
+	if scrap_buffer_bar and scrap_buffer_bar.visible:
+		var scrap_rect = scrap_buffer_bar.get_global_rect()
+		if scrap_rect.has_point(mouse_pos):
 			return true
 	
 	# Check end prep button

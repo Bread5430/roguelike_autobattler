@@ -19,6 +19,8 @@ var unit_name : String
 ## Damage used when this unit strikes; overwritten from glossary when [member unit_glossary_id] matches.
 @export var base_damage: int = 1
 
+var scrap_cost: int = 0
+
 var total_damage_dealt : int = 0
 var dmg_dealt_mult : float = 1.0
 var dmg_taken_mult : float = 1.0
@@ -42,6 +44,9 @@ var _suppress_buff_application: bool = false
 var _suppress_debuff_application: bool = false
 
 signal beacon_status_changed(active: bool)
+signal died(unit: Base_Unit)
+
+var _death_notified: bool = false
 
 
 func _ready() -> void:
@@ -60,6 +65,7 @@ func _sync_from_glossary() -> void:
 	base_speed = int(e["movement_speed"])
 	move_speed = float(e["movement_speed"])
 	base_damage = int(e["damage"])
+	scrap_cost = int(e.get("scrap_cost", 0))
 	var dn := str(e.get("display_name", ""))
 	if dn != "":
 		unit_name = dn
@@ -87,6 +93,9 @@ func take_damage(damage: int, apply_taken_mult: bool = true) -> void:
 
 	if curr_hp <= 0:
 		state_machine.set_state(state_machine.states.dead)
+		if not _death_notified:
+			_death_notified = true
+			died.emit(self)
 
 func post_ready():
 	for node in get_children():

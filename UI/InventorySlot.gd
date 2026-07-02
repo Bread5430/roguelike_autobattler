@@ -10,6 +10,9 @@ var item_inst : Item
 var quantity : int
 @onready var button_icon : TextureRect = $TextureRect
 @onready var quantity_text : Label = $Label
+@onready var scrap_cost_text : Label = $ScrapCostLabel
+
+const SCRAP_COST_COLOR := Color(0.4, 0.7, 1.0)
 
 func set_slot_visible():
 	set_mouse_filter(Control.MOUSE_FILTER_STOP)
@@ -20,6 +23,10 @@ func set_slot_invisible():
 func set_item (itemID : String, new_item : PackedScene, count : int):
 	if new_item == null:
 		item = null
+		item_inst = null
+		if scrap_cost_text:
+			scrap_cost_text.visible = false
+			scrap_cost_text.text = ""
 		return
 		
 	item_name = itemID
@@ -41,6 +48,7 @@ func set_item (itemID : String, new_item : PackedScene, count : int):
 	button_icon.scale = Vector2(self.size.x / max_dim, self.size.y / max_dim)
 	
 	update_quantity_text()
+	update_scrap_cost_text()
 
 func add_item(count : int):
 	quantity += count
@@ -62,6 +70,18 @@ func update_quantity_text ():
 		quantity_text.text = ""
 	else:
 		quantity_text.text = str(quantity)
+
+
+func update_scrap_cost_text() -> void:
+	if scrap_cost_text == null:
+		return
+	if item_inst is Unit_Card:
+		scrap_cost_text.visible = true
+		scrap_cost_text.text = str((item_inst as Unit_Card).get_total_scrap_cost())
+		scrap_cost_text.add_theme_color_override("font_color", SCRAP_COST_COLOR)
+	else:
+		scrap_cost_text.visible = false
+		scrap_cost_text.text = ""
 
 
 func _on_pressed():

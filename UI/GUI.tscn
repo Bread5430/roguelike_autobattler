@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://UI/ShopUI.tscn" id="9_shop"]
 [ext_resource type="PackedScene" path="res://UI/RestUI.tscn" id="10_rest"]
 [ext_resource type="PackedScene" path="res://UI/RandomEventUI.tscn" id="11_event"]
+[ext_resource type="PackedScene" path="res://UI/ScrapBufferBar.tscn" id="12_scrap"]
 
 [node name="Gui" type="Control"]
 layout_mode = 3
@@ -44,6 +45,14 @@ layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("3_n3xue")
+
+[node name="ScrapBufferBar" parent="." instance=ExtResource("12_scrap")]
+visible = false
+layout_mode = 0
+offset_left = 328.0
+offset_top = 0.0
+offset_right = 488.0
+offset_bottom = 48.0
 
 [node name="End_Prep" type="Button" parent="."]
 visible = false

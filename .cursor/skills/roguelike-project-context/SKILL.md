@@ -34,7 +34,8 @@ Dense summaries of specific features or subsystems: `.cursor/docs/systems/<name>
 | `.cursor/docs/systems/tactical-cursor-unit-stats.md` | TacticalCursor, `TacticalCursorStack`, `StatusEffectsRow`, `StatusEffectBox`, selected unit panel, `get_active_status_effects_for_ui`, `get_unit_under_cursor`, deployment click-to-select stats, `total_damage_dealt`, health bar on `Base_Unit`, End Prep button layout |
 | `.cursor/docs/systems/status-effects.md` | `StatusEffectDef`, `apply_status_effect`, `STATUS_EFFECT_DATA`, `status_effects.csv`, DoT/aura/slow spells, stacking, `get_active_status_effects_for_ui` |
 | `.cursor/docs/systems/beacon-spell-fsm.md` | BeaconSpell 3-click flow, BeaconController, beaconed FSM state, panic/cache behavior |
-| `.cursor/docs/systems/battle-rewards-ui.md` | Post-victory `BattleRewardsUI`, reward payload entries, gold/unit submenu, `run_gold`, repair damage stub, modal click blocking |
+| `.cursor/docs/systems/battle-rewards-ui.md` | Post-victory `BattleRewardsUI`, reward payload entries, gold/unit submenu, `run_gold`, repair damage, scrap surplus gold, modal click blocking |
+| `.cursor/docs/systems/scrap-buffer.md` | `ScrapBufferManager`, prep/combat bar, per-unit `scrap_cost`, placement spend/refund, combat refill, death drain, repair damage, scrap bonus gold |
 | `.cursor/docs/systems/random-events.md` | `RANDOM_EVENT_DATA`, CSV event/choice schema, `RandomEventControl`, `RandomEventUI`, map `RANDOM_EVENT` nodes, resource exchange costs/rewards, `event_visit_active` |
 | `.cursor/docs/systems/chasing-enemy-blockades.md` | `ChasingEnemyController`, capsule sweep, on-map step preview arcs, `BLOCKADE` nodes, `chaser_blockaded` exit pressure, blockade combat/rewards |
 

@@ -5,6 +5,7 @@ class_name PlayerHealthManager
 @export var curr_health: int = 100
 
 var _health_snapshot_at_battle_start: int = -1
+var _repair_damage_this_battle: int = 0
 
 signal health_changed(curr: int, max_val: int)
 signal game_over
@@ -13,16 +14,17 @@ signal game_over
 func reset_for_new_campaign() -> void:
 	curr_health = max_health
 	_health_snapshot_at_battle_start = -1
+	_repair_damage_this_battle = 0
 	_emit_health_changed()
 
 
 func snapshot_health_for_battle() -> void:
 	_health_snapshot_at_battle_start = curr_health
+	_repair_damage_this_battle = 0
 
 
 func get_repair_damage_taken_this_battle() -> int:
-	# TODO: resolve repair damage from factory/repair mechanics
-	return 0
+	return _repair_damage_this_battle
 
 
 func get_health_fraction() -> float:
@@ -45,6 +47,19 @@ func apply_damage(amount: int) -> void:
 	_emit_health_changed()
 	if curr_health <= 0:
 		game_over.emit()
+
+
+func apply_damage_capped(amount: int, min_hp: int = 1) -> int:
+	if amount <= 0:
+		return 0
+	var before := curr_health
+	curr_health = maxi(min_hp, curr_health - amount)
+	var applied := before - curr_health
+	_repair_damage_this_battle += applied
+	_emit_health_changed()
+	if curr_health <= 0:
+		game_over.emit()
+	return applied
 
 
 func restore_health_fraction(fraction: float) -> void:

@@ -1,0 +1,38 @@
+[gd_scene load_steps=2 format=3 uid="uid://5d5hnex70l5p"]
+
+[ext_resource type="Script" uid="uid://2saoad0uyvij" path="res://UI/scrap_buffer_bar.gd" id="1_scrap"]
+
+[node name="ScrapBufferBar" type="Control"]
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 160.0
+offset_bottom = 48.0
+script = ExtResource("1_scrap")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 2
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+text = "0 / 0"
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="MarginContainer/VBox"]
+custom_minimum_size = Vector2(140, 16)
+layout_mode = 2
+max_value = 1.0
+show_percentage = false

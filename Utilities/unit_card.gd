@@ -28,6 +28,24 @@ func get_placement(rotated : bool) -> Array:
 		return [placement_size, placement_vectors]
 
 
+func get_unit_glossary_id() -> String:
+	if related_unit == null:
+		return ""
+	var unit_inst = related_unit.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+	var glossary_id := ""
+	if unit_inst is Base_Unit:
+		glossary_id = (unit_inst as Base_Unit).unit_glossary_id
+	unit_inst.queue_free()
+	return glossary_id
+
+
+func get_total_scrap_cost() -> int:
+	var glossary_id := get_unit_glossary_id()
+	if glossary_id.is_empty():
+		return 0
+	return UNIT_GLOSSARY.get_scrap_cost(glossary_id) * num_units
+
+
 ### Internal Functions
 
 func setup_unit():

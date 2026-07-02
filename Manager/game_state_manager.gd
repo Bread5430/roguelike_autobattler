@@ -18,6 +18,7 @@ enum GameState {
 @onready var gui = $UICanvas/Gui
 @onready var map_generator = $MapManager
 @onready var player_health: PlayerHealthManager = $PlayerHealthManager
+@onready var scrap_buffer: ScrapBufferManager = $ScrapBufferManager
 @onready var shop_control: ShopControl = $ShopControl
 @onready var rest_control: RestControl = $RestControl
 @onready var random_event_control: RandomEventControl = $RandomEventControl
@@ -62,6 +63,7 @@ func connect_systems():
 	gui.preperation_ended.connect(_end_prep_phase)
 	battle_manager.battle_ended.connect(_on_battle_ended)
 	battle_manager.factory_destroyed.connect(_on_factory_destroyed)
+	battle_manager.friendly_unit_died.connect(_on_friendly_unit_died)
 	map_generator.selected_node.connect(_on_map_node_selected)
 
 func change_state(new_state: GameState):
@@ -271,6 +273,7 @@ func setup_battle_environment():
 		"is_blockade": is_blockade,
 		"is_chaser_pressured_exit": is_chaser_pressured_exit,
 	})
+	_init_scrap_buffer_from_enemies()
 	
 	print("stage " + str(current_battle_node.stage) + 
 		" difficulty " + _resolve_battle_difficulty(current_battle_node) +
@@ -281,6 +284,21 @@ func setup_battle_environment():
 	# Hide map during battle
 	map_generator.hide()
 	map_generator.set_process_input(false)
+
+func _init_scrap_buffer_from_enemies() -> void:
+	if scrap_buffer == null:
+		return
+	var enemy_total := _sum_enemy_scrap_on_board()
+	scrap_buffer.begin_prep(enemy_total)
+	gui.refresh_scrap_buffer()
+
+func _sum_enemy_scrap_on_board() -> int:
+	var total := 0
+	var unit_parent := battle_manager.get_node("Unit_Parent")
+	for child in unit_parent.get_children():
+		if child is Base_Unit and not (child as Base_Unit).faction:
+			total += (child as Base_Unit).scrap_cost
+	return total
 
 func _end_prep_phase():
 	# Create breif countdown to 
@@ -297,12 +315,29 @@ func start_battle_sequence():
 	print("Battle started at node %d" % current_battle_node.id)
 	if player_health:
 		player_health.snapshot_health_for_battle()
+	if scrap_buffer:
+		scrap_buffer.on_combat_start()
+		gui.refresh_scrap_buffer()
 	battle_manager.start_battle()
 	# The battle will run until _on_battle_ended is called
+
+func _settle_scrap_buffer() -> void:
+	var settlement := scrap_buffer.settle_battle()
+	if settlement.repair_damage > 0 and player_health:
+		player_health.apply_damage_capped(settlement.repair_damage, 1)
+	gui.refresh_scrap_buffer()
+
+
+func _on_friendly_unit_died(unit: Base_Unit) -> void:
+	if scrap_buffer and current_state == GameState.BATTLE_ACTIVE:
+		scrap_buffer.on_friendly_unit_died(unit.scrap_cost)
+		gui.refresh_scrap_buffer()
 
 func _on_battle_ended(victory: bool):
 	"""Handle battle completion from battle manager"""
 	print("Battle ended. Victory: %s" % victory)
+	
+	_settle_scrap_buffer()
 	
 	# Store battle result
 	current_battle_node.completed = victory
@@ -324,6 +359,7 @@ func handle_battle_defeat():
 
 
 func _on_factory_destroyed() -> void:
+	_settle_scrap_buffer()
 	handle_game_over()
 
 
@@ -438,6 +474,17 @@ func calculate_battle_rewards() -> Dictionary:
 			"claimed": false
 		})
 	
+	if scrap_buffer:
+		var bonus := scrap_buffer.get_bonus_gold()
+		if bonus > 0:
+			entries.append({
+				"id": "scrap_bonus",
+				"kind": "instant",
+				"label": "Collect scrap surplus (+%d)" % bonus,
+				"gold": bonus,
+				"claimed": false
+			})
+	
 	return {"entries": entries}
 
 
@@ -526,6 +573,8 @@ func start_new_campaign():
 		gui.close_random_event()
 	if player_health:
 		player_health.reset_for_new_campaign()
+	if scrap_buffer:
+		scrap_buffer.reset()
 	
 	# Generate new map
 	if map_generator:
