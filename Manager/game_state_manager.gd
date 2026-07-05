@@ -623,9 +623,9 @@ func save_campaign_progress() -> Dictionary:
 
 func load_campaign_progress(save_data: Dictionary):
 	"""Load campaign progress from save data"""
-	# Load map state first
+	# Load map state first (regenerates topology from saved seed, then applies progress)
 	if map_generator and save_data.has("map_state"):
-		map_generator.load_map_state(save_data.map_state)
+		map_generator.restore_map_from_save(save_data.map_state)
 	
 	# Restore current state
 	var saved_state = int(save_data.get("current_state", GameState.MAP_EXPLORATION))

@@ -52,6 +52,7 @@ var debug_teleport_on_click := false
 var _debug_bypass_availability := false
 
 var chaser := ChasingEnemyController.new()
+var _map_generation_seed: int = 0
 
 const CONTENT_TYPE_COLORS := {
 	MapNode.ContentType.BATTLE: Color(0.2, 0.45, 0.95),
@@ -623,6 +624,8 @@ func get_camera_center_position() -> Vector2:
 
 func regenerate_map():
 	"""Regenerate the entire map"""
+	_map_generation_seed = randi()
+	seed(_map_generation_seed)
 	completed_nodes.clear()
 	current_node = null
 	generate_map()
@@ -631,6 +634,19 @@ func regenerate_map():
 	if start_node and player_sprite:
 		if player_sprite.has_method("set_pos"):
 			player_sprite.set_pos(start_node.global_position)
+
+
+func restore_map_from_save(state: Dictionary) -> void:
+	"""Regenerate map with saved seed, then apply saved progress."""
+	var gen_seed := int(state.get("generation_seed", 0))
+	if gen_seed == 0:
+		gen_seed = randi()
+	_map_generation_seed = gen_seed
+	seed(_map_generation_seed)
+	completed_nodes.clear()
+	current_node = null
+	generate_map()
+	load_map_state(state)
 
 func get_available_nodes() -> Array[MapNode]:
 	"""Get all currently available nodes"""
@@ -653,6 +669,7 @@ func get_map_progress() -> Dictionary:
 func save_map_state() -> Dictionary:
 	"""Save current map state for persistence"""
 	var state = {
+		"generation_seed": _map_generation_seed,
 		"completed_node_ids": [],
 		"current_node_id": current_node.id if current_node else -1,
 		"node_content_types": {},
@@ -674,25 +691,26 @@ func load_map_state(state: Dictionary):
 	
 	# Mark completed nodes
 	for node_id in state.get("completed_node_ids", []):
+		var id := int(node_id)
 		for node in nodes:
-			if node.id == node_id:
+			if node.id == id:
 				node.completed = true
 				completed_nodes.append(node)
 				break
 	
 	# Set current node
-	var current_id = state.get("current_node_id", -1)
+	var current_id := int(state.get("current_node_id", -1))
 	current_node = null
 	for node in nodes:
 		if node.id == current_id:
 			current_node = node
 			break
 
-	var saved_content_types: Dictionary = state.get("node_content_types", {})
-	var saved_chaser_blockaded: Dictionary = state.get("node_chaser_blockaded", {})
+	var saved_content_types: Dictionary = _normalize_int_key_dict(state.get("node_content_types", {}))
+	var saved_chaser_blockaded: Dictionary = _normalize_int_key_dict(state.get("node_chaser_blockaded", {}))
 	for node in nodes:
 		if saved_content_types.has(node.id):
-			node.content_type = saved_content_types[node.id]
+			node.content_type = int(saved_content_types[node.id])
 		if saved_chaser_blockaded.has(node.id):
 			node.chaser_blockaded = saved_chaser_blockaded[node.id]
 
@@ -706,3 +724,10 @@ func load_map_state(state: Dictionary):
 			player_sprite.set_pos(current_node.global_position)
 	
 	queue_redraw()
+
+
+func _normalize_int_key_dict(source: Dictionary) -> Dictionary:
+	var normalized: Dictionary = {}
+	for key in source.keys():
+		normalized[int(key)] = source[key]
+	return normalized
