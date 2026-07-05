@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Roguelike Autobattler"
-run/main_scene="uid://ooyule8c5gdc"
+run/main_scene="res://UI/Menus/MainMenu.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -22,6 +22,8 @@ FORMATION_MAP="*res://LookUps/FORMATION_MAP.gd"
 UNIT_GLOSSARY="*res://LookUps/unit_glossary.gd"
 STATUS_EFFECT_DATA="*res://LookUps/status_effect_data.gd"
 RANDOM_EVENT_DATA="*res://LookUps/random_event_data.gd"
+SettingsManager="*res://Manager/settings_manager.gd"
+SaveManager="*res://Manager/save_manager.gd"
 
 [display]
 

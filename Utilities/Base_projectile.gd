@@ -45,7 +45,7 @@ func on_spawned() -> void:
 	
 	# Reset any state
 	if trail_particles:
-		trail_particles.emitting = true
+		trail_particles.emitting = SettingsManager.particles_enabled
 	
 	# Override this in child classes for custom setup
 

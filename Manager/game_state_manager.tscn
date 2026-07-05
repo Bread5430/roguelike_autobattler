@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://ooyule8c5gdc"]
+[gd_scene load_steps=17 format=3 uid="uid://ooyule8c5gdc"]
 
 [ext_resource type="PackedScene" uid="uid://b2hkuu4ohgbnk" path="res://Manager/battle_manager.tscn" id="1_b7jtx"]
 [ext_resource type="Script" uid="uid://dtlxst4r4hl5x" path="res://Manager/game_state_manager.gd" id="1_rks66"]
@@ -14,6 +14,8 @@
 [ext_resource type="Script" uid="uid://lvglfpwp3ope" path="res://Manager/rest_control.gd" id="11_rest"]
 [ext_resource type="Script" uid="uid://pek8wyh8f0rq" path="res://Manager/random_event_control.gd" id="12_event"]
 [ext_resource type="Script" uid="uid://dvb2t11fw16ey" path="res://Manager/scrap_buffer_manager.gd" id="13_scrap"]
+[ext_resource type="PackedScene" path="res://UI/Menus/PauseMenu.tscn" id="14_pause"]
+[ext_resource type="PackedScene" path="res://UI/Menus/LossScreen.tscn" id="15_loss"]
 
 [node name="GameStateManager" type="Node"]
 script = ExtResource("1_rks66")
@@ -69,10 +71,11 @@ rows = 5
 visible = true
 MAX_SLOTS = 5
 
-[node name="ScrapBufferBar" parent="UICanvas/Gui" index="4"]
-anchors_preset = 0
-
 [node name="TacticalCursor" parent="UICanvas/Gui" index="7"]
 mouse_filter = 2
+
+[node name="PauseMenu" parent="UICanvas" instance=ExtResource("14_pause")]
+
+[node name="LossScreen" parent="UICanvas" instance=ExtResource("15_loss")]
 
 [editable path="UICanvas/Gui"]

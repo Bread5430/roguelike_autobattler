@@ -1,0 +1,82 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://UI/Menus/Options/audio_options_panel.gd" id="1_audio"]
+
+[node name="AudioOptionsPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_audio")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Audio"
+horizontal_alignment = 1
+
+[node name="MasterRow" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+
+[node name="MasterLabel" type="Label" parent="Margin/VBox/MasterRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Master"
+
+[node name="MasterSlider" type="HSlider" parent="Margin/VBox/MasterRow"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="MusicRow" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+
+[node name="MusicLabel" type="Label" parent="Margin/VBox/MusicRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Music"
+
+[node name="MusicSlider" type="HSlider" parent="Margin/VBox/MusicRow"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="SfxRow" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+
+[node name="SfxLabel" type="Label" parent="Margin/VBox/SfxRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "SFX"
+
+[node name="SfxSlider" type="HSlider" parent="Margin/VBox/SfxRow"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0

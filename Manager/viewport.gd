@@ -22,7 +22,11 @@ var pan_start_camera_pos : Vector2 = Vector2.ZERO
 @export var enable_limits : bool = true
 
 func _ready():
+	add_to_group("game_camera")
 	zoom = default_zoom
+	
+	if SettingsManager:
+		camera_move_speed = SettingsManager.camera_pan_speed
 	
 	# Set camera limits if enabled
 	if enable_limits:

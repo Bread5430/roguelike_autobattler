@@ -1,0 +1,69 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://UI/Menus/game_setup.gd" id="1_setup"]
+[ext_resource type="PackedScene" path="res://UI/button.tscn" id="2_button"]
+
+[node name="GameSetup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_setup")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.160784, 0.223529, 0.313726, 1)
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 160.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 48
+text = "Game Setup"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="TodoLabel" type="Label" parent="Center/VBox"]
+layout_mode = 2
+text = "Run configuration (difficulty, loadout, etc.) — TODO"
+horizontal_alignment = 1
+
+[node name="StartGameButton" parent="Center/VBox" instance=ExtResource("2_button")]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Start Game"
+script = null
+
+[node name="BackButton" parent="Center/VBox" instance=ExtResource("2_button")]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Back"
+script = null
+
+[connection signal="pressed" from="Center/VBox/StartGameButton" to="." method="_on_start_game_pressed"]
+[connection signal="pressed" from="Center/VBox/BackButton" to="." method="_on_back_pressed"]

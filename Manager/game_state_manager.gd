@@ -16,6 +16,8 @@ enum GameState {
 @onready var generic_worker_pool: GenericWorkerPool = $GenericWorkerPool
 @onready var viewport = $Viewport
 @onready var gui = $UICanvas/Gui
+@onready var pause_menu = $UICanvas/PauseMenu
+@onready var loss_screen = $UICanvas/LossScreen
 @onready var map_generator = $MapManager
 @onready var player_health: PlayerHealthManager = $PlayerHealthManager
 @onready var scrap_buffer: ScrapBufferManager = $ScrapBufferManager
@@ -30,6 +32,8 @@ var run_components: int = 0
 var shop_visit_active: bool = false
 var rest_visit_active: bool = false
 var event_visit_active: bool = false
+
+const MAIN_MENU_SCENE := "res://UI/Menus/MainMenu.tscn"
 
 signal run_currency_changed(gold: int, components: int)
 
@@ -55,9 +59,17 @@ func post_ready():
 		if i.has_method("post_ready"):
 			i.post_ready()
 
-	# wait till everything has called post_ready then
-	# Start new campaign
-	start_new_campaign()
+	if pause_menu:
+		pause_menu.setup(self, gui)
+	if loss_screen:
+		loss_screen.setup(self)
+
+	if SaveManager.pending_load:
+		SaveManager.pending_load = false
+		load_campaign_progress(SaveManager.load_run())
+	elif SaveManager.pending_new_run:
+		SaveManager.pending_new_run = false
+		start_new_campaign()
 
 func connect_systems():
 	gui.preperation_ended.connect(_end_prep_phase)
@@ -364,7 +376,19 @@ func _on_factory_destroyed() -> void:
 
 
 func handle_game_over() -> void:
-	pass  # TODO: run-ending game over screen / restart
+	get_tree().paused = true
+	if loss_screen:
+		loss_screen.open()
+
+
+func return_to_main_menu() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+
+
+func save_and_exit_to_menu() -> void:
+	SaveManager.save_run(save_campaign_progress())
+	return_to_main_menu()
 
 # =============================================================================
 # BATTLE COMPLETE STATE
@@ -585,7 +609,7 @@ func start_new_campaign():
 func save_campaign_progress() -> Dictionary:
 	"""Save current campaign progress"""
 	var save_data = {
-		"current_state": current_state,
+		"current_state": int(current_state),
 		"current_battle_node_id": current_battle_node.id if current_battle_node else -1,
 		"run_gold": run_gold,
 		"run_components": run_components,
@@ -604,8 +628,8 @@ func load_campaign_progress(save_data: Dictionary):
 		map_generator.load_map_state(save_data.map_state)
 	
 	# Restore current state
-	var saved_state = save_data.get("current_state", GameState.MAP_EXPLORATION)
-	change_state(saved_state)
+	var saved_state = int(save_data.get("current_state", GameState.MAP_EXPLORATION))
+	change_state(saved_state as GameState)
 	
 	# Restore current battle node if applicable
 	var battle_node_id = save_data.get("current_battle_node_id", -1)

@@ -7,7 +7,7 @@
 
 # Workflows
 
-- **Run**: Open in Godot editor, play main scene (`UI/main_menu.tscn`)
+- **Run**: Open in Godot editor, play main scene (`UI/Menus/MainMenu.tscn`)
 - **Export**: Godot’s built-in export for platforms
 - **Testing**: `enemy_spawn_test.tscn` for isolated battle testing
 - **Data editing**: Modify CSVs; restart autoloads to reload (including `units_glossary.csv` for unit combat stats and glossary text)

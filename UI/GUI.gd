@@ -1331,3 +1331,33 @@ func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 			return true
 	
 	return false
+
+
+func is_casting() -> bool:
+	return casting_mode
+
+
+func is_item_details_open() -> bool:
+	return item_details_card != null and item_details_card.visible
+
+
+func is_modal_blocking() -> bool:
+	if battle_rewards_ui and battle_rewards_ui.visible:
+		return true
+	if shop_ui and shop_ui.visible and shop_ui.is_panel_visible():
+		return true
+	if rest_ui and rest_ui.visible and rest_ui.is_panel_visible():
+		return true
+	if random_event_ui and random_event_ui.visible and random_event_ui.is_panel_visible():
+		return true
+	return false
+
+
+func should_block_pause_menu() -> bool:
+	if is_casting():
+		return true
+	if is_item_details_open():
+		return true
+	if is_modal_blocking():
+		return true
+	return false

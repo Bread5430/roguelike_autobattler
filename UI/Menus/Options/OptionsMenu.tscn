@@ -1,0 +1,216 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://UI/Menus/Options/options_menu.gd" id="1_options"]
+[ext_resource type="PackedScene" path="res://UI/Menus/Options/GameOptionsPanel.tscn" id="2_game"]
+[ext_resource type="PackedScene" path="res://UI/Menus/Options/AudioOptionsPanel.tscn" id="3_audio"]
+[ext_resource type="PackedScene" path="res://UI/Menus/Options/VideoOptionsPanel.tscn" id="4_video"]
+[ext_resource type="PackedScene" path="res://UI/Menus/Options/ControlsOptionsPanel.tscn" id="5_controls"]
+
+[node name="OptionsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_options")
+
+[node name="PanelStack" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Hub" type="PanelContainer" parent="PanelStack"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -220.0
+offset_right = 220.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="PanelStack/Hub"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="PanelStack/Hub/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Title" type="Label" parent="PanelStack/Hub/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Options"
+horizontal_alignment = 1
+
+[node name="GameButton" type="Button" parent="PanelStack/Hub/Margin/VBox"]
+layout_mode = 2
+text = "Game"
+
+[node name="AudioButton" type="Button" parent="PanelStack/Hub/Margin/VBox"]
+layout_mode = 2
+text = "Audio"
+
+[node name="VideoButton" type="Button" parent="PanelStack/Hub/Margin/VBox"]
+layout_mode = 2
+text = "Video"
+
+[node name="ControlsButton" type="Button" parent="PanelStack/Hub/Margin/VBox"]
+layout_mode = 2
+text = "Controls"
+
+[node name="HubBackButton" type="Button" parent="PanelStack/Hub/Margin/VBox"]
+layout_mode = 2
+text = "Back"
+
+[node name="GamePanel" type="PanelContainer" parent="PanelStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -220.0
+offset_right = 280.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="PanelStack/GamePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="PanelStack/GamePanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="GameOptions" parent="PanelStack/GamePanel/Margin/VBox" instance=ExtResource("2_game")]
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GameBackButton" type="Button" parent="PanelStack/GamePanel/Margin/VBox"]
+layout_mode = 2
+text = "Back"
+
+[node name="AudioPanel" type="PanelContainer" parent="PanelStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -220.0
+offset_right = 280.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="PanelStack/AudioPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="PanelStack/AudioPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AudioOptions" parent="PanelStack/AudioPanel/Margin/VBox" instance=ExtResource("3_audio")]
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AudioBackButton" type="Button" parent="PanelStack/AudioPanel/Margin/VBox"]
+layout_mode = 2
+text = "Back"
+
+[node name="VideoPanel" type="PanelContainer" parent="PanelStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -220.0
+offset_right = 280.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="PanelStack/VideoPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="PanelStack/VideoPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VideoOptions" parent="PanelStack/VideoPanel/Margin/VBox" instance=ExtResource("4_video")]
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VideoBackButton" type="Button" parent="PanelStack/VideoPanel/Margin/VBox"]
+layout_mode = 2
+text = "Back"
+
+[node name="ControlsPanel" type="PanelContainer" parent="PanelStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -260.0
+offset_right = 320.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="PanelStack/ControlsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="PanelStack/ControlsPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ControlsOptions" parent="PanelStack/ControlsPanel/Margin/VBox" instance=ExtResource("5_controls")]
+custom_minimum_size = Vector2(0, 320)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ControlsBackButton" type="Button" parent="PanelStack/ControlsPanel/Margin/VBox"]
+layout_mode = 2
+text = "Back"
