@@ -599,6 +599,7 @@ func start_new_campaign():
 		player_health.reset_for_new_campaign()
 	if scrap_buffer:
 		scrap_buffer.reset()
+	UnitUpgradeRegistry.reset_for_new_campaign()
 	
 	# Generate new map
 	if map_generator:

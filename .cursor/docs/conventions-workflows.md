@@ -1,5 +1,27 @@
 # Conventions
 
+## GDScript variable declarations
+
+Do **not** use inferred-type assignment (`:=`) for variables. Use one of:
+
+- **Plain equals** — `var foo = get_bar()` or `var count = 0`
+- **Explicit type** — `var foo : Bar = get_bar()` or `var count : int = 0`
+
+Applies to `var`, `@export var`, and `@onready var`. Examples:
+
+```gdscript
+# Forbidden
+var payload := build_payload()
+@onready var label := $Label
+
+# Allowed
+var payload = build_payload()
+var payload : Dictionary = build_payload()
+@onready var label : Label = $Label
+```
+
+`:=` on `const` and default function parameters is fine when it matches surrounding code.
+
 - **File naming**: PascalCase for scenes (`.tscn`), snake_case for scripts (`.gd`)
 - **Node structure**: Managers as Control/Node2D, units as CharacterBody2D
 - **Input**: Custom actions in `project.godot` (leftClick, inventory=I, rotatePlacement=R)

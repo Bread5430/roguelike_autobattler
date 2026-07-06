@@ -1,8 +1,9 @@
-[gd_scene load_steps=17 format=3 uid="uid://cpeerva01chph"]
+[gd_scene load_steps=18 format=3 uid="uid://cpeerva01chph"]
 
 [ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_g2lu5"]
 [ext_resource type="Texture2D" uid="uid://ce1bfpxqrdj" path="res://Assets/UnitSprites/basic_unit_sprites.png" id="2_g8j08"]
 [ext_resource type="Script" uid="uid://bvp0uxwt0r3lf" path="res://Units/unit_scenes/melee_unit_template/melee_unit_fsm.gd" id="2_hcx1d"]
+[ext_resource type="Script" path="res://Units/unit_scenes/melee_unit_template/melee_unit_template.gd" id="2_root"]
 [ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_7836s"]
 [ext_resource type="Script" uid="uid://bqv2g0eqmyue" path="res://Units/unit_scenes/melee_unit_template/basic_melee.gd" id="5_tgfs3"]
 
@@ -94,6 +95,7 @@ _data = {
 }
 
 [node name="MeleeUnitTemplate" instance=ExtResource("1_g2lu5")]
+script = ExtResource("2_root")
 unit_glossary_id = "melee_template"
 max_hp = 10
 base_damage = 2

@@ -110,6 +110,7 @@ func post_ready():
 		if rest_ui:
 			rest_ui.setup(passthrough_helper)
 			rest_ui.upgrade_requested.connect(_on_rest_upgrade_requested)
+			rest_ui.upgrade_path_selected.connect(_on_rest_upgrade_path_selected)
 			rest_ui.repair_requested.connect(_on_rest_repair_requested)
 			rest_ui.craft_mode_entered.connect(_on_rest_craft_mode_entered)
 			rest_ui.craft_mode_exited.connect(_on_rest_craft_mode_exited)
@@ -566,12 +567,24 @@ func _on_rest_refresh_requested() -> void:
 
 
 func _on_rest_upgrade_requested(slot_data: Dictionary, slot_index: int) -> void:
-	
+	if gsm == null or gsm.rest_control == null or rest_ui == null:
+		return
 	var offers := rest_ui.get_offers()
-	if not gsm.rest_control.try_purchase_upgrade(slot_data, offers):
+	if not gsm.rest_control.can_purchase_upgrade(slot_data, offers):
+		return
+	rest_ui.enter_upgrade_mode(slot_data, slot_index)
+
+
+func _on_rest_upgrade_path_selected(slot_data: Dictionary, slot_index: int, path: String) -> void:
+	if gsm == null or gsm.rest_control == null or rest_ui == null:
+		return
+	var offers := rest_ui.get_offers()
+	if not gsm.rest_control.try_finalize_upgrade(slot_data, path, offers):
 		return
 	rest_ui.mark_upgrade_purchased(slot_index)
 	rest_ui.set_offers(offers, gsm.run_components)
+	if inventory:
+		inventory.refresh_unit_card_icons()
 
 
 func _on_shop_toggle_pressed() -> void:

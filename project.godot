@@ -22,6 +22,8 @@ FORMATION_MAP="*res://LookUps/FORMATION_MAP.gd"
 UNIT_GLOSSARY="*res://LookUps/unit_glossary.gd"
 STATUS_EFFECT_DATA="*res://LookUps/status_effect_data.gd"
 RANDOM_EVENT_DATA="*res://LookUps/random_event_data.gd"
+UNIT_UPGRADES="*res://LookUps/unit_upgrades.gd"
+UnitUpgradeRegistry="*res://Manager/unit_upgrade_registry.gd"
 SettingsManager="*res://Manager/settings_manager.gd"
 SaveManager="*res://Manager/save_manager.gd"
 

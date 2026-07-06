@@ -53,6 +53,17 @@ func _build_unit_payload(unit_card: Unit_Card, item_name: String) -> Dictionary:
 		damage = int(entry.get("damage", damage))
 		blurb = str(entry.get("explanation_blurb", ""))
 
+	var upgrade_path := UnitUpgradeRegistry.get_upgrade_path(item_name)
+	if not upgrade_path.is_empty():
+		hp *= 2
+		damage *= 2
+		var path_label = UNIT_UPGRADES.get_labels(item_name).get(upgrade_path, "")
+		if path_label != "":
+			display_name = "%s (%s)" % [display_name, path_label]
+		var upgrade_blurb := UNIT_UPGRADES.get_blurb(item_name, upgrade_path)
+		if upgrade_blurb != "":
+			blurb = upgrade_blurb if blurb.is_empty() else "%s %s" % [blurb, upgrade_blurb]
+
 	var lines := [
 		{"label": "Max HP", "value": str(hp)},
 		{"label": "Movement Speed", "value": str(speed)},

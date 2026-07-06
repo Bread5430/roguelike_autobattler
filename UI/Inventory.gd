@@ -176,6 +176,16 @@ func clear_all_slots() -> void:
 	for slot in slots:
 		slot.set_item("", null, 0)
 
+
+func refresh_unit_card_icons() -> void:
+	for slot in slots:
+		if slot.item_inst is Unit_Card:
+			var card := slot.item_inst as Unit_Card
+			card.setup_unit()
+			if slot.button_icon and card.get_texture():
+				slot.button_icon.texture = card.get_texture()
+			slot.update_scrap_cost_text()
+
 func set_current_item(slot : InventorySlot):
 	# Pass the item up to the GUI
 	get_parent().set_current_item(slot)

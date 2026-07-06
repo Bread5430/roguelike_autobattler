@@ -208,6 +208,9 @@ func update_tiles():
  
 func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vectors : Array, faction : bool) -> void:
 	#var unit_group : Array = []
+	var card_item_id := ""
+	if unit_ref is Unit_Card:
+		card_item_id = (unit_ref as Unit_Card).item_name
 	for unit_pos : Vector2 in placement_vectors:
 		var this_inst = unit_ref.related_unit.instantiate()
 		# This assumes the board tiles are square
@@ -215,10 +218,12 @@ func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vect
 		this_inst.faction = faction
 		unit_parent.add_child(this_inst)
 		#unit_group.append(this_inst)
-		if this_inst is Base_Unit and faction:
-			var ally := this_inst as Base_Unit
-			if not ally.died.is_connected(_on_ally_unit_died):
-				ally.died.connect(_on_ally_unit_died)
+		if this_inst is Base_Unit:
+			var base_unit := this_inst as Base_Unit
+			if faction and not card_item_id.is_empty():
+				base_unit.apply_upgrade_from_card(card_item_id)
+			if faction and not base_unit.died.is_connected(_on_ally_unit_died):
+				base_unit.died.connect(_on_ally_unit_died)
 		this_inst.post_ready()
 	
 func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:

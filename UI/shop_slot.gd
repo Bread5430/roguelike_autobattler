@@ -46,24 +46,29 @@ func _refresh_display() -> void:
 
 	var purchased: bool = slot_data.get("purchased", false)
 	if kind == "upgrade":
-		_icon.texture = null
-		disabled = purchased
-		_sale_label.visible = on_sale and not purchased
+		disabled = purchased or item_id.is_empty()
+		_sale_label.visible = on_sale and not purchased and not item_id.is_empty()
 		if on_sale:
 			_sale_label.text = "SALE"
 		if purchased:
-			_name_label.text = "Upgrade (TODO)"
+			_name_label.text = "Upgrade purchased"
 			_price_label.text = "Purchased"
 			modulate = Color(0.55, 0.55, 0.55, 1.0)
+		elif item_id.is_empty():
+			modulate = Color(0.55, 0.55, 0.55, 1.0)
+			_name_label.text = "No upgrade"
+			_price_label.text = "—"
+			_icon.texture = null
 		else:
 			modulate = Color.WHITE
-			_name_label.text = "Upgrade (TODO)"
+			_name_label.text = "Upgrade: %s" % _display_name_for_item(item_id)
 			var price := _effective_price(base_price, on_sale)
 			var suffix := _price_suffix()
 			if on_sale:
 				_price_label.text = "%d%s  (%d%s)" % [price, suffix, base_price, suffix]
 			else:
 				_price_label.text = "%d%s" % [price, suffix]
+			_set_icon_for_item(item_id, kind)
 		return
 
 	disabled = sold

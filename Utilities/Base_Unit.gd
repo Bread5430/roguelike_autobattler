@@ -21,6 +21,9 @@ var unit_name : String
 
 var scrap_cost: int = 0
 
+## Set when spawned from an upgraded unit card; "", "path_a", or "path_b".
+var upgrade_path: String = ""
+
 var total_damage_dealt : int = 0
 var dmg_dealt_mult : float = 1.0
 var dmg_taken_mult : float = 1.0
@@ -103,6 +106,52 @@ func post_ready():
 			node.post_ready()
 	_ensure_attack_cd_cache()
 	_recompute_status_stat_modifiers()
+	apply_upgrade_abilities_after_ready()
+
+
+func apply_upgrade_from_card(card_item_id: String) -> void:
+	upgrade_path = UnitUpgradeRegistry.get_upgrade_path(card_item_id)
+	if upgrade_path.is_empty():
+		return
+	_apply_upgrade_stats()
+	_apply_upgrade_sprite(card_item_id)
+
+
+func apply_upgrade_abilities_after_ready() -> void:
+	if upgrade_path.is_empty():
+		return
+	_apply_upgrade_abilities()
+
+
+func _apply_upgrade_stats() -> void:
+	max_hp *= 2
+	curr_hp = max_hp
+	base_damage *= 2
+	scrap_cost *= 2
+
+
+func _apply_upgrade_sprite(card_item_id: String) -> void:
+	var tex_path := UNIT_UPGRADES.get_unit_sprite_path(card_item_id, upgrade_path)
+	if tex_path.is_empty() or not ResourceLoader.exists(tex_path):
+		return
+	var res: Resource = load(tex_path)
+	if not res is Texture2D:
+		return
+	var tex := res as Texture2D
+	if sprite == null:
+		return
+	var frames := SpriteFrames.new()
+	for anim_name in ["walk", "die"]:
+		frames.add_animation(anim_name)
+		frames.set_animation_loop(anim_name, anim_name == "walk")
+		frames.add_frame(anim_name, tex)
+	sprite.sprite_frames = frames
+	if sprite.sprite_frames.has_animation("walk"):
+		sprite.play("walk")
+
+
+func _apply_upgrade_abilities() -> void:
+	pass
 
 func set_start_stop(stopped_state : bool):
 	state_machine.round_start_check = stopped_state

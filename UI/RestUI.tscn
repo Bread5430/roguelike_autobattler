@@ -156,3 +156,71 @@ horizontal_alignment = 1
 [node name="ReturnButton" type="Button" parent="CraftOverlay/CraftPanel/Margin/VBox"]
 layout_mode = 2
 text = "Return to rest"
+
+[node name="UpgradePathOverlay" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="UpgradeBackdrop" type="ColorRect" parent="UpgradePathOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0, 0, 0, 0.45)
+
+[node name="UpgradePanel" type="PanelContainer" parent="UpgradePathOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -140.0
+offset_right = 260.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="UpgradePathOverlay/UpgradePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="UpgradePathOverlay/UpgradePanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="UpgradeTitle" type="Label" parent="UpgradePathOverlay/UpgradePanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Choose upgrade path"
+horizontal_alignment = 1
+
+[node name="UpgradeCardName" type="Label" parent="UpgradePathOverlay/UpgradePanel/Margin/VBox"]
+layout_mode = 2
+text = "Unit card"
+horizontal_alignment = 1
+
+[node name="PathAButton" type="Button" parent="UpgradePathOverlay/UpgradePanel/Margin/VBox"]
+layout_mode = 2
+text = "Path A"
+
+[node name="PathBButton" type="Button" parent="UpgradePathOverlay/UpgradePanel/Margin/VBox"]
+layout_mode = 2
+text = "Path B"
+
+[node name="UpgradeCancelButton" type="Button" parent="UpgradePathOverlay/UpgradePanel/Margin/VBox"]
+layout_mode = 2
+text = "Cancel"

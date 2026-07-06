@@ -1,8 +1,9 @@
-[gd_scene load_steps=17 format=3 uid="uid://dntchg7qjone2"]
+[gd_scene load_steps=18 format=3 uid="uid://dntchg7qjone2"]
 
 [ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_4obhc"]
 [ext_resource type="Texture2D" uid="uid://ce1bfpxqrdj" path="res://Assets/UnitSprites/basic_unit_sprites.png" id="2_3t6ih"]
 [ext_resource type="Script" uid="uid://dh4tqvn6emwhy" path="res://Units/unit_scenes/ranged_unit_template/ranged_unit_fsm.gd" id="3_044i3"]
+[ext_resource type="Script" uid="uid://dx26o2b8it726" path="res://Units/unit_scenes/ranged_unit_template/ranged_unit_template.gd" id="3_root"]
 [ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_le515"]
 [ext_resource type="Script" uid="uid://bfh0eex83r6af" path="res://Units/unit_scenes/ranged_unit_template/basic_ranged.gd" id="5_spjok"]
 
@@ -94,6 +95,7 @@ _data = {
 }
 
 [node name="RangedUnitTemplate" instance=ExtResource("1_4obhc")]
+script = ExtResource("3_root")
 unit_glossary_id = "ranged_template"
 max_hp = 5
 base_speed = 35

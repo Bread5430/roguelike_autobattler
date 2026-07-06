@@ -7,6 +7,8 @@ class_name Unit_Card
 var rotated_placement_size : Vector2 
 
 @export var related_unit : PackedScene
+## When true, offered at rest sites for unit-card upgrades (one path choice per run).
+@export var is_upgradable: bool = true
 ## When true, only spawned via enemy formations — excluded from player inventory grants and battle rewards.
 @export var enemy_formation_only: bool = false
 ## When true, other routers cannot be placed overlapping this card's [member router_exclusion_radius] (deployment only).
@@ -43,7 +45,24 @@ func get_total_scrap_cost() -> int:
 	var glossary_id := get_unit_glossary_id()
 	if glossary_id.is_empty():
 		return 0
-	return UNIT_GLOSSARY.get_scrap_cost(glossary_id) * num_units
+	var cost := UNIT_GLOSSARY.get_scrap_cost(glossary_id) * num_units
+	if not item_name.is_empty() and UnitUpgradeRegistry.has_upgrade(item_name):
+		cost *= 2
+	return cost
+
+
+func _apply_upgraded_card_texture() -> void:
+	if item_name.is_empty():
+		return
+	var path := UnitUpgradeRegistry.get_upgrade_path(item_name)
+	if path.is_empty():
+		return
+	var tex_path := UNIT_UPGRADES.get_card_sprite_path(item_name, path)
+	if tex_path.is_empty() or not ResourceLoader.exists(tex_path):
+		return
+	var res: Resource = load(tex_path)
+	if res is Texture2D:
+		texture = res as Texture2D
 
 
 ### Internal Functions
@@ -53,6 +72,7 @@ func setup_unit():
 	placement_vectors = divide_grid(num_units)
 	rotated_vectors = get_rotated_placement_vectors()
 	rotated_placement_size = Vector2(placement_size.y, placement_size.x)
+	_apply_upgraded_card_texture()
 
 func get_rotated_placement_vectors() -> Array:
 	var rot_arr = []

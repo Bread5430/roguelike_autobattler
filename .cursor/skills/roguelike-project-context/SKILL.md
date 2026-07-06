@@ -21,7 +21,7 @@ From the **workspace root**, read only what you need:
 | `.cursor/docs/architecture.md` | Core systems, main scripts, spells/GUI/units overview |
 | `.cursor/docs/patterns.md` | Autoloads, glossary, signals, placement, roles, `Unit_Parent` filtering, item inspection |
 | `.cursor/docs/data-flow.md` | Map → prep → battle → post-battle sequence, inventory/spell bar behavior |
-| `.cursor/docs/conventions-workflows.md` | Naming, nodes, input actions, dev console, run/test/export, CSV editing |
+| `.cursor/docs/conventions-workflows.md` | Naming, nodes, input actions, dev console, run/test/export, CSV editing, GDScript variable style (no `:=`) |
 | `.cursor/docs/feature-recipes.md` | Step-by-step: new unit, formation, state hook, spell |
 | `.cursor/docs/input-coordination-plan.md` | InputCoordinator, `handle_game_area_click`, `handle_unit_click`, mouse_filter, viewport handling, Passthrough_Helper |
 
@@ -38,6 +38,7 @@ Dense summaries of specific features or subsystems: `.cursor/docs/systems/<name>
 | `.cursor/docs/systems/scrap-buffer.md` | `ScrapBufferManager`, prep/combat bar, per-unit `scrap_cost`, placement spend/refund, combat refill, death drain, repair damage, scrap bonus gold |
 | `.cursor/docs/systems/random-events.md` | `RANDOM_EVENT_DATA`, CSV event/choice schema, `RandomEventControl`, `RandomEventUI`, map `RANDOM_EVENT` nodes, resource exchange costs/rewards, `event_visit_active` |
 | `.cursor/docs/systems/chasing-enemy-blockades.md` | `ChasingEnemyController`, capsule sweep, on-map step preview arcs, `BLOCKADE` nodes, `chaser_blockaded` exit pressure, blockade combat/rewards |
+| `.cursor/docs/systems/unit-card-upgrades.md` | `UNIT_UPGRADES`, `UnitUpgradeRegistry`, rest-site path choice, `is_upgradable`, `Base_Unit.apply_upgrade_from_card`, per-unit `_apply_upgrade_abilities()` |
 
 ## Usage
 
