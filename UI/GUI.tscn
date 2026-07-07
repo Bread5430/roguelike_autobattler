@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://dy1rgpvj3afyd"]
+[gd_scene load_steps=13 format=3 uid="uid://dy1rgpvj3afyd"]
 
 [ext_resource type="Script" uid="uid://bysfs5te4mpkk" path="res://UI/GUI.gd" id="1_u7efx"]
 [ext_resource type="Script" uid="uid://csmfu6ekj5t6l" path="res://UI/passthrough_helper.gd" id="3_dl5f7"]
@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://UI/RestUI.tscn" id="10_rest"]
 [ext_resource type="PackedScene" path="res://UI/RandomEventUI.tscn" id="11_event"]
 [ext_resource type="PackedScene" path="res://UI/ScrapBufferBar.tscn" id="12_scrap"]
+[ext_resource type="Script" path="res://UI/unit_placement.gd" id="13_placement"]
 
 [node name="Gui" type="Control"]
 layout_mode = 3
@@ -71,6 +72,9 @@ text = "End Preperation Phase"
 
 [node name="Passthough_Helper" type="Node" parent="."]
 script = ExtResource("3_dl5f7")
+
+[node name="UnitPlacement" type="Node" parent="."]
+script = ExtResource("13_placement")
 
 [node name="TacticalCursor" parent="." instance=ExtResource("5_tactical")]
 layout_mode = 1
