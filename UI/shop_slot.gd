@@ -46,7 +46,8 @@ func _refresh_display() -> void:
 
 	var purchased: bool = slot_data.get("purchased", false)
 	if kind == "upgrade":
-		disabled = purchased or item_id.is_empty()
+		if purchased or item_id.is_empty():
+			disabled = true
 		_sale_label.visible = on_sale and not purchased and not item_id.is_empty()
 		if on_sale:
 			_sale_label.text = "SALE"
@@ -173,6 +174,8 @@ func _display_name_for_item(item_id: String) -> String:
 
 
 func _on_pressed() -> void:
+	if disabled:
+		return
 	if slot_data.get("sold", false) or slot_data.get("purchased", false):
 		return
 	if str(slot_data.get("kind", "")) == "relic":

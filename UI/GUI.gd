@@ -42,6 +42,11 @@ var unit_board_space_map : Array[Array] = [] # Stores references to units on the
 ## Deployment-only: world-space centers and radii for placed router cards (logical exclusion, not grid-derived).
 var _placed_router_exclusions: Array[Dictionary] = []
 
+## Item id (Data/items.csv) for the unremovable static routers spawned on the player board at battle start.
+const STATIC_ROUTER_CARD_ID := "static_router_card"
+## Board tiles occupied by unremovable static routers (Vector2i -> true); kept out of the space map so they can't be removed/refunded.
+var _static_router_tiles: Dictionary = {}
+
 # Variables related to unit placement when in deployment stage
 var deployment_mode : bool = false
 var targetCell
@@ -92,6 +97,7 @@ func post_ready():
 	if gsm != null and gsm.has_node("PlayerHealthManager"):
 		var health_manager := gsm.get_node("PlayerHealthManager") as PlayerHealthManager
 		player_health_bar.setup(health_manager)
+		health_manager.health_changed.connect(_on_player_health_changed)
 		if battle_rewards_ui:
 			battle_rewards_ui.setup(health_manager, passthrough_helper)
 			battle_rewards_ui.instant_gold_claimed.connect(_on_battle_reward_gold_claimed)
@@ -241,6 +247,9 @@ func handle_game_area_click(event: InputEvent):
 			_place_unit()
 	elif mb.button_index == MOUSE_BUTTON_RIGHT:
 		var mouse_tile_int := Vector2i(anchor_cell.board_position)
+		# Static routers are permanent fixtures and cannot be removed.
+		if _static_router_tiles.has(mouse_tile_int):
+			return
 		var removed_unit_info = get_unit_at_tile(mouse_tile_int)
 		if removed_unit_info:
 			var top_corner = removed_unit_info[1]
@@ -340,6 +349,7 @@ func start_prep_phase():
 	enemy_formation_editor_mode = false
 	end_prep.text = END_PREP_DEFAULT_TEXT
 	_clear_placement_grid()
+	_spawn_static_routers()
 	_committed_spell_item_names.clear()
 	deployment_mode = true
 	toggle_inventory(true)
@@ -349,6 +359,56 @@ func start_prep_phase():
 	scrap_buffer_bar.show()
 	run_resources_hud.set_map_visible(false)
 	refresh_scrap_buffer()
+
+
+## Spawn the two unremovable static routers on the player's board at battle start.
+## Centered horizontally; first ~1/4 down and second ~3/4 down the vertical.
+func _spawn_static_routers() -> void:
+	_static_router_tiles.clear()
+	var scene: PackedScene = ITEM_NAME.item_lookup(STATIC_ROUTER_CARD_ID)
+	if scene == null:
+		push_warning("Static router card not found: %s" % STATIC_ROUTER_CARD_ID)
+		return
+	var probe = scene.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+	if not probe is Unit_Card:
+		if probe:
+			probe.queue_free()
+		return
+	var size : Vector2 = (probe as Unit_Card).placement_size
+	probe.queue_free()
+	var w = int(size.x)
+	var h = int(size.y)
+	# Horizontal: center the footprint on the board's vertical center line.
+	var top_x = int((unit_board_width - w) / 2.0)
+	# Vertical: footprint centers land at 1/4 and 3/4 of the board height.
+	var top_y_first = int(round(unit_board_height * 0.25 - h / 2.0))
+	var top_y_second = int(round(unit_board_height * 0.75 - h / 2.0))
+	_spawn_one_static_router(scene, Vector2i(top_x, top_y_first), size)
+	_spawn_one_static_router(scene, Vector2i(top_x, top_y_second), size)
+
+
+func _spawn_one_static_router(scene: PackedScene, top_left: Vector2i, size: Vector2) -> void:
+	var cells = _get_cells_in_rect(top_left, size)
+	if cells.size() != int(size.x) * int(size.y):
+		return # Footprint doesn't fully fit on the board.
+	var item_inst = scene.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+	if not item_inst is Unit_Card:
+		if item_inst:
+			item_inst.queue_free()
+		return
+	item_inst.setup_unit()
+	# Occupy the grid so players can't place on top. Intentionally NOT added to
+	# unit_board_space_map, so right-click removal and end-of-battle refund skip it.
+	for cell in cells:
+		cell.full = true
+		var bp : Vector2 = (cell as BoardSlot).board_position
+		_static_router_tiles[Vector2i(int(bp.x), int(bp.y))] = true
+	# Derive the anchor from grid coords + cell size directly. BoardUI is a
+	# GridContainer that may not have laid out its cells yet when prep begins,
+	# so BoardSlot.position can still read (0,0) here.
+	var start_position = Vector2(top_left.x * unit_board.cellWidth, top_left.y * unit_board.cellHeight)
+	battle_manager.add_unit_to_board(item_inst, start_position, item_inst.placement_vectors, true)
+	item_inst.queue_free()
 
 
 func refresh_scrap_buffer() -> void:
@@ -428,11 +488,12 @@ func open_rest(offers: Dictionary) -> void:
 		rest_toggle_button.text = "Hide Rest"
 	
 	var components = gsm.run_components
+	var health_at_full = _is_player_at_full_health()
 	if rest_ui:
 		rest_ui.repair_cost = gsm.rest_control.repair_cost
 		rest_ui.craft_cost = gsm.rest_control.craft_cost
 		rest_ui.refresh_cost = gsm.rest_control.refresh_cost
-		rest_ui.open(offers, components)
+		rest_ui.open(offers, components, health_at_full)
 	_sync_rest_map_input(rest_ui.is_panel_visible() if rest_ui else true)
 
 
@@ -537,9 +598,11 @@ func _on_rest_repair_requested() -> void:
 	if gsm == null or gsm.rest_control == null or rest_ui == null:
 		return
 	var offers := rest_ui.get_offers()
+	if not gsm.rest_control.can_repair(offers):
+		return
 	if not gsm.rest_control.try_repair(offers):
 		return
-	rest_ui.set_offers(offers, gsm.run_components)
+	rest_ui.set_offers(offers, gsm.run_components, _is_player_at_full_health())
 
 
 func _on_rest_craft_mode_entered() -> void:
@@ -555,15 +618,17 @@ func _on_inventory_craft_item_requested(item_id: String) -> void:
 	var offers := rest_ui.get_offers()
 	if not gsm.rest_control.try_craft_unit(item_id, inventory, offers):
 		return
-	rest_ui.set_offers(offers, gsm.run_components)
+	rest_ui.set_offers(offers, gsm.run_components, _is_player_at_full_health())
 	rest_ui.exit_craft_mode()
 
 
 func _on_rest_refresh_requested() -> void:
 	
 	var offers := rest_ui.get_offers()
+	if not gsm.rest_control.can_refresh():
+		return
 	var updated = gsm.rest_control.refresh_upgrades(offers)
-	rest_ui.set_offers(updated, gsm.run_components)
+	rest_ui.set_offers(updated, gsm.run_components, _is_player_at_full_health())
 
 
 func _on_rest_upgrade_requested(slot_data: Dictionary, slot_index: int) -> void:
@@ -582,7 +647,7 @@ func _on_rest_upgrade_path_selected(slot_data: Dictionary, slot_index: int, path
 	if not gsm.rest_control.try_finalize_upgrade(slot_data, path, offers):
 		return
 	rest_ui.mark_upgrade_purchased(slot_index)
-	rest_ui.set_offers(offers, gsm.run_components)
+	rest_ui.set_offers(offers, gsm.run_components, _is_player_at_full_health())
 	if inventory:
 		inventory.refresh_unit_card_icons()
 
@@ -650,11 +715,19 @@ func _on_run_currency_changed(gold: int, components: int) -> void:
 	if run_resources_hud.visible:
 		run_resources_hud.update_values(gold, components)
 	if rest_ui and rest_ui.visible:
-		rest_ui.refresh_display(components)
+		rest_ui.refresh_display(components, _is_player_at_full_health())
+
+
+func _on_player_health_changed(_curr: int, _max_val: int) -> void:
+	if rest_ui and rest_ui.visible:
+		rest_ui.refresh_display(gsm.run_components, _is_player_at_full_health())
+
+
+func _is_player_at_full_health() -> bool:
+	return gsm.player_health.is_at_full_health()
 
 
 func _refresh_run_resources_hud() -> void:
-	var gsm := _get_game_state_manager()
 	run_resources_hud.update_values(gsm.run_gold, gsm.run_components)
 
 
@@ -663,18 +736,15 @@ func _get_game_state_manager() -> Node:
 
 
 func _is_shop_visit_active() -> bool:
-	
-	return gsm != null and gsm.shop_visit_active
+	return gsm.shop_visit_active
 
 
 func _is_rest_visit_active() -> bool:
-	
-	return gsm != null and gsm.rest_visit_active
+	return gsm.rest_visit_active
 
 
 func _is_event_visit_active() -> bool:
-	
-	return gsm != null and gsm.event_visit_active
+	return gsm.event_visit_active
 
 
 func show_battle_rewards(payload: Dictionary) -> void:
@@ -686,9 +756,7 @@ func show_battle_rewards(payload: Dictionary) -> void:
 
 
 func _on_battle_reward_gold_claimed(amount: int) -> void:
-	var gsm := get_parent().get_parent()
-	if gsm and gsm.has_method("add_gold"):
-		gsm.add_gold(amount)
+	gsm.add_gold(amount)
 
 
 func _on_battle_reward_unit_picked(item_id: String) -> void:
@@ -766,19 +834,14 @@ func dev_load_formation(formation_name: String) -> String:
 
 
 func _clear_spells_from_inventory_and_bar() -> void:
-	if spell_bar:
-		for slot in spell_bar.slots:
-			spell_bar.remove_spell_at(slot)
-	if inventory == null:
-		return
+	for slot in spell_bar.slots:
+		spell_bar.remove_spell_at(slot)
 	for slot in inventory.slots:
 		if slot.item_inst is Spell_Card:
 			slot.set_item("", null, 0)
 
 
 func _grant_all_unit_cards_to_inventory(qty: int) -> void:
-	if inventory == null:
-		return
 	for item_id in ITEM_NAME.name_obj_map.keys():
 		var sc: PackedScene = ITEM_NAME.item_lookup(item_id)
 		if sc == null:
@@ -807,11 +870,7 @@ func _clear_board_allied_units() -> void:
 
 
 func _clear_board_enemy_units() -> void:
-	if battle_manager == null:
-		return
 	var up := battle_manager.get_node_or_null("Unit_Parent")
-	if up == null:
-		return
 	for child in up.get_children():
 		if child is Base_Unit and not (child as Base_Unit).faction:
 			child.queue_free()

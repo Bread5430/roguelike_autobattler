@@ -33,9 +33,7 @@ func get_component_price(slot_data: Dictionary) -> int:
 
 
 func try_repair(state: Dictionary) -> bool:
-	if _game_state == null:
-		return false
-	if int(state.get("actions_left", 0)) <= 0:
+	if not can_repair(state):
 		return false
 	if not _game_state.spend_components(repair_cost):
 		return false
@@ -44,6 +42,33 @@ func try_repair(state: Dictionary) -> bool:
 		health_manager.restore_health_fraction(repair_heal_fraction)
 	state["actions_left"] = int(state.get("actions_left", 0)) - 1
 	return true
+
+
+func can_repair(state: Dictionary) -> bool:
+	if _game_state == null:
+		return false
+	if int(state.get("actions_left", 0)) <= 0:
+		return false
+	if _game_state.run_components < repair_cost:
+		return false
+	var health_manager: PlayerHealthManager = _game_state.player_health
+	if health_manager and health_manager.is_at_full_health():
+		return false
+	return true
+
+
+func can_craft(state: Dictionary) -> bool:
+	if _game_state == null:
+		return false
+	if int(state.get("actions_left", 0)) <= 0:
+		return false
+	return _game_state.run_components >= craft_cost
+
+
+func can_refresh() -> bool:
+	if _game_state == null:
+		return false
+	return _game_state.run_components >= refresh_cost
 
 
 func try_craft_unit(item_id: String, inventory: Inventory, state: Dictionary) -> bool:
@@ -79,6 +104,11 @@ func can_purchase_upgrade(slot_data: Dictionary, state: Dictionary) -> bool:
 		return false
 	var base_id := str(slot_data.get("upgrade_id", ""))
 	if base_id.is_empty() or UnitUpgradeRegistry.has_upgrade(base_id):
+		return false
+	if not UNIT_UPGRADES.has_entry(base_id):
+		return false
+	var price := get_component_price(slot_data)
+	if price <= 0 or _game_state.run_components < price:
 		return false
 	return true
 

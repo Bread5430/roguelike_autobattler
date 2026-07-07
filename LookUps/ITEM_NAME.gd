@@ -67,6 +67,9 @@ func load_unit_csv(path: String):
 
 		# ---- roles → bitmask ----
 		if roles_str != "":
+			# Skip unit loading for spells 
+			if roles_str == "SPELL":
+				continue
 			var role_mask := 0
 			for role_name in roles_str.split("|"):
 				if ROLE_LOOKUP.has(role_name):

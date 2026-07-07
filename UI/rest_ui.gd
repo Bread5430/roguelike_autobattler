@@ -44,6 +44,7 @@ var _pending_upgrade_slot_index := -1
 var _pending_upgrade_slot_data: Dictionary = {}
 var _passthrough_helper: Node
 var _last_components: int = 0
+var _health_at_full: bool = false
 var _item_details_builder := ItemDetailsBuilder.new()
 
 
@@ -75,9 +76,10 @@ func setup(passthrough_helper: Node) -> void:
 	_passthrough_helper = passthrough_helper
 
 
-func open(offers: Dictionary, components: int) -> void:
+func open(offers: Dictionary, components: int, health_at_full: bool = false) -> void:
 	_offers = offers.duplicate(true)
 	_last_components = components
+	_health_at_full = health_at_full
 	_panel_visible = true
 	_craft_mode = false
 	_upgrade_mode = false
@@ -114,20 +116,22 @@ func get_offers() -> Dictionary:
 	return _offers.duplicate(true)
 
 
-func set_offers(offers: Dictionary, components: int) -> void:
+func set_offers(offers: Dictionary, components: int, health_at_full: bool = false) -> void:
 	_offers = offers.duplicate(true)
 	_last_components = components
+	_health_at_full = health_at_full
 	_rebuild_upgrade_data()
 	_update_header(components)
 	_update_action_buttons(components)
 
 
-func refresh_display(components: int) -> void:
+func refresh_display(components: int, health_at_full: bool = false) -> void:
 	_last_components = components
+	_health_at_full = health_at_full
 	_update_header(components)
-	_update_action_buttons(components)
 	for slot in _upgrade_slots:
 		slot._refresh_display()
+	_update_action_buttons(components)
 
 
 func enter_craft_mode() -> void:
@@ -192,7 +196,8 @@ func _configure_upgrade_overlay(slot_data: Dictionary) -> void:
 	var price_suffix := " (%dc)" % price
 	_path_a_button.text = "%s\n%s%s" % [label_a, blurb_a, price_suffix] if blurb_a != "" else "%s%s" % [label_a, price_suffix]
 	_path_b_button.text = "%s\n%s%s" % [label_b, blurb_b, price_suffix] if blurb_b != "" else "%s%s" % [label_b, price_suffix]
-	var can_afford := _last_components >= price
+	var actions_left := int(_offers.get("actions_left", 0))
+	var can_afford := actions_left > 0 and _last_components >= price
 	_path_a_button.disabled = not can_afford
 	_path_b_button.disabled = not can_afford
 
@@ -245,6 +250,8 @@ func _clear_upgrade_row() -> void:
 func _on_upgrade_slot_pressed(slot_data: Dictionary, slot_index: int) -> void:
 	if _craft_mode or _upgrade_mode:
 		return
+	if not _can_afford_upgrade_slot(slot_data, _last_components):
+		return
 	upgrade_requested.emit(slot_data, slot_index)
 
 
@@ -258,6 +265,12 @@ func _on_path_b_pressed() -> void:
 
 func _emit_upgrade_path(path: String) -> void:
 	if not _upgrade_mode:
+		return
+	var price := int(_pending_upgrade_slot_data.get("base_price", 0))
+	if _pending_upgrade_slot_data.get("on_sale", false):
+		price = int(floor(float(price) * 0.5))
+	var actions_left := int(_offers.get("actions_left", 0))
+	if actions_left <= 0 or _last_components < price:
 		return
 	var data := _pending_upgrade_slot_data.duplicate(true)
 	var index := _pending_upgrade_slot_index
@@ -273,17 +286,23 @@ func _on_upgrade_cancel_pressed() -> void:
 func _on_repair_pressed() -> void:
 	if _craft_mode or _upgrade_mode:
 		return
+	if not _can_afford_repair(_last_components):
+		return
 	repair_requested.emit()
 
 
 func _on_craft_pressed() -> void:
 	if _craft_mode or _upgrade_mode:
 		return
+	if not _can_afford_craft(_last_components):
+		return
 	enter_craft_mode()
 
 
 func _on_refresh_pressed() -> void:
 	if _craft_mode or _upgrade_mode:
+		return
+	if not _can_afford_refresh(_last_components):
 		return
 	refresh_requested.emit()
 
@@ -317,13 +336,16 @@ func _set_panel_visible(show_panel: bool) -> void:
 
 
 func _set_rest_controls_enabled(enabled: bool) -> void:
-	_repair_button.disabled = not enabled
-	_craft_button.disabled = not enabled
-	_refresh_button.disabled = not enabled
-	_leave_button.disabled = not enabled
-	for slot in _upgrade_slots:
-		var purchased: bool = slot.slot_data.get("purchased", false)
-		slot.disabled = not enabled or purchased
+	if not enabled:
+		_repair_button.disabled = true
+		_craft_button.disabled = true
+		_refresh_button.disabled = true
+		_leave_button.disabled = true
+		for slot in _upgrade_slots:
+			slot.disabled = true
+	else:
+		_leave_button.disabled = false
+		_update_action_buttons(_last_components)
 
 
 func _update_header(components: int) -> void:
@@ -335,14 +357,45 @@ func _update_header(components: int) -> void:
 func _update_action_buttons(components: int) -> void:
 	var actions_left := int(_offers.get("actions_left", 0))
 	var has_actions := actions_left > 0
-	_repair_button.text = "Repair (+20%% HP, %dc)" % repair_cost
+	var in_overlay := _craft_mode or _upgrade_mode
+	if _health_at_full:
+		_repair_button.text = "Repair (full health)"
+	else:
+		_repair_button.text = "Repair (+20%% HP, %dc)" % repair_cost
 	_craft_button.text = "Craft duplicate (%dc)" % craft_cost
 	_refresh_button.text = "Refresh upgrades (%dc)" % refresh_cost
-	_repair_button.disabled = _craft_mode or _upgrade_mode or not has_actions or components < repair_cost
-	_craft_button.disabled = _craft_mode or _upgrade_mode or not has_actions or components < craft_cost
-	_refresh_button.disabled = _craft_mode or _upgrade_mode or components < refresh_cost
+	_repair_button.disabled = in_overlay or not _can_afford_repair(components)
+	_craft_button.disabled = in_overlay or not _can_afford_craft(components)
+	_refresh_button.disabled = in_overlay or not _can_afford_refresh(components)
 	for slot in _upgrade_slots:
-		if slot.slot_data.get("purchased", false):
-			slot.disabled = true
-			continue
-		slot.disabled = _craft_mode or _upgrade_mode or not has_actions
+		slot.disabled = in_overlay or not _can_afford_upgrade_slot(slot.slot_data, components)
+
+
+func _can_afford_repair(components: int) -> bool:
+	var actions_left := int(_offers.get("actions_left", 0))
+	return actions_left > 0 and not _health_at_full and components >= repair_cost
+
+
+func _can_afford_craft(components: int) -> bool:
+	var actions_left := int(_offers.get("actions_left", 0))
+	return actions_left > 0 and components >= craft_cost
+
+
+func _can_afford_refresh(components: int) -> bool:
+	return components >= refresh_cost
+
+
+func _can_afford_upgrade_slot(slot_data: Dictionary, components: int) -> bool:
+	if slot_data.get("purchased", false):
+		return false
+	var item_id := str(slot_data.get("item_id", slot_data.get("upgrade_id", "")))
+	if item_id.is_empty():
+		return false
+	var actions_left := int(_offers.get("actions_left", 0))
+	if actions_left <= 0:
+		return false
+	var base_price := int(slot_data.get("base_price", 0))
+	var price := base_price
+	if slot_data.get("on_sale", false):
+		price = int(floor(float(base_price) * 0.5))
+	return components >= price

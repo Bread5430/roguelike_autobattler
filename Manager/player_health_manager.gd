@@ -70,5 +70,9 @@ func restore_health_fraction(fraction: float) -> void:
 	_emit_health_changed()
 
 
+func is_at_full_health() -> bool:
+	return curr_health >= max_health
+
+
 func _emit_health_changed() -> void:
 	health_changed.emit(curr_health, max_health)
