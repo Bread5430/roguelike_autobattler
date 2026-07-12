@@ -25,7 +25,7 @@ func _load_csv() -> void:
 		var line := file.get_csv_line()
 		if line.is_empty():
 			continue
-		if line.size() < 9:
+		if line.size() < 7:
 			push_warning("Unit upgrade row too short (%d cols): %s" % [line.size(), line])
 			continue
 		var base_id := str(line[0]).strip_edges()
@@ -36,10 +36,8 @@ func _load_csv() -> void:
 			"path_b_label": str(line[2]),
 			"path_a_sprite": str(line[3]),
 			"path_b_sprite": str(line[4]),
-			"path_a_unit_sprite": str(line[5]),
-			"path_b_unit_sprite": str(line[6]),
-			"path_a_blurb": str(line[7]),
-			"path_b_blurb": str(line[8]),
+			"path_a_blurb": str(line[5]),
+			"path_b_blurb": str(line[6]),
 		}
 	file.close()
 
@@ -91,17 +89,14 @@ func get_card_sprite_path(base_id: String, path: String) -> String:
 			return ""
 
 
-func get_unit_sprite_path(base_id: String, path: String) -> String:
-	if not has_entry(base_id):
+## Slug derived from a path's label, used to build the AnimatedSprite2D animation
+## names for an upgraded unit (e.g. "Berserker Line" -> "berserker_line", so the
+## FSM plays "walk_berserker_line" / "die_berserker_line"). Empty when unknown.
+func get_animation_key(base_id: String, path: String) -> String:
+	var label := str(get_labels(base_id).get(path, "")).strip_edges()
+	if label.is_empty():
 		return ""
-	var e: Dictionary = entries[base_id]
-	match path:
-		PATH_A:
-			return str(e.get("path_a_unit_sprite", ""))
-		PATH_B:
-			return str(e.get("path_b_unit_sprite", ""))
-		_:
-			return ""
+	return label.to_lower().replace(" ", "_")
 
 
 func is_valid_path(path: String) -> bool:

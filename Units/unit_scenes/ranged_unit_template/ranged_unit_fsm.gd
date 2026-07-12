@@ -53,11 +53,15 @@ func _get_transition() -> int:
 func _enter_state(_previous_state: int, new_state: int) -> void:
 	match new_state:
 		states.march:
-			sprite.play("walk")
+			sprite.play(run_animation)
+
+		states.attack:
+			if attack_animation != "":
+				sprite.play(attack_animation)
 
 		states.beaconed:
-			sprite.play("walk")
+			sprite.play(run_animation)
 
 		states.dead:
-			sprite.play("die")
+			sprite.play(die_animation)
 			animation_player.play("dead")

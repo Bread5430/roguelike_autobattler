@@ -168,7 +168,9 @@ func _clear_slot_rows() -> void:
 	_relic_slots.clear()
 
 
-func _on_slot_pressed(row_key: String, slot_index: int, slot_data: Dictionary) -> void:
+# NOTE: bound args (row_key, slot_index) are appended AFTER the signal's emitted
+# slot_data, so the emitted arg must be the first parameter here.
+func _on_slot_pressed(slot_data: Dictionary, row_key: String, slot_index: int) -> void:
 	if _scrap_mode:
 		return
 	purchase_requested.emit(slot_data, row_key, slot_index)

@@ -114,7 +114,7 @@ func apply_upgrade_from_card(card_item_id: String) -> void:
 	if upgrade_path.is_empty():
 		return
 	_apply_upgrade_stats()
-	_apply_upgrade_sprite(card_item_id)
+	_apply_upgrade_animations(card_item_id)
 
 
 func apply_upgrade_abilities_after_ready() -> void:
@@ -130,24 +130,24 @@ func _apply_upgrade_stats() -> void:
 	scrap_cost *= 2
 
 
-func _apply_upgrade_sprite(card_item_id: String) -> void:
-	var tex_path := UNIT_UPGRADES.get_unit_sprite_path(card_item_id, upgrade_path)
-	if tex_path.is_empty() or not ResourceLoader.exists(tex_path):
+## Points the FSM at the upgraded animations authored on the AnimatedSprite2D.
+## Names follow "walk_<key>" / "die_<key>" where <key> comes from the CSV path label
+## (see UNIT_UPGRADES.get_animation_key). Only names that actually exist as animations
+## are applied, so a missing variant simply keeps the base animation.
+func _apply_upgrade_animations(card_item_id: String) -> void:
+	if state_machine == null or not state_machine.has_method("set_animation_names"):
 		return
-	var res: Resource = load(tex_path)
-	if not res is Texture2D:
+	var key : String = UNIT_UPGRADES.get_animation_key(card_item_id, upgrade_path)
+	if key.is_empty():
 		return
-	var tex := res as Texture2D
-	if sprite == null:
-		return
-	var frames := SpriteFrames.new()
-	for anim_name in ["walk", "die"]:
-		frames.add_animation(anim_name)
-		frames.set_animation_loop(anim_name, anim_name == "walk")
-		frames.add_frame(anim_name, tex)
-	sprite.sprite_frames = frames
-	if sprite.sprite_frames.has_animation("walk"):
-		sprite.play("walk")
+	var frames : SpriteFrames = sprite.sprite_frames if sprite != null else null
+	var run_name : String = "walk_" + key
+	var die_name : String = "die_" + key
+	var final_run : String = run_name if (frames != null and frames.has_animation(run_name)) else ""
+	var final_die : String = die_name if (frames != null and frames.has_animation(die_name)) else ""
+	state_machine.set_animation_names(final_run, final_die)
+	if sprite != null and final_run != "":
+		sprite.play(final_run)
 
 
 func _apply_upgrade_abilities() -> void:

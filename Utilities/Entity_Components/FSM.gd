@@ -9,6 +9,12 @@ var round_start_check = false
 var start_state = null
 var beacon_move_vec: Vector2 = Vector2.ZERO
 
+## Animation names played per state. Swapped on upgrade via [method set_animation_names]
+## (see [method Base_Unit._apply_upgrade_animations]). Empty [member attack_animation] means no attack anim.
+var run_animation : String = "walk"
+var die_animation : String = "die"
+var attack_animation : String = ""
+
 @onready var parent: Base_Unit = get_parent()
 @onready var sprite: AnimatedSprite2D = parent.get_node("AnimatedSprite2D")
 @onready var animation_player: AnimationPlayer = parent.get_node("AnimationPlayer")
@@ -58,6 +64,17 @@ func _get_transition() -> int:
 
 func _add_state(new_state: String) -> void:
 	states[new_state] = states.size()
+
+
+## Overrides the animation names this FSM plays for movement/death/attack states.
+## Empty names are ignored so callers can update only the animations they have art for.
+func set_animation_names(run_name: String, die_name: String, attack_name: String = "") -> void:
+	if run_name != "":
+		run_animation = run_name
+	if die_name != "":
+		die_animation = die_name
+	if attack_name != "":
+		attack_animation = attack_name
 
 
 func set_state(new_state: int) -> void:
