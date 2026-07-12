@@ -231,9 +231,12 @@ func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
 		if not u is Base_Unit:
 			continue
 		var unit_pos := (u as Base_Unit).position
+		# Subtract the board's own offset (BoardUI.start_offset) so the result is
+		# a logical, 0-indexed board tile matching top_corner/unit_board_space_map.
+		var local_pos : Vector2 = unit_pos - board_tiles.global_position
 		var unit_tile := Vector2i(
-			int(unit_pos.x / board_tiles.cellHeight),
-			int(unit_pos.y / board_tiles.cellHeight)
+			int(local_pos.x / board_tiles.cellHeight),
+			int(local_pos.y / board_tiles.cellHeight)
 		)
 		var in_x := unit_tile.x >= top_corner.x and unit_tile.x < top_corner.x + int(size.x)
 		var in_y := unit_tile.y >= top_corner.y and unit_tile.y < top_corner.y + int(size.y)

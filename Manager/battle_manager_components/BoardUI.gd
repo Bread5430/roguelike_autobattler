@@ -27,6 +27,17 @@ extends GridContainer
 		_remove_grid()
 		_create_grid()
 
+## Tile offset (in board cells) applied to the whole grid's position, starting
+## placement at cell (1, 1) instead of (0, 0). This keeps every placed unit off
+## the battle space's world origin edge (row/col 0 of BattleManager.tile_map_size),
+## which the flow field otherwise always treats as a map border regardless of
+## actual unit adjacency.
+@export var start_offset : Vector2i = Vector2i(1, 1):
+	set(value):
+		start_offset = value
+		_remove_grid()
+		_create_grid()
+
 @export var GRID_CELL : PackedScene
 
 func _create_grid():
@@ -34,6 +45,7 @@ func _create_grid():
 	add_theme_constant_override("v_separation", borderSize)
 	
 	columns = width
+	position = Vector2(start_offset.x * cellWidth, start_offset.y * cellHeight)
 
 	for i in width * height:
 		var gridCellNode : BoardSlot = GRID_CELL.instantiate()

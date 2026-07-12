@@ -25,8 +25,8 @@ wait_time = 0.5
 
 [node name="BoardUI" parent="." instance=ExtResource("3_0kdsf")]
 layout_mode = 0
-width = 15
-height = 20
+width = 12
+height = 24
 cellWidth = 50
 cellHeight = 50
 
@@ -43,6 +43,7 @@ wait_time = 0.15
 
 [node name="Enemy_Spawner" type="Node" parent="."]
 script = ExtResource("9_tj47k")
+grid_size = Vector2i(14, 0)
 
 [node name="Proj_Pool" type="Node" parent="."]
 script = ExtResource("7_0kdsf")

@@ -9,11 +9,15 @@ func handles_casting_input() -> bool:
 
 
 func on_casting_click(world_pos: Vector2) -> Dictionary:
+	var bc: BeaconController = battle_manager.beacon_controller
+	# Block confirming a segment that exceeds max length (first point has no prior segment).
+	if not _confirmed.is_empty() and bc.is_segment_too_long(_confirmed[_confirmed.size() - 1], world_pos):
+		return {"consume_spell": false, "exit_casting": false}
 	_confirmed.append(world_pos)
 	if _confirmed.size() < 3:
 		return {"consume_spell": false, "exit_casting": false}
-	var path := PackedVector2Array([_confirmed[0], _confirmed[1], _confirmed[2]])
-	var ok := _try_commit(path)
+	var path = PackedVector2Array([_confirmed[0], _confirmed[1], _confirmed[2]])
+	var ok = _try_commit(path)
 	_confirmed.clear()
 	clear_preview()
 	return {"consume_spell": ok, "exit_casting": true}

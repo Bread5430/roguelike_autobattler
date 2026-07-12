@@ -240,8 +240,10 @@ func _spawn_one_static_router(scene: PackedScene, top_left: Vector2i, size: Vect
 		_static_router_tiles[Vector2i(int(bp.x), int(bp.y))] = true
 	# Derive the anchor from grid coords + cell size directly. BoardUI is a
 	# GridContainer that may not have laid out its cells yet when prep begins,
-	# so BoardSlot.position can still read (0,0) here.
-	var start_position = Vector2(top_left.x * unit_board.cellWidth, top_left.y * unit_board.cellHeight)
+	# so BoardSlot.position can still read (0,0) here. unit_board's own
+	# global_position (including its start_offset) is set explicitly though,
+	# so it's safe to read immediately.
+	var start_position = unit_board.global_position + Vector2(top_left.x * unit_board.cellWidth, top_left.y * unit_board.cellHeight)
 	battle_manager.add_unit_to_board(item_inst, start_position, item_inst.placement_vectors, true)
 	item_inst.queue_free()
 
@@ -382,7 +384,7 @@ func place_unit_card_programmatic(p_scene: PackedScene, top_left: Vector2i, rota
 			"size": unit_size,
 		})
 
-	battle_manager.add_unit_to_board(item_inst, objectCells[0].position, unit_vec, true)
+	battle_manager.add_unit_to_board(item_inst, objectCells[0].global_position, unit_vec, true)
 	if item_inst is Unit_Card:
 		_spend_scrap_for_card(item_inst as Unit_Card)
 	_reset_highlight(objectCells)
@@ -453,7 +455,7 @@ func _place_unit():
 			"top_corner": top_i,
 			"size": unit_size,
 		})
-	battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].position, unit_vec, true)
+	battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].global_position, unit_vec, true)
 	if curr_unit_inst is Unit_Card:
 		_spend_scrap_for_card(curr_unit_inst as Unit_Card)
 	_reset_highlight(objectCells)

@@ -6,6 +6,11 @@ class_name BeaconController
 ## Default radius from path start used when registering affected allies (spell may override via argument).
 @export var assign_radius: float = 120.0
 @export var waypoint_arrive_distance: float = 36.0
+## Max world-space length for a single path segment (start→waypoint or waypoint→end).
+@export var max_segment_length: float = 400.0
+
+const _PREVIEW_COLOR_VALID = Color(0.35, 0.85, 1.0, 0.92)
+const _PREVIEW_COLOR_INVALID = Color(0.95, 0.25, 0.2, 0.95)
 
 var battle_manager: Node
 var target_man: Node
@@ -40,11 +45,15 @@ func clear_all() -> void:
 	clear_preview_line()
 
 
+func is_segment_too_long(from_world: Vector2, to_world: Vector2) -> bool:
+	return from_world.distance_to(to_world) > max_segment_length
+
+
 func preview_path(points_world: Array[Vector2], hover_world: Vector2) -> void:
 	if not is_instance_valid(_preview_line):
 		_preview_line = Line2D.new()
 		_preview_line.width = 5.0
-		_preview_line.default_color = Color(0.35, 0.85, 1.0, 0.92)
+		_preview_line.default_color = _PREVIEW_COLOR_VALID
 		_preview_line.z_index = 100
 		add_child(_preview_line)
 	var pts: PackedVector2Array = PackedVector2Array()
@@ -52,6 +61,10 @@ func preview_path(points_world: Array[Vector2], hover_world: Vector2) -> void:
 		pts.append(self.to_local(p))
 	pts.append(self.to_local(hover_world))
 	_preview_line.points = pts
+	var segment_invalid = false
+	if not points_world.is_empty():
+		segment_invalid = is_segment_too_long(points_world[points_world.size() - 1], hover_world)
+	_preview_line.default_color = _PREVIEW_COLOR_INVALID if segment_invalid else _PREVIEW_COLOR_VALID
 
 
 func clear_preview_line() -> void:

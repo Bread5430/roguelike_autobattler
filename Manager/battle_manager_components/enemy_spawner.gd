@@ -17,7 +17,10 @@ extends Node
 
 var bm
 
-@export var grid_size := Vector2i(20, 0)
+# This should be set to size of player board + small buffer (1 or 2 cells)
+# Need to ensure that player towers are physically close to enemy units to be threatened
+@export var grid_size := Vector2i(20, 0) 
+
 
 
 #var unit_bitstring_cache = {}
@@ -197,9 +200,11 @@ func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -
 
 ## Enemy formations are authored in BoardUI tile coordinates.
 ## Use board cell size, not BattleManager.tile_size, to avoid oversized spacing.
+## board.global_position already carries BoardUI's start_offset (see BoardUI.gd),
+## so enemies spawn with the same 1x1 tile offset from 0 as the player board.
 func _board_grid_to_world(coord: Vector2i) -> Vector2:
 	var board = bm.get_node("BoardUI")
-	return Vector2(coord.x * int(board.cellWidth), coord.y * int(board.cellHeight))
+	return board.global_position + Vector2(coord.x * int(board.cellWidth), coord.y * int(board.cellHeight))
 
 
 ## Dev / console: spawn an arbitrary formation list (e.g. from FORMATION_MAP.formation_lookup).
