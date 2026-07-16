@@ -30,3 +30,11 @@ static func beacon_following() -> BeaconFollowingDef:
 
 static func aegis() -> AegisDef:
 	return AegisDef.new()
+
+
+static func ablative_armor() -> AblativeArmorDef:
+	return AblativeArmorDef.new()
+
+
+static func infested() -> InfestedDef:
+	return InfestedDef.new()

@@ -1,3 +1,7 @@
 base_item_id,path_a_label,path_b_label,path_a_sprite,path_b_sprite,path_a_blurb,path_b_blurb
-four_melee,Berserker Line,Shield Wall,res://Assets/CardSprites/bruiser_card.png,res://Assets/CardSprites/splash_unit.png,Faster movement and aggressive strikes.,Takes less damage from enemy attacks.
-one_ranged,Marksman,Volley,res://Assets/CardSprites/sniper_card.png,res://Assets/CardSprites/one_ranged.png,Deals more damage per shot.,Fires more frequently.
+four_melee,Reinforced Plating,Assault Doctrine,res://Assets/CardSprites/aegis.png,res://Assets/CardSprites/4_Melee.png,Generate Ablative Armor every 5 seconds.,Spawn with 2 Ablative Armor stacks; faster attack and movement.
+bruiser_card,Vampiric Strikes,Bloodlust,res://Assets/CardSprites/bruiser_card.png,res://Assets/CardSprites/bruiser_card.png,Heal when killing enemies based on their max HP.,Gain attack and move speed as HP is lost.
+exploder_card,Cataclysm,Phoenix Core,res://Assets/CardSprites/bruiser_card.png,res://Assets/CardSprites/bruiser_card.png,Death explosion is much larger and more damaging.,Revive once after 5 seconds the first time you die in combat.
+arc_unit,Executioner,Iron Guard,res://Assets/CardSprites/one_ranged.png,res://Assets/CardSprites/one_ranged.png,Bonus damage for each kill this combat.,Flat damage reduction like a Bruiser.
+chaff_swarm,Infestors,Resilient Swarm,res://Assets/CardSprites/chaff_swarm.png,res://Assets/CardSprites/chaff_swarm.png,Attacks Infest enemies; Infested spawn crawlers on death. Crawlers move faster.,50% chance to revive after 5 seconds (once per combat).
+one_ranged,Longshot,Disruptor Rounds,res://Assets/CardSprites/sniper_card.png,res://Assets/CardSprites/one_ranged.png,Massively increased attack range.,Attacks slow the target and strip all buffs.

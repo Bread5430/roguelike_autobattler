@@ -89,7 +89,7 @@ tracks/0/keys = {
 "method": &"spawn_death_explosion"
 }, {
 "args": [],
-"method": &"queue_free"
+"method": &"finish_death"
 }]
 }
 

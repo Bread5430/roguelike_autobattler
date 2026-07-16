@@ -1,7 +1,8 @@
-[gd_scene load_steps=17 format=3 uid="uid://b3ot57ll4pmh3"]
+[gd_scene load_steps=18 format=3 uid="uid://b3ot57ll4pmh3"]
 
 [ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_hlbew"]
 [ext_resource type="Texture2D" uid="uid://ce1bfpxqrdj" path="res://Assets/UnitSprites/basic_unit_sprites.png" id="2_5l3bg"]
+[ext_resource type="Script" path="res://Units/unit_scenes/basic_chaff/basic_chaff.gd" id="2_root"]
 [ext_resource type="Script" uid="uid://bvp0uxwt0r3lf" path="res://Units/unit_scenes/melee_unit_template/melee_unit_fsm.gd" id="3_bqw64"]
 [ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_x8yey"]
 [ext_resource type="Script" uid="uid://u1kypg7x4hux" path="res://Units/unit_scenes/basic_chaff/vulnurability_melee.gd" id="5_htjjy"]
@@ -84,7 +85,7 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1),
 "values": [{
 "args": [],
-"method": &"queue_free"
+"method": &"finish_death"
 }]
 }
 
@@ -94,6 +95,7 @@ _data = {
 }
 
 [node name="basicChaff" instance=ExtResource("1_hlbew")]
+script = ExtResource("2_root")
 unit_glossary_id = "basic_chaff"
 max_hp = 2
 base_damage = 2

@@ -24,7 +24,7 @@
 
 ## 4. Implemented features / progress
 
-- Built-in effects: damage vulnerability, attack speed aura, ground slow, DoT ramp, **stun**; spell scenes under `Spells/spell_cards/status_effects/`.
+- Built-in effects: damage vulnerability, attack speed aura, ground slow, DoT ramp, **stun**, **aegis**, **ablative armor**, **infested**; spell scenes under `Spells/spell_cards/status_effects/`.
 - CSV-driven shared fields; `STATUS_EFFECT_DATA.get_display_name` for display strings.
 - `UI/StatusEffectBox.tscn` + `status_effect_box.gd` (`StatusEffectBox`).
 
@@ -37,6 +37,8 @@
 - New effect **type:** add `StatusEffectDef` subclass, row in `status_effects.csv`, extend `StatusEffectTune` only if new **shared** columns are added (prefer keeping shared columns stable).
 - **`StatusEffectDef` hooks:** `get_polarity()` (`NEUTRAL` / `BUFF` / `DEBUFF`) for dispel/suppression; `restricts_movement()`, `restricts_basic_attacks()`, `restricts_special_abilities()` OR’d on the host; `suppresses_buff_application()` / `suppresses_debuff_application()` gate **new** instances in `apply_status_effect` (existing instance keys still refresh duration/stacks); `on_applied(host)` runs before inserting a **new** instance (purge/dispel pattern).
 - **`Base_Unit`:** `purge_status_effects_by_polarity(p)`; `is_basic_attacks_restricted()` is enforced in `Attack_Base.check_can_attack()`. Special abilities must call `is_special_abilities_restricted()` at entry when added.
+- **Ablative Armor:** each stack absorbs one damage hit (`Base_Unit._try_consume_ablative_armor`); used by Standard Melee.
+- **Infested:** on death, spawns `basic_chaff` × host `scrap_cost` for infector faction; Crawler Path A (`chaff_swarm`).
 - **Stun:** `StunnedDef` — move mult `0`, all three restrictions `true`, debuff polarity. Optional UX: play idle while `is_movement_restricted()` in FSMs if sprites support it.
 - `Unit_Parent` children: filter `Base_Unit` when iterating (spell previews may be non-units).
 - `instance_key` format: `"effect_id::stack_key"`.

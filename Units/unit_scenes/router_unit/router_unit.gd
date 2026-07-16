@@ -41,9 +41,9 @@ func _setup_deployment_exclusion_visual() -> void:
 	viz.setup(self)
 
 
-func take_damage(damage: int, apply_taken_mult: bool = true) -> void:
+func take_damage(damage: int, apply_taken_mult: bool = true, source: Base_Unit = null) -> void:
 	var was_alive := curr_hp > 0
-	super.take_damage(damage, apply_taken_mult)
+	super.take_damage(damage, apply_taken_mult, source)
 	if was_alive and curr_hp <= 0:
 		_apply_same_faction_death_stun()
 

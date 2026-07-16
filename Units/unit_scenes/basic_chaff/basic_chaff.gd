@@ -1,59 +1,45 @@
 extends Base_Unit
 
-const DEATH_SPLASH_SCENE := preload("res://Units/unit_scenes/splash_template/splash_projectile.tscn")
 const REVIVE_DELAY := 5.0
+const REVIVE_CHANCE := 0.5
 
-var _proj_pool: ProjectilePool
+## When true, melee applies Infested on hit (Path A).
+var applies_infested: bool = false
+
+var _revive_enabled: bool = false
 var _has_revived: bool = false
 var _revive_pending: bool = false
 var _revive_timer: float = 0.0
-var _big_explosion: bool = false
-
-
-func post_ready() -> void:
-	_proj_pool = get_parent().get_parent().proj_pool
-	super.post_ready()
+var _will_revive_this_death: bool = false
 
 
 func _apply_upgrade_abilities() -> void:
 	match upgrade_path:
 		UNIT_UPGRADES.PATH_A:
-			_big_explosion = true
+			applies_infested = true
+			extra_move_speed_mult = 1.35
+			_recompute_status_stat_modifiers()
 		UNIT_UPGRADES.PATH_B:
-			pass
+			_revive_enabled = true
 
 
-func spawn_death_explosion() -> void:
-	if _proj_pool == null:
-		return
-	var proj = _proj_pool.spawn_projectile(DEATH_SPLASH_SCENE)
-	if proj == null:
-		return
-	proj.setup(self, global_position, not faction)
-	var boom_damage = 10
-	var boom_scale = Vector2(2, 2)
-	if _big_explosion:
-		boom_damage = 30
-		boom_scale = Vector2(4, 4)
-	proj.set_properties_via_spawner({
-		"damage": boom_damage,
-		"speed": 300,
-		"lifetime_val": 1.0,
-	})
-	proj.set_target_position(global_position)
-	proj.scale = boom_scale
-
-
-## Called by the "dead" AnimationPlayer track instead of queue_free.
 func finish_death() -> void:
-	if upgrade_path == UNIT_UPGRADES.PATH_B and not _has_revived:
+	if _will_revive_this_death:
 		_begin_revive()
 		return
 	queue_free()
 
 
+func take_damage(damage: int, apply_taken_mult: bool = true, source: Base_Unit = null) -> void:
+	var was_alive = curr_hp > 0
+	super.take_damage(damage, apply_taken_mult, source)
+	if was_alive and curr_hp <= 0 and _revive_enabled and not _has_revived:
+		_will_revive_this_death = randf() < REVIVE_CHANCE
+
+
 func _begin_revive() -> void:
 	_has_revived = true
+	_will_revive_this_death = false
 	_revive_pending = true
 	_revive_timer = REVIVE_DELAY
 	_death_notified = false

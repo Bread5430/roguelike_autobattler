@@ -25,9 +25,9 @@ func _ready() -> void:
 		state_machine.set_state(state_machine.states.dead)
 
 
-func take_damage(damage: int, apply_taken_mult: bool = true) -> void:
+func take_damage(damage: int, apply_taken_mult: bool = true, source: Base_Unit = null) -> void:
 	var before := curr_hp
-	super.take_damage(damage, apply_taken_mult)
+	super.take_damage(damage, apply_taken_mult, source)
 	var lost := before - curr_hp
 	if lost > 0 and player_health_manager != null:
 		player_health_manager.apply_damage(lost)

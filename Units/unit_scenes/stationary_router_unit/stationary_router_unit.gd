@@ -4,9 +4,9 @@ extends Base_Unit
 const ALLY_DEATH_STUN_STACK_KEY := "ally_death_stun"
 
 
-func take_damage(damage: int, apply_taken_mult: bool = true) -> void:
-	var was_alive := curr_hp > 0
-	super.take_damage(damage, apply_taken_mult)
+func take_damage(damage: int, apply_taken_mult: bool = true, source: Base_Unit = null) -> void:
+	var was_alive = curr_hp > 0
+	super.take_damage(damage, apply_taken_mult, source)
 	if was_alive and curr_hp <= 0:
 		_apply_same_faction_death_stun()
 

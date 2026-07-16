@@ -10,10 +10,21 @@ func do_attack():
 	queue_redraw()
 	
 	# Projectile is purely cosmetic, dmg is done now
-	var amount := get_strike_damage()
-	target_unit.take_damage(amount)
+	var amount = get_strike_damage()
+	target_unit.take_damage(amount, true, unit)
 	unit.add_damage_dealt(amount)
+	_apply_post_hit_effects()
 	super()
+
+
+func _apply_post_hit_effects() -> void:
+	if unit == null or unit.get("applies_disrupt_shot") != true:
+		return
+	if target_unit == null or not is_instance_valid(target_unit):
+		return
+	target_unit.purge_status_effects_by_polarity(StatusEffectDef.Polarity.BUFF)
+	target_unit.apply_status_effect(StatusEffectLibrary.ground_slow(), "disrupt_slow", 1, 2.5)
+
 
 func _draw():
 	if show_line:

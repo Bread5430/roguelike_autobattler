@@ -1,7 +1,8 @@
-[gd_scene load_steps=18 format=3 uid="uid://bqxarcunit001"]
+[gd_scene load_steps=19 format=3 uid="uid://bqxarcunit001"]
 
 [ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_base"]
 [ext_resource type="Texture2D" uid="uid://cjr1vox5odcwj" path="res://Assets/UnitSprites/arc_unit.png" id="2_hjdd7"]
+[ext_resource type="Script" path="res://Units/unit_scenes/arc_template/arc_unit_template.gd" id="2_root"]
 [ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_attack_base"]
 [ext_resource type="Script" uid="uid://22inhe8x2vy6" path="res://Units/unit_scenes/arc_template/arc_attack.gd" id="5_arc_script"]
 [ext_resource type="Script" uid="uid://dh4tqvn6emwhy" path="res://Units/unit_scenes/ranged_unit_template/ranged_unit_fsm.gd" id="5_hjdd7"]
@@ -95,6 +96,7 @@ _data = {
 }
 
 [node name="ArcUnitTemplate" instance=ExtResource("1_base")]
+script = ExtResource("2_root")
 unit_glossary_id = "arc_template"
 max_hp = 10
 base_damage = 2

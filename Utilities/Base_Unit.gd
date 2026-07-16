@@ -21,12 +21,18 @@ var unit_name : String
 
 var scrap_cost: int = 0
 
+## Flat damage subtracted after [member dmg_taken_mult] (e.g. Bruiser, Arc Path B).
+var flat_damage_reduction: int = 0
+
 ## Set when spawned from an upgraded unit card; "", "path_a", or "path_b".
 var upgrade_path: String = ""
 
 var total_damage_dealt : int = 0
 var dmg_dealt_mult : float = 1.0
 var dmg_taken_mult : float = 1.0
+## Extra multipliers stacked on top of status-effect recompute (e.g. Bruiser Path B).
+var extra_move_speed_mult : float = 1.0
+var extra_attack_speed_mult : float = 1.0
 
 # Movement Related
 @export var base_speed : int
@@ -88,17 +94,78 @@ func disable_physics_collision() -> void:
 
 
 ## If [param apply_taken_mult] is false, damage ignores [member dmg_taken_mult] (e.g. DoT ticks).
-func take_damage(damage: int, apply_taken_mult: bool = true) -> void:
-	var amt := float(damage)
+## [param source] is the unit that dealt the damage (used for kill credit).
+func take_damage(damage: int, apply_taken_mult: bool = true, source: Base_Unit = null) -> void:
+	if _try_consume_ablative_armor():
+		return
+	var amt = float(damage)
 	if apply_taken_mult:
 		amt *= dmg_taken_mult
-	curr_hp -= int(amt)
+	var final_dmg = maxi(0, int(amt) - flat_damage_reduction)
+	curr_hp -= final_dmg
 
 	if curr_hp <= 0:
 		state_machine.set_state(state_machine.states.dead)
 		if not _death_notified:
 			_death_notified = true
+			_handle_infested_on_death()
 			died.emit(self)
+			if source != null and is_instance_valid(source):
+				source.notify_kill(self)
+
+
+## Called on the killer when this unit scores a kill. Override [method _on_kill] in subclasses.
+func notify_kill(killed: Base_Unit) -> void:
+	_on_kill(killed)
+
+
+func _on_kill(_killed: Base_Unit) -> void:
+	pass
+
+
+## Consumes one Ablative Armor stack and fully blocks this hit. Returns true if blocked.
+func _try_consume_ablative_armor() -> bool:
+	var key = _status_instance_key(&"ablative_armor", "ablative")
+	if not _status_effect_instances.has(key):
+		return false
+	var inst: StatusEffectInstance = _status_effect_instances[key]
+	inst.stacks -= 1
+	if inst.stacks <= 0:
+		_status_effect_instances.erase(key)
+	_recompute_status_stat_modifiers()
+	return true
+
+
+const CRAWLER_SCENE_PATH := "res://Units/unit_scenes/basic_chaff/basicChaff.tscn"
+
+
+func _handle_infested_on_death() -> void:
+	var key = _status_instance_key(&"infested", "infested")
+	if not _status_effect_instances.has(key):
+		return
+	var inst: StatusEffectInstance = _status_effect_instances[key]
+	var spawn_faction = bool(inst.custom_state.get("spawn_faction", false))
+	var count = maxi(1, scrap_cost)
+	var parent_node = get_parent()
+	if parent_node == null:
+		return
+	if not ResourceLoader.exists(CRAWLER_SCENE_PATH):
+		return
+	var crawler_scene: PackedScene = load(CRAWLER_SCENE_PATH) as PackedScene
+	if crawler_scene == null:
+		return
+	for i in count:
+		var crawler = crawler_scene.instantiate()
+		if crawler == null:
+			continue
+		crawler.faction = spawn_faction
+		var angle = TAU * float(i) / float(count)
+		crawler.position = position + Vector2(cos(angle), sin(angle)) * 12.0
+		parent_node.add_child(crawler)
+		if crawler is Base_Unit:
+			var bu: Base_Unit = crawler
+			bu.post_ready()
+			bu.set_start_stop(true)
 
 func post_ready():
 	for node in get_children():
@@ -207,6 +274,8 @@ func apply_status_effect(
 			return
 		def.on_applied(self)
 		var inst2 := StatusEffectInstance.new(def, stack_key, stacks_add, dur)
+		if def.effect_id == &"infested" and _source_unit != null and is_instance_valid(_source_unit):
+			inst2.custom_state["spawn_faction"] = _source_unit.faction
 		_status_effect_instances[key] = inst2
 		_recompute_status_stat_modifiers()
 		if def.effect_id == &"beacon_following" and not had_beacon_before:
@@ -340,16 +409,19 @@ func _recompute_status_stat_modifiers() -> void:
 		if d.suppresses_debuff_application():
 			_suppress_debuff_application = true
 	dmg_taken_mult = dmg_t
-	move_speed = float(base_speed) * move_m
+	move_speed = float(base_speed) * move_m * extra_move_speed_mult
 	if atk_m <= 0.001:
 		atk_m = 1.0
+	var combined_atk = atk_m * extra_attack_speed_mult
+	if combined_atk <= 0.001:
+		combined_atk = 1.0
 	for c in get_children():
 		if c is Attack_Base:
 			var atk: Attack_Base = c
 			var tid := atk.get_instance_id()
 			var base_w: float = float(_base_attack_cd_wait.get(tid, atk.attack_cd.wait_time if atk.attack_cd else 1.0))
 			if atk.attack_cd:
-				atk.attack_cd.wait_time = base_w / atk_m
+				atk.attack_cd.wait_time = base_w / combined_atk
 
 
 func _process_status_effects(delta: float) -> void:

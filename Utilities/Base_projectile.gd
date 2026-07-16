@@ -96,9 +96,12 @@ func return_to_pool() -> void:
 #OVERIDE - This is to be overrided in each seperate projectile
 func activate_hit_effect(body):
 	var amount := int(damage * parent_dmg_mult)
-	body.take_damage(amount)
+	var src: Base_Unit = null
 	if is_instance_valid(parent_unit) and parent_unit is Base_Unit:
-		parent_unit.add_damage_dealt(amount)
+		src = parent_unit as Base_Unit
+	body.take_damage(amount, true, src)
+	if src != null:
+		src.add_damage_dealt(amount)
 
 ##### Set method for passing variable data via the spawner
 

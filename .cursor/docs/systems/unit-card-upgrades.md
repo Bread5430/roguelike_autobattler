@@ -43,10 +43,16 @@ Only rows in the CSV are offered at rest. Reset on `GameStateManager.start_new_c
 
 | Base card | Path A | Path B |
 |-----------|--------|--------|
-| `four_melee` | Berserker: +25% move speed | Shield Wall: `dmg_taken_mult = 0.75` |
-| `one_ranged` | Marksman: `dmg_dealt_mult = 1.3` | Volley: −30% ranged attack cooldown |
+| `four_melee` | Reinforced Plating: Ablative Armor regen every 5s | Assault Doctrine: 2 Ablative stacks + 25% move/attack speed |
+| `bruiser_card` | Vampiric Strikes: heal 25% of killed unit max HP | Bloodlust: up to +50% move/attack speed from missing HP |
+| `exploder_card` | Cataclysm: larger/more damaging death explosion | Phoenix Core: revive once after 5s |
+| `arc_unit` | Executioner: +15% dmg dealt per kill | Iron Guard: flat damage reduction 2 |
+| `chaff_swarm` | Infestors: Infested on hit; spawn crawlers on Infested death; +35% speed | Resilient Swarm: 50% chance revive once after 5s |
+| `one_ranged` | Longshot: ×3 attack range | Disruptor Rounds: slow on hit + purge BUFF polarity effects |
 
-Unit scripts: `melee_unit_template.gd`, `ranged_unit_template.gd`.
+**Base (non-upgrade) change:** `four_melee` always spawns with 1 stack of Ablative Armor.
+
+Unit scripts: `melee_unit_template.gd`, `bruiser_unit.gd`, `exploder_unit.gd`, `arc_unit_template.gd`, `basic_chaff.gd`, `ranged_unit_template.gd`.
 
 ## Save/load
 
