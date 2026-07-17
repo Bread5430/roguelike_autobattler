@@ -1,6 +1,7 @@
 extends Base_Spell
 
 var _confirmed: Array[Vector2] = []
+var _pending_path: PackedVector2Array = PackedVector2Array()
 var _preview_indicator: Node2D
 
 
@@ -17,14 +18,18 @@ func on_casting_click(world_pos: Vector2) -> Dictionary:
 	if _confirmed.size() < 3:
 		return {"consume_spell": false, "exit_casting": false}
 	var path = PackedVector2Array([_confirmed[0], _confirmed[1], _confirmed[2]])
-	var ok = _try_commit(path)
 	_confirmed.clear()
 	clear_preview()
-	return {"consume_spell": ok, "exit_casting": true}
+	if not _can_commit(path):
+		_pending_path = PackedVector2Array()
+		return {"consume_spell": false, "exit_casting": true}
+	_pending_path = path
+	return {"consume_spell": true, "exit_casting": true}
 
 
 func on_casting_cancel() -> void:
 	_confirmed.clear()
+	_pending_path = PackedVector2Array()
 	clear_preview()
 	if battle_manager and battle_manager.beacon_controller:
 		battle_manager.beacon_controller.clear_preview_line()
@@ -47,7 +52,10 @@ func preview(world_pos: Vector2) -> void:
 
 
 func cast(_world_pos: Vector2) -> void:
-	pass
+	if _pending_path.size() < 3:
+		return
+	_try_commit(_pending_path)
+	_pending_path = PackedVector2Array()
 
 
 func clear_preview() -> void:
@@ -86,7 +94,7 @@ func _make_preview_node(radius: float) -> Node2D:
 	return circle
 
 
-func _try_commit(path: PackedVector2Array) -> bool:
+func _can_commit(path: PackedVector2Array) -> bool:
 	var bc: BeaconController = battle_manager.beacon_controller
 	var tc: Variant = battle_manager.tactical_cursor
 	var sel: Base_Unit = tc.get_selected_unit()
@@ -96,6 +104,28 @@ func _try_commit(path: PackedVector2Array) -> bool:
 	var assign_r: float = bc.assign_radius
 	if sel.global_position.distance_to(origin) > assign_r:
 		return false
+	var up = battle_manager.unit_parent
+	for c in up.get_children():
+		if not c is Base_Unit:
+			continue
+		var u: Base_Unit = c as Base_Unit
+		if u.curr_hp <= 0:
+			continue
+		if u.faction != sel.faction:
+			continue
+		if u.global_position.distance_to(origin) <= assign_r:
+			return true
+	return false
+
+
+func _try_commit(path: PackedVector2Array) -> bool:
+	if not _can_commit(path):
+		return false
+	var bc: BeaconController = battle_manager.beacon_controller
+	var tc: Variant = battle_manager.tactical_cursor
+	var sel: Base_Unit = tc.get_selected_unit()
+	var origin: Vector2 = path[0]
+	var assign_r: float = bc.assign_radius
 	var beaconed_units: Array = []
 	var up = battle_manager.unit_parent
 	for c in up.get_children():

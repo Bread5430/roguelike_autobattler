@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://dy1rgpvj3afyd"]
+[gd_scene load_steps=15 format=3 uid="uid://dy1rgpvj3afyd"]
 
 [ext_resource type="Script" uid="uid://bysfs5te4mpkk" path="res://UI/GUI.gd" id="1_u7efx"]
 [ext_resource type="Script" uid="uid://csmfu6ekj5t6l" path="res://UI/passthrough_helper.gd" id="3_dl5f7"]
@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" path="res://UI/RandomEventUI.tscn" id="11_event"]
 [ext_resource type="PackedScene" path="res://UI/ScrapBufferBar.tscn" id="12_scrap"]
 [ext_resource type="Script" path="res://UI/unit_placement.gd" id="13_placement"]
+[ext_resource type="PackedScene" path="res://UI/BattleSpeedBar.tscn" id="14_speed"]
 
 [node name="Gui" type="Control"]
 layout_mode = 3
@@ -46,6 +47,9 @@ layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("3_n3xue")
+
+[node name="BattleSpeedBar" parent="." instance=ExtResource("14_speed")]
+layout_mode = 1
 
 [node name="ScrapBufferBar" parent="." instance=ExtResource("12_scrap")]
 visible = false

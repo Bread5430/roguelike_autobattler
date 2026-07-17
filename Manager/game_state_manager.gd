@@ -331,6 +331,8 @@ func start_battle_sequence():
 		scrap_buffer.on_combat_start()
 		gui.refresh_scrap_buffer()
 	battle_manager.start_battle()
+	if gui:
+		gui.show_battle_speed_bar()
 	# The battle will run until _on_battle_ended is called
 
 func _settle_scrap_buffer() -> void:

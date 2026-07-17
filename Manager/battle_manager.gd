@@ -18,6 +18,7 @@ var tile_map_size : Vector2i
 @onready var spell_manager = $Spell_Manager
 @onready var proj_pool = $Proj_Pool
 @onready var beacon_controller: BeaconController = $BeaconController
+@onready var battle_speed_controller: BattleSpeedController = $BattleSpeedController
 #@onready var viewport = $Viewport
 
 ## Set by GUI for beacon spell validation (selected ally near path start).
@@ -66,6 +67,8 @@ func clear_battlefield():
 	_factory_destroyed_handled = false
 
 func start_battle():
+	if battle_speed_controller:
+		battle_speed_controller.set_combat_speed(1.0)
 	manager_timer.start()
 	flow_visualizer.redraw_timer.start()
 	board_tiles.visible = false
@@ -77,6 +80,8 @@ func end_battle(victory: bool = true) -> void:
 	flow_visualizer.redraw_timer.stop()
 	set_unit_start_stop(false)
 	beacon_controller.clear_all()
+	if battle_speed_controller:
+		battle_speed_controller.reset()
 	battle_ended.emit(victory)
 	
 

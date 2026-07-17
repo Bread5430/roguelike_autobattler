@@ -11,6 +11,7 @@ var inventory : Inventory
 var gsm 
 @onready var unit_placement : UnitPlacement = $UnitPlacement
 @onready var spell_bar : SpellBar = $SpellBar
+@onready var battle_speed_bar: BattleSpeedBar = $BattleSpeedBar
 @onready var scrap_buffer_bar: ScrapBufferBar = $ScrapBufferBar
 @onready var end_prep : Button = $End_Prep
 @onready var tactical_cursor = $TacticalCursor
@@ -66,6 +67,8 @@ func post_ready():
 
 	spell_bar.battle_manager = battle_manager
 	battle_manager.tactical_cursor = tactical_cursor
+	if battle_speed_bar and battle_manager.battle_speed_controller:
+		battle_speed_bar.setup(battle_manager.battle_speed_controller)
 	if gsm != null and gsm.has_node("PlayerHealthManager"):
 		var health_manager := gsm.get_node("PlayerHealthManager") as PlayerHealthManager
 		player_health_bar.setup(health_manager)
@@ -155,12 +158,11 @@ func _input(event: InputEvent):
 			if spell_inst.handles_casting_input():
 				var r: Dictionary = spell_inst.on_casting_click(world_pos)
 				if r.get("consume_spell", false):
-					spell_bar.remove_spell_at(casting_slot)
+					_commit_spell_cast(spell_inst, casting_slot, world_pos)
 				if r.get("exit_casting", true):
 					_exit_casting_mode()
 			else:
-				spell_inst.cast(world_pos)
-				spell_bar.remove_spell_at(casting_slot)
+				_commit_spell_cast(spell_inst, casting_slot, world_pos)
 				_exit_casting_mode()
 		else:
 			_exit_casting_mode()
@@ -168,6 +170,26 @@ func _input(event: InputEvent):
 	if event.is_action_pressed("rightClick") or event.is_action_pressed("ui_cancel"):
 		_exit_casting_mode()
 		return
+
+
+## Apply spell world effect now, or buffer it while soft-paused (UI consume still happens).
+func _commit_spell_cast(spell_inst: Base_Spell, slot: SpellBarSlot, world_pos: Vector2) -> void:
+	var speed_ctrl: BattleSpeedController = null
+	if battle_manager and battle_manager.battle_speed_controller:
+		speed_ctrl = battle_manager.battle_speed_controller
+	if speed_ctrl and speed_ctrl.is_soft_paused():
+		speed_ctrl.retain_spell(spell_inst)
+		spell_bar.detach_spell_at(slot)
+		var spell_ref: Base_Spell = spell_inst
+		var pos: Vector2 = world_pos
+		speed_ctrl.queue_spell_effect(func():
+			if is_instance_valid(spell_ref):
+				spell_ref.cast(pos)
+				spell_ref.queue_free()
+		)
+	else:
+		spell_inst.cast(world_pos)
+		spell_bar.remove_spell_at(slot)
 
 ## Only runs when no Control has accepted the event (e.g. keyboard when no button focused).
 func _unhandled_input(event: InputEvent):
@@ -229,9 +251,20 @@ func start_prep_phase():
 	end_prep.show()
 	end_prep.disabled = false
 	spell_bar.show()
+	hide_battle_speed_bar()
 	scrap_buffer_bar.show()
 	run_resources_hud.set_map_visible(false)
 	refresh_scrap_buffer()
+
+
+func show_battle_speed_bar() -> void:
+	if battle_speed_bar:
+		battle_speed_bar.show_bar()
+
+
+func hide_battle_speed_bar() -> void:
+	if battle_speed_bar:
+		battle_speed_bar.hide_bar()
 
 
 func refresh_scrap_buffer() -> void:
@@ -249,6 +282,7 @@ func _on_scrap_buffer_changed(current: int, max_val: int) -> void:
 
 func enter_map_exploration() -> void:
 	spell_bar.hide()
+	hide_battle_speed_bar()
 	scrap_buffer_bar.hide()
 	run_resources_hud.set_map_visible(true)
 	_refresh_run_resources_hud()
@@ -795,6 +829,7 @@ func _on_battle_ended_clear_selection(_victory: bool) -> void:
 	tactical_cursor.set_selected_unit(null)
 
 func _on_battle_ended(victory: bool) -> void:
+	hide_battle_speed_bar()
 	_refund_items_after_battle()
 	_on_battle_ended_clear_selection(victory)
 
@@ -829,6 +864,11 @@ func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 	if spell_bar and spell_bar.visible:
 		var spell_rect = spell_bar.get_global_rect()
 		if spell_rect.has_point(mouse_pos):
+			return true
+
+	if battle_speed_bar and battle_speed_bar.visible:
+		var speed_rect = battle_speed_bar.get_global_rect()
+		if speed_rect.has_point(mouse_pos):
 			return true
 	
 	if scrap_buffer_bar and scrap_buffer_bar.visible:

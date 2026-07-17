@@ -52,6 +52,18 @@ func remove_spell_at(slot: SpellBarSlot) -> void:
 		slot.spell_inst.queue_free()
 	slot.clear_slot()
 
+
+## Clear slot UI without freeing the spell instance (used when buffering casts during soft pause).
+func detach_spell_at(slot: SpellBarSlot) -> Base_Spell:
+	if not slot or slot.is_empty():
+		return null
+	var spell: Base_Spell = slot.spell_inst
+	if is_instance_valid(spell):
+		spell.clear_preview()
+	slot.clear_slot()
+	return spell
+
+
 func get_first_empty_slot() -> SpellBarSlot:
 	for slot in slots:
 		if slot.is_empty():

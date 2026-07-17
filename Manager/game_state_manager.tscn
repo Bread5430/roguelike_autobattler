@@ -71,7 +71,7 @@ rows = 5
 visible = true
 MAX_SLOTS = 5
 
-[node name="TacticalCursor" parent="UICanvas/Gui" index="8"]
+[node name="TacticalCursor" parent="UICanvas/Gui" index="9"]
 mouse_filter = 2
 
 [node name="PauseMenu" parent="UICanvas" instance=ExtResource("14_pause")]
