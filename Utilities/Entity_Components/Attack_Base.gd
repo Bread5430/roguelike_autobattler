@@ -23,12 +23,15 @@ func _ready() -> void:
 func in_range() -> bool:
 	if not _target_is_valid_for_attack():
 		return false
-		
-	# Subtract the collision circle radius for both the target and the attacker
-	# For the case when melee units have range smaller than the target's collision
-	return (target_unit.position - unit.position).length_squared() - \
-	 target_unit.coll_circle.shape.get_radius() ** 2 - unit.coll_circle.shape.get_radius() ** 2 \
-		< attack_range ** 2
+	# Edge-to-edge: gap between collision circles must be within attack_range.
+	# Matches placement range preview (circle radius = attack_range + own coll radius).
+	var dist: float = (target_unit.position - unit.position).length()
+	var r_sum: float = 0.0
+	if unit.coll_circle != null and unit.coll_circle.shape is CircleShape2D:
+		r_sum += (unit.coll_circle.shape as CircleShape2D).radius
+	if target_unit.coll_circle != null and target_unit.coll_circle.shape is CircleShape2D:
+		r_sum += (target_unit.coll_circle.shape as CircleShape2D).radius
+	return dist - r_sum < float(attack_range)
 
 func check_new_targets() -> bool:
 	var frame := Engine.get_physics_frames()

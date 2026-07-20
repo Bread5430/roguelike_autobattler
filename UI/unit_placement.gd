@@ -37,6 +37,11 @@ var curr_mouse_tile : Vector2
 var isValid = false
 var rotated_placement : bool = false
 
+## Cached attack preview stats for the currently selected unit card.
+var _cached_stats_card_id: String = ""
+var _cached_is_melee: bool = true
+var _cached_attack_range: float = 0.0
+
 
 func setup(p_gui, p_battle_manager: Control, p_unit_board: GridContainer, p_inventory: Inventory, p_gsm, p_enemy_spawner: Node) -> void:
 	gui = p_gui
@@ -64,18 +69,25 @@ func init_grid() -> void:
 func begin_deployment() -> void:
 	clear_placement_grid()
 	_spawn_static_routers()
+	_clear_placement_indicators_preview()
 
 
 func reset_current_selection() -> void:
 	curr_unit = null
 	curr_unit_inst = null
 	objectCells.clear()
+	_clear_placement_stat_cache()
+	_clear_placement_indicators_preview()
 
 
 func set_current_unit(slot: InventorySlot) -> void:
 	curr_inv_slot = slot
 	curr_unit = slot.item
 	curr_unit_inst = slot.item_inst
+	_refresh_placement_stat_cache()
+	# Force hover recompute so indicators appear immediately on card select.
+	targetCell = null
+	process_hover()
 
 
 func handle_rotate() -> void:
@@ -105,9 +117,11 @@ func process_hover() -> void:
 			curr_unit_inst.global_position = targetCell.global_position + curr_unit_inst.texture.get_size() * curr_unit_inst.scale / 2
 			objectCells = _get_object_cells()
 			isValid = _check_and_highlight_cells(objectCells)
+			_update_placement_indicators_preview()
 		else:
 			objectCells = [new_target]
 			new_target.change_color(Color.YELLOW)
+			_clear_placement_indicators_preview()
 
 
 func _clear_preview_highlight() -> void:
@@ -115,6 +129,7 @@ func _clear_preview_highlight() -> void:
 		_reset_highlight(objectCells)
 	objectCells.clear()
 	isValid = false
+	_clear_placement_indicators_preview()
 
 
 # =============================================================================
@@ -139,11 +154,14 @@ func handle_board_click(mb: InputEventMouseButton, world_pos: Vector2) -> void:
 			objectCells = [anchor_cell]
 			anchor_cell.change_color(Color.YELLOW)
 			isValid = false
+			_clear_placement_indicators_preview()
 			return
 		objectCells = _get_object_cells_for_anchor(anchor_cell)
 		isValid = _check_and_highlight_cells(objectCells)
 		if isValid:
 			_place_unit()
+		else:
+			_update_placement_indicators_preview()
 	elif mb.button_index == MOUSE_BUTTON_RIGHT:
 		var mouse_tile_int = Vector2i(anchor_cell.board_position)
 		# Static routers are permanent fixtures and cannot be removed.
@@ -321,6 +339,9 @@ func clear_board_enemy_units() -> void:
 	for child in up.get_children():
 		if child is Base_Unit and not (child as Base_Unit).faction:
 			child.queue_free()
+	var indicators = _get_placement_indicators()
+	if indicators:
+		indicators.clear_enemy_packs()
 
 
 func load_formation_rows_on_player_board(rows: Array) -> int:
@@ -459,11 +480,13 @@ func _place_unit():
 	if curr_unit_inst is Unit_Card:
 		_spend_scrap_for_card(curr_unit_inst as Unit_Card)
 	_reset_highlight(objectCells)
+	_clear_placement_indicators_preview()
 
 	# Allow the player to keep placing this unit as long as there still are cards left
 	if curr_inv_slot.remove_item(1) == false:
 		curr_unit = null
 		curr_unit_inst = null
+		_clear_placement_stat_cache()
 		if gui.selector_rect_debug:
 			gui.selector_rect = Rect2(0,0,0,0)
 
@@ -471,6 +494,7 @@ func _place_unit():
 	else:
 		# Visually mark that you cannot keep placing here
 		_check_and_highlight_cells(objectCells)
+		_update_placement_indicators_preview()
 
 	isValid = false
 
@@ -626,3 +650,93 @@ func get_unit_at_tile(tile: Vector2i): # Returns PackedScene unit ref, left corn
 func _get_world_mouse_position() -> Vector2:
 	var vp = get_viewport()
 	return vp.get_canvas_transform().affine_inverse() * vp.get_mouse_position()
+
+
+# =============================================================================
+# PLACEMENT INDICATORS (range + targeting lines)
+# =============================================================================
+
+func _get_placement_indicators() -> PlacementIndicators:
+	if battle_manager == null:
+		return null
+	return battle_manager.get_node_or_null("PlacementIndicators") as PlacementIndicators
+
+
+func _board_cell_size() -> Vector2:
+	return Vector2(unit_board.cellWidth, unit_board.cellHeight)
+
+
+func _clear_placement_indicators_preview() -> void:
+	var indicators = _get_placement_indicators()
+	if indicators:
+		indicators.clear_preview()
+
+
+func _clear_placement_stat_cache() -> void:
+	_cached_stats_card_id = ""
+	_cached_is_melee = true
+	_cached_attack_range = 0.0
+
+
+func _refresh_placement_stat_cache() -> void:
+	_clear_placement_stat_cache()
+	if curr_unit_inst == null or not curr_unit_inst is Unit_Card:
+		return
+	var card: Unit_Card = curr_unit_inst as Unit_Card
+	if card.related_unit == null:
+		return
+	var probe = card.related_unit.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+	if not probe is Base_Unit:
+		probe.queue_free()
+		return
+	var unit: Base_Unit = probe as Base_Unit
+	var card_id: String = card.item_name
+	if not card_id.is_empty():
+		unit.apply_upgrade_from_card(card_id)
+		unit.apply_upgrade_abilities_after_ready()
+	_cached_is_melee = unit.is_melee
+	var coll_radius: float = 0.0
+	var coll_shape_node = unit.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if coll_shape_node != null and coll_shape_node.shape is CircleShape2D:
+		coll_radius = (coll_shape_node.shape as CircleShape2D).radius
+	for c in unit.get_children():
+		if c is Attack_Base:
+			# Preview radius from unit center matches Attack_Base.in_range edge-to-edge
+			# reach against a point target: attack_range + own collision radius.
+			_cached_attack_range = float((c as Attack_Base).attack_range) + coll_radius
+			break
+	_cached_stats_card_id = card_id
+	probe.queue_free()
+
+
+func _update_placement_indicators_preview() -> void:
+	if gui == null or not gui.deployment_mode:
+		_clear_placement_indicators_preview()
+		return
+	if curr_unit_inst == null or not curr_unit_inst is Unit_Card or objectCells.is_empty():
+		_clear_placement_indicators_preview()
+		return
+	var indicators = _get_placement_indicators()
+	if indicators == null:
+		return
+	var card: Unit_Card = curr_unit_inst as Unit_Card
+	var footprint: Vector2 = card.rotated_placement_size if rotated_placement else card.placement_size
+	var vecs: Array = card.rotated_vectors if rotated_placement else card.placement_vectors
+	var anchor: Vector2 = objectCells[0].global_position
+	var cell: Vector2 = _board_cell_size()
+	var is_multi: bool = card.num_units > 1
+	var player_points: Array[Vector2] = PlacementIndicators.compute_pack_points(
+		anchor, footprint, cell, is_multi
+	)
+	var player_center: Vector2 = PlacementIndicators.footprint_center(anchor, footprint, cell)
+	var unit_worlds: Array[Vector2] = []
+	for v in vecs:
+		# Match BattleManager.add_unit_to_board (square cells: scale by cellHeight).
+		unit_worlds.append(anchor + v * cell.y)
+	indicators.update_preview(
+		player_points,
+		player_center,
+		unit_worlds,
+		_cached_is_melee,
+		_cached_attack_range
+	)

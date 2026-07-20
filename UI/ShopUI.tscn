@@ -137,14 +137,15 @@ color = Color(0, 0, 0, 0.45)
 
 [node name="ScrapPanel" type="PanelContainer" parent="ScrapOverlay"]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -200.0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -420.0
 offset_top = 24.0
-offset_right = 200.0
-offset_bottom = 140.0
-grow_horizontal = 2
+offset_right = -20.0
+offset_bottom = 160.0
+grow_horizontal = 0
+mouse_filter = 0
 
 [node name="Margin" type="MarginContainer" parent="ScrapOverlay/ScrapPanel"]
 layout_mode = 2
@@ -165,10 +166,10 @@ horizontal_alignment = 1
 
 [node name="ScrapHint" type="Label" parent="ScrapOverlay/ScrapPanel/Margin/VBox"]
 layout_mode = 2
-text = "Open your inventory and click an item to scrap all copies."
+text = "Click an inventory item to scrap all copies, or leave without scrapping."
 autowrap_mode = 2
 horizontal_alignment = 1
 
 [node name="ReturnButton" type="Button" parent="ScrapOverlay/ScrapPanel/Margin/VBox"]
 layout_mode = 2
-text = "Return to shop"
+text = "Leave Scraper"

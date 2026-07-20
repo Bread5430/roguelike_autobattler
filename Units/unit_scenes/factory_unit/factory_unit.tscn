@@ -101,6 +101,7 @@ unit_glossary_id = "factory"
 max_hp = 100
 base_damage = 10
 base_speed = 20
+is_melee = false
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 scale = Vector2(1.5, 1.5)

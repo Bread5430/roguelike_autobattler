@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://b2hkuu4ohgbnk"]
+[gd_scene load_steps=12 format=3 uid="uid://b2hkuu4ohgbnk"]
 
 [ext_resource type="Script" uid="uid://cuad6lpso0q62" path="res://Manager/battle_manager.gd" id="1_c6fe6"]
 [ext_resource type="Script" uid="uid://dxavhucjkx8u3" path="res://Manager/battle_manager_components/TargetManager.gd" id="2_7x82o"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://bqo443bjdc1tg" path="res://Manager/battle_manager_components/enemy_spawner.gd" id="9_tj47k"]
 [ext_resource type="Script" uid="uid://8kd63ykwghfx" path="res://Manager/battle_manager_components/beacon_controller.gd" id="10_beacon"]
 [ext_resource type="Script" uid="uid://bjhj2sqjuk5l3" path="res://Manager/battle_manager_components/battle_speed_controller.gd" id="11_speed"]
+[ext_resource type="Script" uid="uid://ba4hpnaihvbck" path="res://Utilities/placement_indicators.gd" id="12_place"]
 
 [node name="BattleManager" type="Control" groups=["BATTLEMANAGER"]]
 layout_mode = 3
@@ -58,6 +59,10 @@ waypoint_arrive_distance = 10.0
 
 [node name="BattleSpeedController" type="Node" parent="."]
 script = ExtResource("11_speed")
+
+[node name="PlacementIndicators" type="Node2D" parent="."]
+z_index = 20
+script = ExtResource("12_place")
 
 [connection signal="timeout" from="flow_visualizer/Redraw_Timer" to="flow_visualizer" method="_on_redraw_timer_timeout"]
 [connection signal="timeout" from="Manager_Update" to="." method="_on_manager_update_timeout"]

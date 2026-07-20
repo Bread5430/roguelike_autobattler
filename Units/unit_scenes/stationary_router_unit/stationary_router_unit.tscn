@@ -99,6 +99,7 @@ script = ExtResource("2_p8xm2")
 ally_death_stun_duration = 10.0
 unit_glossary_id = "static_router_unit"
 max_hp = 40
+is_melee = false
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)

@@ -99,6 +99,7 @@ script = ExtResource("3_root")
 unit_glossary_id = "ranged_template"
 max_hp = 5
 base_speed = 35
+is_melee = false
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)

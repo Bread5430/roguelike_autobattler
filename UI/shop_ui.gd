@@ -60,6 +60,7 @@ func open(stock: Dictionary, gold: int, components: int) -> void:
 	_panel_visible = true
 	_scrap_mode = false
 	_scrap_overlay.visible = false
+	_set_scrap_pass_through(false)
 	_build_slot_rows()
 	_update_currency_labels(gold, components)
 	_update_refresh_button(gold)
@@ -104,6 +105,9 @@ func enter_scrap_mode() -> void:
 		return
 	_scrap_mode = true
 	_scrap_overlay.visible = true
+	# Inventory is brought to the front for item clicks; keep shop chrome
+	# pass-through so only the scrap return panel captures mouse.
+	_set_scrap_pass_through(true)
 	_set_shop_controls_enabled(false)
 	scrap_mode_entered.emit()
 
@@ -113,6 +117,7 @@ func exit_scrap_mode() -> void:
 		return
 	_scrap_mode = false
 	_scrap_overlay.visible = false
+	_set_scrap_pass_through(false)
 	_set_shop_controls_enabled(true)
 	scrap_mode_exited.emit()
 
@@ -214,6 +219,23 @@ func _set_panel_visible(show_panel: bool) -> void:
 			_passthrough_helper.block_input()
 	elif _passthrough_helper:
 		_passthrough_helper.unblock_input()
+
+
+func _set_scrap_pass_through(enabled: bool) -> void:
+	# While scrapping, inventory sits above most of the shop. Ignore mouse on
+	# the shop chrome so inventory stays clickable, but keep ScrapPanel STOP
+	# so "Leave Scraper" remains reachable even when overlapping the grid.
+	var filter = Control.MOUSE_FILTER_IGNORE if enabled else Control.MOUSE_FILTER_STOP
+	mouse_filter = filter
+	_backdrop.mouse_filter = filter
+	_main_panel.mouse_filter = filter
+	_scrap_overlay.mouse_filter = filter
+	_scrap_backdrop.mouse_filter = filter
+	_scrap_overlay.get_node("ScrapPanel").mouse_filter = Control.MOUSE_FILTER_STOP
+	_scrap_return_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	if enabled:
+		move_to_front()
+		_scrap_overlay.move_to_front()
 
 
 func _set_shop_controls_enabled(enabled: bool) -> void:

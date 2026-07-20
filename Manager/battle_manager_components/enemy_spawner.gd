@@ -194,8 +194,17 @@ func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -
 	var placement = unit_item_inst.get_placement(false)
 
 	bm.add_unit_to_board(unit_item_inst, world_spawn_pos, placement[1], false)
+	_register_enemy_pack_points(world_spawn_pos, placement[0], unit_item_inst.num_units > 1)
 	unit_item_inst.queue_free()
 	return spawn_pos
+
+
+func _register_enemy_pack_points(anchor: Vector2, footprint_size: Vector2, is_multi: bool) -> void:
+	if bm == null or not bm.placement_indicators:
+		return
+	var board = bm.get_node("BoardUI")
+	var cell = Vector2(board.cellWidth, board.cellHeight)
+	bm.placement_indicators.register_enemy_pack(anchor, footprint_size, cell, is_multi)
 
 
 ## Enemy formations are authored in BoardUI tile coordinates.
@@ -209,6 +218,8 @@ func _board_grid_to_world(coord: Vector2i) -> Vector2:
 
 ## Dev / console: spawn an arbitrary formation list (e.g. from FORMATION_MAP.formation_lookup).
 func spawn_formation_rows(rows: Array) -> int:
+	if bm and bm.placement_indicators:
+		bm.placement_indicators.clear_enemy_packs()
 	var seen_groups := {}
 	var n := 0
 	for parsed in rows:

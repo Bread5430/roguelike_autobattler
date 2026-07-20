@@ -103,6 +103,7 @@ deployment_exclusion_radius = 180.0
 unit_glossary_id = "router_unit"
 max_hp = 20
 base_speed = 35
+is_melee = false
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)

@@ -100,6 +100,7 @@ script = ExtResource("2_6m7fj")
 unit_glossary_id = "splash_template"
 max_hp = 5
 base_speed = 100
+is_melee = false
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)

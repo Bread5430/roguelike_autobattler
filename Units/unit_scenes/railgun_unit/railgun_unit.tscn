@@ -100,6 +100,7 @@ script = ExtResource("2_shooter")
 unit_glossary_id = "railgun_unit"
 max_hp = 5
 base_speed = 100
+is_melee = false
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 sprite_frames = SubResource("SpriteFrames_louiq")

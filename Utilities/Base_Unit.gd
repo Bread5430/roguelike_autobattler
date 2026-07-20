@@ -41,6 +41,8 @@ var extra_attack_speed_mult : float = 1.0
 
 @export var spawn_position : Vector2
 @export var faction : bool
+## True for melee contact units; false for ranged (placement range preview uses this).
+@export var is_melee : bool = true
 
 ## --- Status effects ---
 var _status_effect_instances: Dictionary = {} ## String -> StatusEffectInstance

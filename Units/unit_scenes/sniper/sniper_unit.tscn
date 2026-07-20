@@ -98,6 +98,7 @@ unit_glossary_id = "sniper_unit"
 max_hp = 5
 base_damage = 10
 base_speed = 30
+is_melee = false
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(1, 0)

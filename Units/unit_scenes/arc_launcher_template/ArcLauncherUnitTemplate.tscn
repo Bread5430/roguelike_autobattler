@@ -7,6 +7,7 @@
 [node name="ArcLauncherUnitTemplate" instance=ExtResource("1_v3f1o")]
 unit_glossary_id = "arc_launcher"
 base_damage = 1
+is_melee = false
 
 [node name="Ranged_Attack" parent="." index="5"]
 script = ExtResource("2_xu6uc")

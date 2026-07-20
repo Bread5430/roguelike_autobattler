@@ -22,13 +22,24 @@ func set_slot_invisible():
 
 func set_item (itemID : String, new_item : PackedScene, count : int):
 	if new_item == null:
+		if item_inst and is_instance_valid(item_inst):
+			item_inst.queue_free()
 		item = null
 		item_inst = null
+		item_name = ""
+		quantity = 0
+		if button_icon:
+			button_icon.visible = false
+			button_icon.texture = null
+		if quantity_text:
+			quantity_text.text = ""
 		if scrap_cost_text:
 			scrap_cost_text.visible = false
 			scrap_cost_text.text = ""
 		return
-		
+
+	if item_inst and is_instance_valid(item_inst):
+		item_inst.queue_free()
 	item_name = itemID
 	item = new_item
 	item_inst = item.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)

@@ -540,6 +540,10 @@ func _on_shop_refresh_requested() -> void:
 
 func _on_shop_scrap_mode_entered() -> void:
 	inventory.set_scrap_mode(true)
+	# Inventory opens first; re-assert shop scrap panel on top so Leave/Return
+	# remains clickable while inventory slots still receive pass-through clicks.
+	if shop_ui:
+		shop_ui.move_to_front()
 
 
 func _on_shop_scrap_mode_exited() -> void:
@@ -623,6 +627,8 @@ func _on_end_prep_pressed() -> void:
 	end_prep.hide()
 	end_prep.disabled = true
 	toggle_inventory(false)
+	if unit_placement:
+		unit_placement.reset_current_selection()
 	preperation_ended.emit()
 
 

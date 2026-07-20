@@ -101,6 +101,7 @@ unit_glossary_id = "arc_template"
 max_hp = 10
 base_damage = 2
 base_speed = 100
+is_melee = false
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(0, -1)

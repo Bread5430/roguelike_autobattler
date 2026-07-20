@@ -19,6 +19,7 @@ var tile_map_size : Vector2i
 @onready var proj_pool = $Proj_Pool
 @onready var beacon_controller: BeaconController = $BeaconController
 @onready var battle_speed_controller: BattleSpeedController = $BattleSpeedController
+@onready var placement_indicators: PlacementIndicators = $PlacementIndicators
 #@onready var viewport = $Viewport
 
 ## Set by GUI for beacon spell validation (selected ally near path start).
@@ -41,6 +42,8 @@ var _factory_destroyed_handled: bool = false
 
 func setup_battle(battle_params : Dictionary):
 	"""Generate enemies for the current battle"""
+	if placement_indicators:
+		placement_indicators.clear_all()
 	if battle_params.has("stage") and battle_params.has("difficulty"):
 		var modifiers := {
 			"is_blockade": battle_params.get("is_blockade", false),
@@ -60,6 +63,8 @@ func clear_battlefield():
 	"""Clear all units from the battlefield and return active projectiles so they don't linger."""
 	proj_pool.return_all_active()
 	beacon_controller.clear_all()
+	if placement_indicators:
+		placement_indicators.clear_all()
 	for child in unit_parent.get_children():
 		child.queue_free()
 	_clear_unit_tile_grids()
@@ -67,6 +72,8 @@ func clear_battlefield():
 	_factory_destroyed_handled = false
 
 func start_battle():
+	if placement_indicators:
+		placement_indicators.clear_preview()
 	if battle_speed_controller:
 		battle_speed_controller.set_combat_speed(1.0)
 	manager_timer.start()
