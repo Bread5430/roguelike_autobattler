@@ -9,8 +9,9 @@ func do_attack():
 
 
 func _apply_post_hit_status_effects() -> void:
-	var stack_key = "vulnurability"
-	target_unit.apply_status_effect(StatusEffectLibrary.damage_vulnerability(), stack_key, 1, -1.0)
+	# No longer apply vulnerability
+	#var stack_key = "vulnurability"
+	#target_unit.apply_status_effect(StatusEffectLibrary.damage_vulnerability(), stack_key, 1, -1.0)
 	if unit.get("applies_infested") == true:
 		target_unit.apply_status_effect(
 			StatusEffectLibrary.infested(),
