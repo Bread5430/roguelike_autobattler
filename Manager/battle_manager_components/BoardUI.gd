@@ -1,6 +1,9 @@
 
 extends GridContainer
 
+## Top and bottom board rows treated as side strips (stun corridor / formation mirror).
+const SIDE_ROWS : int = 3
+
 @export var width := 5:
 	set(value): 
 		width = value
@@ -38,7 +41,16 @@ extends GridContainer
 		_remove_grid()
 		_create_grid()
 
+## Logical board coordinate offset applied to BoardSlot.board_position.
+## Side strips sit outside the main board vertically: top strip maps to
+## y -SIDE_ROWS..-1, bottom strip to y height..height+SIDE_ROWS-1.
+@export var board_position_offset : Vector2i = Vector2i.ZERO
+
 @export var GRID_CELL : PackedScene
+
+func is_side_row(y: int) -> bool:
+	return y < SIDE_ROWS or y >= height - SIDE_ROWS
+
 
 func _create_grid():
 	add_theme_constant_override("h_separation", borderSize)
@@ -50,7 +62,7 @@ func _create_grid():
 	for i in width * height:
 		var gridCellNode : BoardSlot = GRID_CELL.instantiate()
 		gridCellNode.custom_minimum_size = Vector2(cellWidth, cellHeight)
-		gridCellNode.set_board_position(Vector2(i % width, int(i / width)))
+		gridCellNode.set_board_position(Vector2(i % width + board_position_offset.x, int(i / width) + board_position_offset.y))
 		add_child(gridCellNode)
 
 func _remove_grid():

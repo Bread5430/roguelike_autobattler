@@ -12,6 +12,8 @@ var tile_map_size : Vector2i
 @onready var flow_gen = $FlowGen
 @onready var target_man = $TargetManager
 @onready var board_tiles = $BoardUI
+@onready var side_strip_top_tiles = $SideStripTop
+@onready var side_strip_bottom_tiles = $SideStripBottom
 @onready var enemy_spawner = $Enemy_Spawner
 @onready var manager_timer = $Manager_Update
 @onready var flow_visualizer = $flow_visualizer
@@ -57,6 +59,10 @@ func setup_battle(battle_params : Dictionary):
 	#else:
 	
 	board_tiles.visible = true
+	if side_strip_top_tiles:
+		side_strip_top_tiles.visible = true
+	if side_strip_bottom_tiles:
+		side_strip_bottom_tiles.visible = true
 
 	
 func clear_battlefield():
@@ -79,7 +85,42 @@ func start_battle():
 	manager_timer.start()
 	flow_visualizer.redraw_timer.start()
 	board_tiles.visible = false
+	if side_strip_top_tiles:
+		side_strip_top_tiles.visible = false
+	if side_strip_bottom_tiles:
+		side_strip_bottom_tiles.visible = false
+	_apply_side_tile_debuffs_to_player_units()
 	set_unit_start_stop(true)
+
+
+## Player units starting in BoardUI side strips get a short stun + damage vulnerability.
+func _apply_side_tile_debuffs_to_player_units() -> void:
+	if side_strip_top_tiles == null or side_strip_bottom_tiles == null:
+		return
+	var cell_w = float(side_strip_top_tiles.cellWidth)
+	var cell_h = float(side_strip_top_tiles.cellHeight)
+	if cell_w <= 0.0 or cell_h <= 0.0:
+		return
+	var top_rect : Rect2 = Rect2(
+		side_strip_top_tiles.global_position,
+		Vector2(float(side_strip_top_tiles.width) * cell_w, float(side_strip_top_tiles.height) * cell_h)
+	)
+	var bottom_rect : Rect2 = Rect2(
+		side_strip_bottom_tiles.global_position,
+		Vector2(float(side_strip_bottom_tiles.width) * cell_w, float(side_strip_bottom_tiles.height) * cell_h)
+	)
+	for child in unit_parent.get_children():
+		if not child is Base_Unit:
+			continue
+		var unit : Base_Unit = child
+		if not unit.faction:
+			continue
+		if not (top_rect.has_point(unit.position) or bottom_rect.has_point(unit.position)):
+			continue
+		unit.apply_status_effect(StatusEffectLibrary.stunned(), "side_tile_stun", 1, 3.0)
+		var vul = StatusEffectLibrary.damage_vulnerability()
+		vul.dmg_taken_mult_per_stack = 1.5
+		unit.apply_status_effect(vul, "side_tile_vuln", 1, 3.0)
 
 
 func end_battle(victory: bool = true) -> void:
@@ -239,20 +280,26 @@ func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vect
 		this_inst.post_ready()
 	
 func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
+	var cell_w = float(board_tiles.cellWidth)
+	var cell_h = float(board_tiles.cellHeight)
+	var side_h = 3
+	var origin: Vector2
+	if top_corner.y < 0 and side_strip_top_tiles:
+		# Top strip logical y is -side_h .. -1
+		var local_y = top_corner.y + side_h
+		origin = side_strip_top_tiles.global_position + Vector2(top_corner.x * cell_w, local_y * cell_h)
+	elif top_corner.y >= int(board_tiles.height) and side_strip_bottom_tiles:
+		# Bottom strip logical y is height .. height+side_h-1
+		var local_y = top_corner.y - int(board_tiles.height)
+		origin = side_strip_bottom_tiles.global_position + Vector2(top_corner.x * cell_w, local_y * cell_h)
+	else:
+		origin = board_tiles.global_position + Vector2(top_corner.x * cell_w, top_corner.y * cell_h)
+
+	var footprint : Rect2 = Rect2(origin, Vector2(size.x * cell_w, size.y * cell_h))
 	for u in unit_parent.get_children():
 		if not u is Base_Unit:
 			continue
-		var unit_pos := (u as Base_Unit).position
-		# Subtract the board's own offset (BoardUI.start_offset) so the result is
-		# a logical, 0-indexed board tile matching top_corner/unit_board_space_map.
-		var local_pos : Vector2 = unit_pos - board_tiles.global_position
-		var unit_tile := Vector2i(
-			int(local_pos.x / board_tiles.cellHeight),
-			int(local_pos.y / board_tiles.cellHeight)
-		)
-		var in_x := unit_tile.x >= top_corner.x and unit_tile.x < top_corner.x + int(size.x)
-		var in_y := unit_tile.y >= top_corner.y and unit_tile.y < top_corner.y + int(size.y)
-		if in_x and in_y:
+		if footprint.has_point((u as Base_Unit).position):
 			u.queue_free()
 
 

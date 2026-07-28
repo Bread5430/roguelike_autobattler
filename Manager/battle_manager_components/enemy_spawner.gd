@@ -17,6 +17,9 @@ extends Node
 
 var bm
 
+# Top/bottom number of rows that are treated as side slots for stuns/vulnerability.
+const SIDE_ROWS : int = 3
+
 # This should be set to size of player board + small buffer (1 or 2 cells)
 # Need to ensure that player towers are physically close to enemy units to be threatened
 @export var grid_size := Vector2i(20, 0) 
@@ -50,14 +53,14 @@ func get_enemy_spawns(stage: int, difficulty: String, modifiers: Dictionary = {}
 	var seen_groups = {}
 	
 	for parsed in formation:
-		var spawn_pos : Vector2 = spawn_single_formation_entry(parsed, seen_groups)
+		var spawn_pos = spawn_single_formation_entry(parsed, seen_groups)
 		if spawn_pos != null:
 			all_spawn_positions.append(spawn_pos)
 	
 	if modifiers.get("is_blockade", false) or modifiers.get("is_chaser_pressured_exit", false):
 		var bonus_formation = FORMATION_MAP.random_formation("light")
 		for parsed in bonus_formation:
-			var spawn_pos : Vector2 = spawn_single_formation_entry(parsed, seen_groups)
+			var spawn_pos = spawn_single_formation_entry(parsed, seen_groups)
 			if spawn_pos != null:
 				all_spawn_positions.append(spawn_pos)
 	
@@ -173,12 +176,14 @@ func pick_unit_scene_for_entry(parsed: Dictionary, seen_groups: Dictionary) -> P
 
 
 ## Spawns one formation entry as enemies. Returns spawn grid position on success, or null.
+## Side-row formation entries (top/bottom SIDE_ROWS) are also mirrored onto the
+## player-side board at the authored (x, y) cell as additional enemies.
 func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -> Variant:
 	if parsed.is_empty():
 		push_warning("Malformed Formation")
 		return null
 
-	var selected_unit_scene := pick_unit_scene_for_entry(parsed, seen_groups)
+	var selected_unit_scene = pick_unit_scene_for_entry(parsed, seen_groups)
 	if not selected_unit_scene:
 		return null
 
@@ -189,12 +194,41 @@ func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -
 		return null
 	unit_item_inst.setup_unit()
 
-	var spawn_pos := Vector2i(int(parsed["x"]), int(parsed["y"])) + grid_size
-	var world_spawn_pos := _board_grid_to_world(spawn_pos)
+	var local_x = int(parsed["x"])
+	var local_y = int(parsed["y"])
 	var placement = unit_item_inst.get_placement(false)
+	var placement_size : Vector2 = placement[0]
+	var footprint_h : int = int(placement_size.y)
+
+	var board = bm.get_node("BoardUI")
+	var board_height : int = int(board.height)
+	var in_top_side_band : bool = local_y < SIDE_ROWS
+	var in_bottom_side_band : bool = local_y >= board_height - SIDE_ROWS
+	var is_side_band : bool = in_top_side_band or in_bottom_side_band
+
+	# Validate side-slot placements: the unit footprint must not expand
+	# outside the 3-row side band (top or bottom).
+	if is_side_band:
+		if in_top_side_band:
+			if local_y + footprint_h > SIDE_ROWS:
+				unit_item_inst.queue_free()
+				return null
+		elif local_y + footprint_h > board_height:
+			unit_item_inst.queue_free()
+			return null
+
+	var spawn_pos : Vector2i = Vector2i(local_x, local_y) + grid_size
+	var world_spawn_pos = _board_grid_to_world(spawn_pos)
 
 	bm.add_unit_to_board(unit_item_inst, world_spawn_pos, placement[1], false)
 	_register_enemy_pack_points(world_spawn_pos, placement[0], unit_item_inst.num_units > 1)
+
+	if is_side_band:
+		var mirror_pos : Vector2i = Vector2i(local_x, local_y)
+		var mirror_world = _board_grid_to_world(mirror_pos)
+		bm.add_unit_to_board(unit_item_inst, mirror_world, placement[1], false)
+		_register_enemy_pack_points(mirror_world, placement[0], unit_item_inst.num_units > 1)
+
 	unit_item_inst.queue_free()
 	return spawn_pos
 

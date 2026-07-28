@@ -8,11 +8,14 @@ class_name UnitPlacement
 
 ## Item id (Data/items.csv) for the unremovable static routers spawned on the player board at battle start.
 const STATIC_ROUTER_CARD_ID := "static_router_card"
+const SIDE_ROWS : int = 3
 
 # References resolved by the GUI in setup().
 var gui  # GUI root (Control with the GUI.gd script); untyped for dynamic property access.
 var battle_manager: Control
 var unit_board: GridContainer
+var side_strip_top_board: GridContainer
+var side_strip_bottom_board: GridContainer
 var inventory: Inventory
 var gsm
 var enemy_spawner: Node
@@ -47,6 +50,8 @@ func setup(p_gui, p_battle_manager: Control, p_unit_board: GridContainer, p_inve
 	gui = p_gui
 	battle_manager = p_battle_manager
 	unit_board = p_unit_board
+	side_strip_top_board = battle_manager.get_node_or_null("SideStripTop") as GridContainer
+	side_strip_bottom_board = battle_manager.get_node_or_null("SideStripBottom") as GridContainer
 	inventory = p_inventory
 	gsm = p_gsm
 	enemy_spawner = p_enemy_spawner
@@ -56,10 +61,27 @@ func init_grid() -> void:
 	unit_board_height = unit_board.height
 	unit_board_width = unit_board.width
 	unit_board_space_map.clear()
+	# Space map covers main board y 0..height-1 plus side strips at
+	# y -SIDE_ROWS..-1 (top) and y height..height+SIDE_ROWS-1 (bottom).
+	# Index with _space_map_y(logical_y).
+	var map_height = unit_board_height + 2 * SIDE_ROWS
 	for i in unit_board_width:
 		unit_board_space_map.append([])
-		for j in unit_board_height:
+		for j in map_height:
 			unit_board_space_map[i].append(null)
+
+
+## Convert logical board y (may be negative for the top strip) to space-map index.
+func _space_map_y(logical_y: int) -> int:
+	return logical_y + SIDE_ROWS
+
+
+func _is_valid_logical_tile(tile: Vector2i) -> bool:
+	if tile.x < 0 or tile.x >= unit_board_width:
+		return false
+	if tile.y < -SIDE_ROWS or tile.y >= unit_board_height + SIDE_ROWS:
+		return false
+	return true
 
 
 # =============================================================================
@@ -191,7 +213,10 @@ func remove_from_board(top_corner: Vector2i, size: Vector2) -> void:
 	_remove_placed_router_exclusion_if_matches(top_corner, size)
 	for x in size.x:
 		for y in size.y:
-			unit_board_space_map[top_corner.x + x][top_corner.y + y] = null
+			var lx = top_corner.x + int(x)
+			var ly = top_corner.y + int(y)
+			if _is_valid_logical_tile(Vector2i(lx, ly)):
+				unit_board_space_map[lx][_space_map_y(ly)] = null
 
 	var reset_cells = _get_cells_in_rect(top_corner, size)
 	for cell in reset_cells:
@@ -292,15 +317,17 @@ func refund_units_after_battle() -> void:
 	# Refund deployed units back to inventory and reset the placement grid.
 	if inventory:
 		var counts_by_scene: Dictionary = {} # PackedScene -> int
+		var map_height = unit_board_height + 2 * SIDE_ROWS
 		for x in unit_board_width:
-			for y in unit_board_height:
-				var entry = unit_board_space_map[x][y]
+			for map_y in map_height:
+				var entry = unit_board_space_map[x][map_y]
 				if entry == null:
 					continue
 				# entry = [unit_ref, top_corner, size]
 				var unit_ref: PackedScene = entry[0]
 				var top_corner: Vector2i = entry[1]
-				if top_corner.x != x or top_corner.y != y:
+				var logical_y = map_y - SIDE_ROWS
+				if top_corner.x != x or top_corner.y != logical_y:
 					continue # only count once per placed unit
 				counts_by_scene[unit_ref] = int(counts_by_scene.get(unit_ref, 0)) + 1
 
@@ -422,14 +449,21 @@ func place_unit_card_programmatic(p_scene: PackedScene, top_left: Vector2i, rota
 
 func clear_placement_grid() -> void:
 	_placed_router_exclusions.clear()
+	var map_height = unit_board_height + 2 * SIDE_ROWS
 	for i in unit_board_width:
-		for j in unit_board_height:
+		for j in map_height:
 			unit_board_space_map[i][j] = null
-	var default_slot_color = Color(0.5, 0.5, 0.5, 0.5)
-	for cell in unit_board.get_children():
-		if cell is BoardSlot:
-			cell.full = false
-			cell.change_color(default_slot_color)
+	var boards = []
+	boards.append(unit_board)
+	if side_strip_top_board:
+		boards.append(side_strip_top_board)
+	if side_strip_bottom_board:
+		boards.append(side_strip_bottom_board)
+	for b in boards:
+		for cell in b.get_children():
+			if cell is BoardSlot:
+				cell.full = false
+				cell.change_color(Color(0.5, 0.5, 0.5, 0.5))
 
 
 func _check_and_highlight_cells(cells: Array) -> bool:
@@ -503,7 +537,11 @@ func _place_unit():
 func check_unit_space_availability(top_corner: Vector2, size: Vector2) -> bool:
 	for x in size.x:
 		for y in size.y:
-			if unit_board_space_map[top_corner.x + x][top_corner.y + y] != null:
+			var lx = int(top_corner.x) + int(x)
+			var ly = int(top_corner.y) + int(y)
+			if not _is_valid_logical_tile(Vector2i(lx, ly)):
+				return false
+			if unit_board_space_map[lx][_space_map_y(ly)] != null:
 				return false
 	return true
 
@@ -511,7 +549,10 @@ func check_unit_space_availability(top_corner: Vector2, size: Vector2) -> bool:
 func place_on_board(top_corner: Vector2, size: Vector2, unit_ref: PackedScene) -> void:
 	for x in size.x:
 		for y in size.y:
-			unit_board_space_map[top_corner.x + x][top_corner.y + y] = [unit_ref, top_corner, size]
+			var lx = int(top_corner.x) + int(x)
+			var ly = int(top_corner.y) + int(y)
+			if _is_valid_logical_tile(Vector2i(lx, ly)):
+				unit_board_space_map[lx][_space_map_y(ly)] = [unit_ref, top_corner, size]
 
 
 func _router_exclusion_radius_for_current_unit() -> float:
@@ -555,10 +596,26 @@ func _router_placement_overlaps_exclusion(cells: Array, size: Vector2) -> bool:
 
 
 func _get_board_slot_at_grid(grid_xy: Vector2i) -> BoardSlot:
-	if grid_xy.x < 0 or grid_xy.x >= unit_board_width or grid_xy.y < 0 or grid_xy.y >= unit_board_height:
+	if not _is_valid_logical_tile(grid_xy):
 		return null
-	var idx = grid_xy.x + grid_xy.y * unit_board_width
-	var children = unit_board.get_children()
+	var board: GridContainer
+	var local_y: int
+	if grid_xy.y < 0:
+		# Top strip: logical y -SIDE_ROWS .. -1
+		board = side_strip_top_board
+		local_y = grid_xy.y + SIDE_ROWS
+	elif grid_xy.y >= unit_board_height:
+		# Bottom strip: logical y height .. height+SIDE_ROWS-1
+		board = side_strip_bottom_board
+		local_y = grid_xy.y - unit_board_height
+	else:
+		board = unit_board
+		local_y = grid_xy.y
+
+	if board == null:
+		return null
+	var idx = grid_xy.x + local_y * board.width
+	var children = board.get_children()
 	if idx >= children.size():
 		return null
 	var cell = children[idx]
@@ -567,17 +624,44 @@ func _get_board_slot_at_grid(grid_xy: Vector2i) -> BoardSlot:
 
 ## Returns the BoardSlot at the given world position (transformed coords; works with pan/zoom).
 func _get_cell_at_world_position(world_pos: Vector2) -> BoardSlot:
+	# Main board first.
 	var local = world_pos - unit_board.global_position
 	var tile_x = int(local.x / unit_board.cellWidth)
 	var tile_y = int(local.y / unit_board.cellHeight)
-	if tile_x < 0 or tile_x >= unit_board_width or tile_y < 0 or tile_y >= unit_board_height:
-		return null
-	var idx = tile_x + tile_y * unit_board_width
-	var children = unit_board.get_children()
-	if idx >= children.size():
-		return null
-	var cell = children[idx]
-	return cell as BoardSlot if cell is BoardSlot else null
+	if tile_x >= 0 and tile_x < unit_board_width and tile_y >= 0 and tile_y < unit_board_height:
+		var idx = tile_x + tile_y * unit_board_width
+		var children = unit_board.get_children()
+		if idx < children.size():
+			var cell = children[idx]
+			return cell as BoardSlot if cell is BoardSlot else null
+
+	# Side strips sit above/below the player board and start at its right edge.
+	var cell_w = unit_board.cellWidth
+	var cell_h = unit_board.cellHeight
+
+	if side_strip_top_board:
+		var top_local = world_pos - side_strip_top_board.global_position
+		var top_x = int(top_local.x / cell_w)
+		var top_y = int(top_local.y / cell_h)
+		if top_x >= 0 and top_x < unit_board_width and top_y >= 0 and top_y < SIDE_ROWS:
+			var idx2 = top_x + top_y * side_strip_top_board.width
+			var children2 = side_strip_top_board.get_children()
+			if idx2 < children2.size():
+				var cell2 = children2[idx2]
+				return cell2 as BoardSlot if cell2 is BoardSlot else null
+
+	if side_strip_bottom_board:
+		var bot_local = world_pos - side_strip_bottom_board.global_position
+		var bot_x = int(bot_local.x / cell_w)
+		var bot_y = int(bot_local.y / cell_h)
+		if bot_x >= 0 and bot_x < unit_board_width and bot_y >= 0 and bot_y < SIDE_ROWS:
+			var idx3 = bot_x + bot_y * side_strip_bottom_board.width
+			var children3 = side_strip_bottom_board.get_children()
+			if idx3 < children3.size():
+				var cell3 = children3[idx3]
+				return cell3 as BoardSlot if cell3 is BoardSlot else null
+
+	return null
 
 
 func _reset_highlight(cells : Array):
@@ -607,9 +691,15 @@ func _get_object_cells_for_anchor(anchor_cell: BoardSlot) -> Array:
 			unit_rect = Rect2(origin, curr_unit_inst.placement_size * cell_size)
 	if gui.selector_rect_debug:
 		gui.selector_rect = unit_rect
-	for cell in unit_board.get_children():
-		if cell is Control and cell.get_global_rect().intersects(unit_rect):
-			cells.append(cell)
+	var boards = [unit_board]
+	if side_strip_top_board:
+		boards.append(side_strip_top_board)
+	if side_strip_bottom_board:
+		boards.append(side_strip_bottom_board)
+	for b in boards:
+		for cell in b.get_children():
+			if cell is Control and cell.get_global_rect().intersects(unit_rect):
+				cells.append(cell)
 	# Top-left first (for _place_unit which uses objectCells[0] as origin).
 	cells.sort_custom(func(a, b): return _cell_order(a, b) < 0)
 	return cells
@@ -630,19 +720,16 @@ func _get_cells_in_rect(top_corner: Vector2i, size: Vector2) -> Array:
 		for dy in int(size.y):
 			var tx = top_corner.x + dx
 			var ty = top_corner.y + dy
-			if tx >= 0 and tx < unit_board_width and ty >= 0 and ty < unit_board_height:
-				var idx = tx + ty * unit_board_width
-				var children = unit_board.get_children()
-				if idx < children.size():
-					var c = children[idx]
-					if c is BoardSlot:
-						cells.append(c)
+			if _is_valid_logical_tile(Vector2i(tx, ty)):
+				var c = _get_board_slot_at_grid(Vector2i(tx, ty))
+				if c != null:
+					cells.append(c)
 	return cells
 
 
 func get_unit_at_tile(tile: Vector2i): # Returns PackedScene unit ref, left corner position, and placement vector
-	if tile.x >= 0 and tile.x < unit_board_width and tile.y >= 0 and tile.y < unit_board_height:
-		return unit_board_space_map[tile.x][tile.y]
+	if _is_valid_logical_tile(tile):
+		return unit_board_space_map[tile.x][_space_map_y(tile.y)]
 	return null
 
 
