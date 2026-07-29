@@ -89,15 +89,5 @@ func get_card_sprite_path(base_id: String, path: String) -> String:
 			return ""
 
 
-## Slug derived from a path's label, used to build the AnimatedSprite2D animation
-## names for an upgraded unit (e.g. "Berserker Line" -> "berserker_line", so the
-## FSM plays "walk_berserker_line" / "die_berserker_line"). Empty when unknown.
-func get_animation_key(base_id: String, path: String) -> String:
-	var label := str(get_labels(base_id).get(path, "")).strip_edges()
-	if label.is_empty():
-		return ""
-	return label.to_lower().replace(" ", "_")
-
-
 func is_valid_path(path: String) -> bool:
 	return path == PATH_A or path == PATH_B

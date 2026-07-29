@@ -28,13 +28,13 @@ Only rows in the CSV are offered at rest. Reset on `GameStateManager.start_new_c
 - **Inventory:** item ID unchanged (e.g. always `four_melee`)
 - **`Unit_Card.setup_unit()`:** swaps card texture from CSV when registry has a path; `get_total_scrap_cost()` doubles when upgraded
 - **Spawn:** `BattleManager.add_unit_to_board()` → `Base_Unit.apply_upgrade_from_card(item_name)` before `post_ready()` (2× HP/damage/scrap + animation swap); `_apply_upgrade_abilities()` runs at end of `post_ready()` so status recompute does not wipe path mods
-- **Animations:** `FSM` tracks `run_animation`/`die_animation`/`attack_animation` (defaults `walk`/`die`/`""`) and plays those names per state. Upgraded animations are **pre-authored on the unit's `AnimatedSprite2D`**, named `walk_<key>` / `die_<key>` where `<key> = UNIT_UPGRADES.get_animation_key()` (path label slugged, e.g. "Berserker Line" → `berserker_line`). `Base_Unit._apply_upgrade_animations()` only calls `FSM.set_animation_names()` for names that actually exist in the `SpriteFrames`, so a missing variant just keeps the base animation. No textures are loaded at runtime.
+- **Animations:** `FSM` tracks `run_animation`/`die_animation`/`attack_animation` (defaults `walk`/`die`/`""`) and plays those names per state. Upgraded animations are **pre-authored on the unit's `AnimatedSprite2D`**, named `walk_a`/`die_a` (path A) or `walk_b`/`die_b` (path B). `Base_Unit._apply_upgrade_animations()` only calls `FSM.set_animation_names()` for names that actually exist in the `SpriteFrames`, so a missing variant just keeps the base animation. No textures are loaded at runtime.
 - **Enemies:** no upgrade (faction-only hook; empty registry path for enemy card ids)
 
 ## Adding a new upgradable card
 
 1. Add row to `unit_upgrades.csv` (path labels, blurbs, card sprite paths)
-2. Author `walk_<key>` / `die_<key>` animations on the unit's `AnimatedSprite2D` (`<key>` = slugged path label, e.g. `berserker_line`)
+2. Author `walk_a`/`die_a` and/or `walk_b`/`die_b` animations on the unit's `AnimatedSprite2D`
 3. Override `_apply_upgrade_abilities()` on the unit root script — short `match upgrade_path` using existing stats/nodes only
 4. Ensure card scene has `is_upgradable = true` (default)
 5. If the unit's FSM plays animations, it should use `run_animation`/`die_animation`/`attack_animation` (not hardcoded names) so upgrades can swap them

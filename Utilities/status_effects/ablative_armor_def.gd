@@ -15,3 +15,16 @@ func _init() -> void:
 
 func get_polarity() -> Polarity:
 	return Polarity.BUFF
+
+
+func modify_incoming_damage(
+	instance: StatusEffectInstance,
+	_host: Base_Unit,
+	amount: int,
+	_source: Base_Unit,
+	_apply_taken_mult: bool
+) -> int:
+	if amount <= 0 or instance == null or instance.stacks <= 0:
+		return amount
+	instance.stacks -= 1
+	return 0

@@ -98,9 +98,10 @@ func disable_physics_collision() -> void:
 ## If [param apply_taken_mult] is false, damage ignores [member dmg_taken_mult] (e.g. DoT ticks).
 ## [param source] is the unit that dealt the damage (used for kill credit).
 func take_damage(damage: int, apply_taken_mult: bool = true, source: Base_Unit = null) -> void:
-	if _try_consume_ablative_armor():
+	var remaining = _dispatch_incoming_damage_hooks(damage, source, apply_taken_mult)
+	if remaining <= 0:
 		return
-	var amt = float(damage)
+	var amt = float(remaining)
 	if apply_taken_mult:
 		amt *= dmg_taken_mult
 	var final_dmg = maxi(0, int(amt) - flat_damage_reduction)
@@ -110,7 +111,7 @@ func take_damage(damage: int, apply_taken_mult: bool = true, source: Base_Unit =
 		state_machine.set_state(state_machine.states.dead)
 		if not _death_notified:
 			_death_notified = true
-			_handle_infested_on_death()
+			_dispatch_death_hooks(source)
 			died.emit(self)
 			if source != null and is_instance_valid(source):
 				source.notify_kill(self)
@@ -125,49 +126,40 @@ func _on_kill(_killed: Base_Unit) -> void:
 	pass
 
 
-## Consumes one Ablative Armor stack and fully blocks this hit. Returns true if blocked.
-func _try_consume_ablative_armor() -> bool:
-	var key = _status_instance_key(&"ablative_armor", "ablative")
-	if not _status_effect_instances.has(key):
-		return false
-	var inst: StatusEffectInstance = _status_effect_instances[key]
-	inst.stacks -= 1
-	if inst.stacks <= 0:
-		_status_effect_instances.erase(key)
-	_recompute_status_stat_modifiers()
-	return true
-
-
-const CRAWLER_SCENE_PATH := "res://Units/unit_scenes/basic_chaff/basicChaff.tscn"
-
-
-func _handle_infested_on_death() -> void:
-	var key = _status_instance_key(&"infested", "infested")
-	if not _status_effect_instances.has(key):
-		return
-	var inst: StatusEffectInstance = _status_effect_instances[key]
-	var spawn_faction = bool(inst.custom_state.get("spawn_faction", false))
-	var count = maxi(1, scrap_cost)
-	var parent_node = get_parent()
-	if parent_node == null:
-		return
-	if not ResourceLoader.exists(CRAWLER_SCENE_PATH):
-		return
-	var crawler_scene: PackedScene = load(CRAWLER_SCENE_PATH) as PackedScene
-	if crawler_scene == null:
-		return
-	for i in count:
-		var crawler = crawler_scene.instantiate()
-		if crawler == null:
+## Lets active status defs absorb/reduce damage. Returns remaining amount (0 = fully blocked).
+func _dispatch_incoming_damage_hooks(amount: int, source: Base_Unit, apply_taken_mult: bool) -> int:
+	if amount <= 0 or _status_effect_instances.is_empty():
+		return amount
+	var dirty = false
+	var keys = _status_effect_instances.keys()
+	for key in keys:
+		var inst: StatusEffectInstance = _status_effect_instances.get(key)
+		if inst == null or inst.def == null:
 			continue
-		crawler.faction = spawn_faction
-		var angle = TAU * float(i) / float(count)
-		crawler.position = position + Vector2(cos(angle), sin(angle)) * 12.0
-		parent_node.add_child(crawler)
-		if crawler is Base_Unit:
-			var bu: Base_Unit = crawler
-			bu.post_ready()
-			bu.set_start_stop(true)
+		var before_stacks = inst.stacks
+		amount = inst.def.modify_incoming_damage(inst, self, amount, source, apply_taken_mult)
+		if inst.stacks != before_stacks:
+			dirty = true
+		if inst.stacks <= 0:
+			_status_effect_instances.erase(key)
+			dirty = true
+		if amount <= 0:
+			break
+	if dirty:
+		_recompute_status_stat_modifiers()
+	return maxi(0, amount)
+
+
+func _dispatch_death_hooks(source: Base_Unit) -> void:
+	if _status_effect_instances.is_empty():
+		return
+	var keys = _status_effect_instances.keys()
+	for key in keys:
+		var inst: StatusEffectInstance = _status_effect_instances.get(key)
+		if inst == null or inst.def == null:
+			continue
+		inst.def.on_host_death(inst, self, source)
+
 
 func post_ready():
 	for node in get_children():
@@ -200,18 +192,22 @@ func _apply_upgrade_stats() -> void:
 
 
 ## Points the FSM at the upgraded animations authored on the AnimatedSprite2D.
-## Names follow "walk_<key>" / "die_<key>" where <key> comes from the CSV path label
-## (see UNIT_UPGRADES.get_animation_key). Only names that actually exist as animations
-## are applied, so a missing variant simply keeps the base animation.
-func _apply_upgrade_animations(card_item_id: String) -> void:
+## Names are "walk_a"/"die_a" for path_a and "walk_b"/"die_b" for path_b.
+## Only names that actually exist as animations are applied; a missing variant keeps the base.
+func _apply_upgrade_animations(_card_item_id: String) -> void:
 	if state_machine == null or not state_machine.has_method("set_animation_names"):
 		return
-	var key : String = UNIT_UPGRADES.get_animation_key(card_item_id, upgrade_path)
-	if key.is_empty():
-		return
+	var suffix : String = ""
+	match upgrade_path:
+		UNIT_UPGRADES.PATH_A:
+			suffix = "a"
+		UNIT_UPGRADES.PATH_B:
+			suffix = "b"
+		_:
+			return
 	var frames : SpriteFrames = sprite.sprite_frames if sprite != null else null
-	var run_name : String = "walk_" + key
-	var die_name : String = "die_" + key
+	var run_name : String = "walk_" + suffix
+	var die_name : String = "die_" + suffix
 	var final_run : String = run_name if (frames != null and frames.has_animation(run_name)) else ""
 	var final_die : String = die_name if (frames != null and frames.has_animation(die_name)) else ""
 	state_machine.set_animation_names(final_run, final_die)

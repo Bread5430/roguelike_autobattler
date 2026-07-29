@@ -33,6 +33,23 @@ func process_instance(_instance: StatusEffectInstance, _host: Base_Unit, _delta:
 	pass
 
 
+## Incoming damage pipeline hook. Return the remaining damage after this effect reacts
+## (e.g. absorb to 0). Default: unchanged. Called before [member Base_Unit.dmg_taken_mult].
+func modify_incoming_damage(
+	_instance: StatusEffectInstance,
+	_host: Base_Unit,
+	amount: int,
+	_source: Base_Unit,
+	_apply_taken_mult: bool
+) -> int:
+	return amount
+
+
+## Called once when the host first reaches 0 HP (before [signal Base_Unit.died]).
+func on_host_death(_instance: StatusEffectInstance, _host: Base_Unit, _source: Base_Unit) -> void:
+	pass
+
+
 func get_polarity() -> Polarity:
 	return Polarity.NEUTRAL
 

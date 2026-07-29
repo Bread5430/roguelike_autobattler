@@ -1,10 +1,12 @@
-[gd_scene load_steps=18 format=3 uid="uid://1x8lgit6c1ek"]
+[gd_scene load_steps=34 format=3 uid="uid://1x8lgit6c1ek"]
 
 [ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_y1ls7"]
 [ext_resource type="Script" uid="uid://bctncojb78b24" path="res://Units/unit_scenes/bruiser_unit/bruiser_unit.gd" id="2_1lovx"]
 [ext_resource type="Texture2D" uid="uid://uxnio2eat30p" path="res://Assets/UnitSprites/bruiser_unit.png" id="2_vmuac"]
 [ext_resource type="Script" uid="uid://bvp0uxwt0r3lf" path="res://Units/unit_scenes/melee_unit_template/melee_unit_fsm.gd" id="3_jvx18"]
+[ext_resource type="Texture2D" uid="uid://dwlkavrk82taf" path="res://Assets/UnitSprites/vampiric_bruiser.png" id="4_4unam"]
 [ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_otlbk"]
+[ext_resource type="Texture2D" uid="uid://cxkosrfrq7ma7" path="res://Assets/UnitSprites/berserk_bruiser.png" id="5_11wxx"]
 [ext_resource type="Script" uid="uid://bqv2g0eqmyue" path="res://Units/unit_scenes/melee_unit_template/basic_melee.gd" id="5_d3lu7"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_1lovx"]
@@ -17,6 +19,30 @@ region = Rect2(32, 96, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_4unam"]
 atlas = ExtResource("2_vmuac")
+region = Rect2(64, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s63m4"]
+atlas = ExtResource("4_4unam")
+region = Rect2(0, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jixql"]
+atlas = ExtResource("4_4unam")
+region = Rect2(32, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_702dr"]
+atlas = ExtResource("4_4unam")
+region = Rect2(64, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_osohi"]
+atlas = ExtResource("5_11wxx")
+region = Rect2(0, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dv8x8"]
+atlas = ExtResource("5_11wxx")
+region = Rect2(32, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ymi0i"]
+atlas = ExtResource("5_11wxx")
 region = Rect2(64, 96, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_11wxx"]
@@ -33,6 +59,38 @@ region = Rect2(64, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pks1s"]
 atlas = ExtResource("2_vmuac")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lx7iy"]
+atlas = ExtResource("4_4unam")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wu24k"]
+atlas = ExtResource("4_4unam")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_abxsa"]
+atlas = ExtResource("4_4unam")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ytjrw"]
+atlas = ExtResource("4_4unam")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7iw7q"]
+atlas = ExtResource("5_11wxx")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dgh1q"]
+atlas = ExtResource("5_11wxx")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n82a2"]
+atlas = ExtResource("5_11wxx")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ahxft"]
+atlas = ExtResource("5_11wxx")
 region = Rect2(96, 0, 32, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_louiq"]
@@ -53,6 +111,34 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_s63m4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jixql")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_702dr")
+}],
+"loop": true,
+"name": &"die_a",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_osohi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dv8x8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ymi0i")
+}],
+"loop": true,
+"name": &"die_b",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_11wxx")
 }, {
 "duration": 1.0,
@@ -67,6 +153,40 @@ animations = [{
 "loop": true,
 "name": &"walk",
 "speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lx7iy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wu24k")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_abxsa")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ytjrw")
+}],
+"loop": true,
+"name": &"walk_a",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7iw7q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dgh1q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n82a2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ahxft")
+}],
+"loop": true,
+"name": &"walk_b",
+"speed": 5.0
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_eggw2"]
@@ -96,7 +216,6 @@ _data = {
 
 [node name="Bruiser_Unit" instance=ExtResource("1_y1ls7")]
 script = ExtResource("2_1lovx")
-flat_damage_reduction = 2
 unit_glossary_id = "bruiser_unit"
 max_hp = 30
 base_damage = 4
@@ -105,7 +224,7 @@ base_speed = 80
 [node name="AnimatedSprite2D" parent="." index="0"]
 position = Vector2(0, -1)
 sprite_frames = SubResource("SpriteFrames_louiq")
-animation = &"walk"
+animation = &"die"
 
 [node name="CollisionShape2D" parent="." index="1"]
 shape = SubResource("CircleShape2D_eggw2")
