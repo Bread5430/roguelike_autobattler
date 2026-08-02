@@ -33,9 +33,8 @@ func cast(world_pos: Vector2) -> void:
 			continue
 		var u: Base_Unit = child
 		if u.global_position.distance_to(world_pos) <= radius:
-			var sk := "dot_%d" % u.get_instance_id()
-			u.apply_status_effect(def, sk, 1, def.default_duration)
-	clear_preview()
+			var sk = "dot_%d" % u.get_instance_id()
+			apply_spell_status(u, def, sk, 1, def.default_duration)
 
 
 func clear_preview() -> void:

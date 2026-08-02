@@ -139,6 +139,46 @@ func set_unit_start_stop(stopped : bool):
 			i.set_start_stop(stopped)
 
 
+func spawn_runtime_unit(
+	unit_scene: PackedScene,
+	world_position: Vector2,
+	spawn_faction: bool,
+	saved_upgrade_path: String = ""
+) -> void:
+	if unit_scene == null:
+		return
+	call_deferred(
+		"_spawn_runtime_unit_deferred",
+		unit_scene,
+		world_position,
+		spawn_faction,
+		saved_upgrade_path
+	)
+
+
+func _spawn_runtime_unit_deferred(
+	unit_scene: PackedScene,
+	world_position: Vector2,
+	spawn_faction: bool,
+	saved_upgrade_path: String
+) -> void:
+	var instance = unit_scene.instantiate()
+	if not instance is Base_Unit:
+		if instance != null:
+			instance.queue_free()
+		return
+	var unit: Base_Unit = instance
+	unit.faction = spawn_faction
+	unit_parent.add_child(unit)
+	unit.global_position = world_position
+	unit.post_ready()
+	if not saved_upgrade_path.is_empty():
+		unit.restore_upgrade_path(saved_upgrade_path)
+	if spawn_faction and not unit.died.is_connected(_on_ally_unit_died):
+		unit.died.connect(_on_ally_unit_died)
+	unit.set_start_stop(true)
+
+
 func _physics_process(_delta: float) -> void:
 	if not manager_timer.is_stopped():
 		target_man.advance_snapshot_refresh(target_man.snapshot_cells_per_tick)

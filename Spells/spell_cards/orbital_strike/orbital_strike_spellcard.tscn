@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://ddr7fx6tn0om7"]
+
+[ext_resource type="Texture2D" uid="uid://c38p5cqfujyp8" path="res://Assets/CardSprites/orbital_strike.png" id="1_1ggo8"]
+[ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2"]
+[ext_resource type="PackedScene" path="res://Spells/spell_cards/orbital_strike/OrbitalStrikeSpell.tscn" id="3"]
+
+[node name="OrbitalStrikeSpellcard" type="Sprite2D"]
+texture = ExtResource("1_1ggo8")
+script = ExtResource("2")
+related_spell_effect = ExtResource("3")
+mana_cost = 10
+cooldown = 5
+item_name = "orbital_strike"
+max_stack_size = 1
+spell_slots = 1

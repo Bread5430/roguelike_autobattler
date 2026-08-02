@@ -25,7 +25,7 @@ func do_attack():
 			"lifetime_val" : lifetime_val,
 		})
 		
-		var deviation = Vector2(randf_range(-1, 1), randf_range(1, 1)) * randf_range(0, burst_radius)
+		var deviation = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * randf_range(0, burst_radius)
 		new_projectile.set_target_position(target_unit.global_position + deviation)
 	
 	super()

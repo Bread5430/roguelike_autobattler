@@ -8,3 +8,5 @@ beacon_following,Beacon,res://Assets/CardSprites/beacon_spell.png,80000,1
 aegis,Aegis,res://Assets/CardSprites/circle_aoe_spell.png,1,1
 ablative_armor,Ablative Armor,res://Assets/CardSprites/aegis.png,999999,20
 infested,Infested,res://Assets/CardSprites/dot_spell.png,999999,1
+spell_immune,Spell Immune,res://Assets/CardSprites/aegis.png,999999,1
+fire,On Fire,res://Assets/CardSprites/dot_spell.png,0.25,1

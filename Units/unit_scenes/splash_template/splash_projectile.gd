@@ -19,6 +19,9 @@ func _on_lifetime_timeout():
 	self.monitoring = true
 	col_shape.disabled = false
 	speed = 0
+	# Minor Bug - explode triggers returnto pool even if 
+	# the projectile has already been pooled when battle ends
+	# by proj_pool.return_all_active
 	animation.play("explode")
 
 func _on_body_entered(body): 

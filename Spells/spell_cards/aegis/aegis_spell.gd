@@ -37,8 +37,7 @@ func cast(world_pos: Vector2) -> void:
 			continue
 		if u.global_position.distance_to(world_pos) > radius:
 			continue
-		u.apply_status_effect(def, "aegis", 1, shield_duration)
-	clear_preview()
+		apply_spell_status(u, def, "aegis", 1, shield_duration)
 
 
 func clear_preview() -> void:

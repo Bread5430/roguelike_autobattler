@@ -4,6 +4,11 @@ extends Base_Unit
 const ALLY_DEATH_STUN_STACK_KEY := "ally_death_stun"
 
 
+func post_ready() -> void:
+	super.post_ready()
+	apply_status_effect(StatusEffectLibrary.spell_immune(), "static_router", 1)
+
+
 func take_damage(damage: int, apply_taken_mult: bool = true, source: Base_Unit = null) -> void:
 	var was_alive = curr_hp > 0
 	super.take_damage(damage, apply_taken_mult, source)

@@ -178,6 +178,15 @@ func apply_upgrade_from_card(card_item_id: String) -> void:
 	_apply_upgrade_animations(card_item_id)
 
 
+func restore_upgrade_path(saved_path: String) -> void:
+	if saved_path.is_empty():
+		return
+	upgrade_path = saved_path
+	_apply_upgrade_stats()
+	_apply_upgrade_animations("")
+	_apply_upgrade_abilities()
+
+
 func apply_upgrade_abilities_after_ready() -> void:
 	if upgrade_path.is_empty():
 		return
@@ -253,7 +262,9 @@ func apply_status_effect(
 ) -> void:
 	if def == null:
 		return
-	var dur := def.default_duration
+	if bool(_params.get("from_spell", false)) and is_spell_immune():
+		return
+	var dur = def.default_duration
 	if duration_override_seconds > 0.0:
 		dur = duration_override_seconds
 	var key := _status_instance_key(def.effect_id, stack_key)
@@ -300,6 +311,10 @@ func is_debuff_application_suppressed() -> bool:
 	return _suppress_debuff_application
 
 
+func is_spell_immune() -> bool:
+	return _has_effect_id(&"spell_immune")
+
+
 func purge_status_effects_by_polarity(polarity: StatusEffectDef.Polarity) -> void:
 	var had_beacon_before := _has_effect_id(&"beacon_following")
 	var to_remove: Array[String] = []
@@ -328,7 +343,9 @@ func get_active_status_effects_for_ui() -> Array[Dictionary]:
 			disp = STATUS_EFFECT_DATA.get_display_name(inst.def.effect_id)
 		var ref_dur: float = inst.reference_duration
 		var frac: float = 1.0
-		if ref_dur > 0.001:
+		if is_inf(ref_dur):
+			frac = 1.0
+		elif ref_dur > 0.001:
 			frac = clampf(inst.remaining_time / ref_dur, 0.0, 1.0)
 		out.append({
 			"instance_key": key,
@@ -430,7 +447,8 @@ func _process_status_effects(delta: float) -> void:
 		var inst: StatusEffectInstance = _status_effect_instances[key]
 		if inst.def:
 			inst.def.process_instance(inst, self, delta)
-		inst.remaining_time -= delta
+		if not is_inf(inst.remaining_time):
+			inst.remaining_time -= delta
 		if inst.remaining_time <= 0.0:
 			to_remove.append(key)
 	for key in to_remove:

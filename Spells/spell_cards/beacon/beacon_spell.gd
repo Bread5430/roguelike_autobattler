@@ -19,7 +19,6 @@ func on_casting_click(world_pos: Vector2) -> Dictionary:
 		return {"consume_spell": false, "exit_casting": false}
 	var path = PackedVector2Array([_confirmed[0], _confirmed[1], _confirmed[2]])
 	_confirmed.clear()
-	clear_preview()
 	if not _can_commit(path):
 		_pending_path = PackedVector2Array()
 		return {"consume_spell": false, "exit_casting": true}
@@ -60,8 +59,11 @@ func cast(_world_pos: Vector2) -> void:
 
 func clear_preview() -> void:
 	_hide_radius_preview()
-	#battle_manager.beacon_controller.clear_preview_line()
-	# Keep the preview line until the end of combat
+	if battle_manager and battle_manager.beacon_controller:
+		battle_manager.beacon_controller.clear_preview_line()
+
+
+func lock_cast_indicator(_world_pos: Vector2) -> void:
 	pass
 
 
@@ -111,6 +113,8 @@ func _can_commit(path: PackedVector2Array) -> bool:
 		var u: Base_Unit = c as Base_Unit
 		if u.curr_hp <= 0:
 			continue
+		if u.is_spell_immune():
+			continue
 		if u.faction != sel.faction:
 			continue
 		if u.global_position.distance_to(origin) <= assign_r:
@@ -133,6 +137,8 @@ func _try_commit(path: PackedVector2Array) -> bool:
 			continue
 		var u: Base_Unit = c as Base_Unit
 		if u.curr_hp <= 0:
+			continue
+		if u.is_spell_immune():
 			continue
 		if u.faction != sel.faction:
 			continue

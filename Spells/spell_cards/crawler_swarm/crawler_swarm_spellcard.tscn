@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://cc3y3l7x32ep5"]
+
+[ext_resource type="Texture2D" uid="uid://b44grhgav31bb" path="res://Assets/CardSprites/crawler_swarm_spell.png" id="1_eixb4"]
+[ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2"]
+[ext_resource type="PackedScene" path="res://Spells/spell_cards/crawler_swarm/CrawlerSwarmSpell.tscn" id="3"]
+
+[node name="CrawlerSwarmSpellcard" type="Sprite2D"]
+texture = ExtResource("1_eixb4")
+script = ExtResource("2")
+related_spell_effect = ExtResource("3")
+mana_cost = 10
+cooldown = 5
+item_name = "crawler_swarm_spell"
+max_stack_size = 1
+spell_slots = 1

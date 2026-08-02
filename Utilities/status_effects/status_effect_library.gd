@@ -38,3 +38,11 @@ static func ablative_armor() -> AblativeArmorDef:
 
 static func infested() -> InfestedDef:
 	return InfestedDef.new()
+
+
+static func spell_immune() -> SpellImmuneDef:
+	return SpellImmuneDef.new()
+
+
+static func fire() -> FireDef:
+	return FireDef.new()

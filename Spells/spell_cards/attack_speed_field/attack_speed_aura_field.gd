@@ -54,6 +54,9 @@ func _process(_delta: float) -> void:
 		else:
 			if not u.faction:
 				continue
+			if u.is_spell_immune():
+				continue
 		if global_position.distance_to(u.global_position) <= radius:
-			var sk := "%s_%d" % [_aura_key, u.get_instance_id()]
-			u.apply_status_effect(_def, sk, 1, refresh_duration)
+			var sk = "%s_%d" % [_aura_key, u.get_instance_id()]
+			var from_spell: bool = aura_source_unit == null
+			u.apply_status_effect(_def, sk, 1, refresh_duration, null, {"from_spell": from_spell})

@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://dy0yafhjomswi"]
+
+[ext_resource type="Texture2D" uid="uid://bt8iopmaawicn" path="res://Assets/CardSprites/reboot_spell.png" id="1_3s5hm"]
+[ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2"]
+[ext_resource type="PackedScene" path="res://Spells/spell_cards/reboot/RebootSpell.tscn" id="3"]
+
+[node name="RebootSpellcard" type="Sprite2D"]
+texture = ExtResource("1_3s5hm")
+script = ExtResource("2")
+related_spell_effect = ExtResource("3")
+mana_cost = 10
+cooldown = 5
+item_name = "reboot_spell"
+max_stack_size = 1
+spell_slots = 1

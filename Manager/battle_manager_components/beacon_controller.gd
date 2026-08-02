@@ -158,7 +158,7 @@ func register_beacon(path: PackedVector2Array, units: Array, panic_r: float = -1
 		if not u is Base_Unit:
 			continue
 		var bu: Base_Unit = u as Base_Unit
-		if not is_instance_valid(bu) or bu.curr_hp <= 0:
+		if not is_instance_valid(bu) or bu.curr_hp <= 0 or bu.is_spell_immune():
 			continue
 		owned_units.append(bu)
 
@@ -171,7 +171,9 @@ func register_beacon(path: PackedVector2Array, units: Array, panic_r: float = -1
 	for bu in owned_units:
 		remove_unit_beacon(bu)
 	for bu in owned_units:
-		bu.apply_status_effect(def, stack_key, 1, def.default_duration)
+		if bu.is_spell_immune():
+			continue
+		bu.apply_status_effect(def, stack_key, 1, def.default_duration, null, {"from_spell": true})
 		var uid := bu.get_instance_id()
 		_unit_to_beacon[uid] = beacon_id
 		_unit_waypoint_idx[uid] = 1

@@ -86,11 +86,22 @@ func _build_unit_payload(unit_card: Unit_Card, item_name: String) -> Dictionary:
 	}
 
 func _build_spell_payload(spell_card: Spell_Card, item_name: String) -> Dictionary:
-	var display_name := item_name
-	var lines := [
-		{"label": "Cooldown", "value": str(spell_card.cooldown)},
-		{"label": "Mana Cost", "value": str(spell_card.mana_cost)}
+	var display_name = item_name
+	var blurb = ""
+	var mana_cost = spell_card.mana_cost
+	var cooldown = spell_card.cooldown
+	if SPELL_GLOSSARY.has_entry(item_name):
+		var entry = SPELL_GLOSSARY.get_entry(item_name)
+		display_name = str(entry.get("display_name", display_name))
+		blurb = str(entry.get("explanation_blurb", ""))
+		mana_cost = int(entry.get("mana_cost", mana_cost))
+		cooldown = int(entry.get("cooldown", cooldown))
+	var lines = [
+		{"label": "Cooldown", "value": str(cooldown)},
+		{"label": "Mana Cost", "value": str(mana_cost)}
 	]
+	if not blurb.is_empty():
+		lines.append({"label": "Info", "value": blurb})
 	return {
 		"kind": KIND_SPELL,
 		"display_name": display_name,

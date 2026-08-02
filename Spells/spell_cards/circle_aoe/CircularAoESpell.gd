@@ -29,8 +29,7 @@ func cast(world_pos: Vector2) -> void:
 		if child is Base_Unit:
 			var dist = child.global_position.distance_to(world_pos)
 			if dist <= radius:
-				child.take_damage(damage)
-	clear_preview()
+				deal_spell_damage(child as Base_Unit, damage)
 
 func clear_preview() -> void:
 	if is_instance_valid(_preview_indicator):

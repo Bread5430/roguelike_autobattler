@@ -1,5 +1,5 @@
 extends Node
 
 
-func spell_modification(location : Vector2, modifiable_attributes : Dictionary):
+func spell_modification(_location : Vector2, _modifiable_attributes : Dictionary):
 	pass

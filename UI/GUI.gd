@@ -160,10 +160,10 @@ func _input(event: InputEvent):
 				if r.get("consume_spell", false):
 					_commit_spell_cast(spell_inst, casting_slot, world_pos)
 				if r.get("exit_casting", true):
-					_exit_casting_mode()
+					_exit_casting_mode(bool(r.get("consume_spell", false)))
 			else:
 				_commit_spell_cast(spell_inst, casting_slot, world_pos)
-				_exit_casting_mode()
+				_exit_casting_mode(true)
 		else:
 			_exit_casting_mode()
 		return
@@ -177,19 +177,19 @@ func _commit_spell_cast(spell_inst: Base_Spell, slot: SpellBarSlot, world_pos: V
 	var speed_ctrl: BattleSpeedController = null
 	if battle_manager and battle_manager.battle_speed_controller:
 		speed_ctrl = battle_manager.battle_speed_controller
+	if speed_ctrl == null:
+		return
+	speed_ctrl.retain_spell(spell_inst)
+	spell_bar.consume_spell_at(slot)
 	if speed_ctrl and speed_ctrl.is_soft_paused():
-		speed_ctrl.retain_spell(spell_inst)
-		spell_bar.detach_spell_at(slot)
 		var spell_ref: Base_Spell = spell_inst
 		var pos: Vector2 = world_pos
 		speed_ctrl.queue_spell_effect(func():
 			if is_instance_valid(spell_ref):
-				spell_ref.cast(pos)
-				spell_ref.queue_free()
+				spell_ref.begin_cast(pos)
 		)
 	else:
-		spell_inst.cast(world_pos)
-		spell_bar.remove_spell_at(slot)
+		spell_inst.begin_cast(world_pos)
 
 ## Only runs when no Control has accepted the event (e.g. keyboard when no button focused).
 func _unhandled_input(event: InputEvent):
@@ -805,12 +805,13 @@ func _on_inventory_inspect_requested(item_inst: Item, item_name: String, source_
 	var payload := item_details_builder.build_payload(item_inst, item_name)
 	item_details_card.show_details(payload, source_global_pos)
 
-func _exit_casting_mode() -> void:
+func _exit_casting_mode(committed: bool = false) -> void:
 	if casting_slot and is_instance_valid(casting_slot.spell_inst):
 		var si: Base_Spell = casting_slot.spell_inst
-		if si.handles_casting_input():
+		if not committed and si.handles_casting_input():
 			si.on_casting_cancel()
-		si.clear_preview()
+		if not committed:
+			si.clear_preview()
 	casting_mode = false
 	casting_slot = null
 

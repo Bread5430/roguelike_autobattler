@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Spells/spell_cards/orbital_strike/orbital_strike_spell.gd" id="1"]
+
+[node name="OrbitalStrikeSpell" type="Node"]
+script = ExtResource("1")

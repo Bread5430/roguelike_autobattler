@@ -17,3 +17,9 @@ ground_slow_field,res://Spells/spell_cards/slow_field/ground_slow_field_spellcar
 dot_ramp,res://Spells/spell_cards/ramping_dot/dot_ramp_spellcard.tscn,SPELL
 beacon_spell,res://Spells/spell_cards/beacon/beacon_spellcard.tscn,SPELL
 aegis_spell,res://Spells/spell_cards/aegis/aegis_spellcard.tscn,SPELL
+goo_spell,res://Spells/spell_cards/goo/goo_spellcard.tscn,SPELL
+fire_spell,res://Spells/spell_cards/fire/fire_spellcard.tscn,SPELL
+orbital_strike,res://Spells/spell_cards/orbital_strike/orbital_strike_spellcard.tscn,SPELL
+crawler_swarm_spell,res://Spells/spell_cards/crawler_swarm/crawler_swarm_spellcard.tscn,SPELL
+reboot_spell,res://Spells/spell_cards/reboot/reboot_spellcard.tscn,SPELL
+wormhole_spell,res://Spells/spell_cards/wormhole/wormhole_spellcard.tscn,SPELL

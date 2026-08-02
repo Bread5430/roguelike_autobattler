@@ -27,6 +27,8 @@ func _process(_delta: float) -> void:
 		if not child is Base_Unit:
 			continue
 		var u: Base_Unit = child
+		if u.is_spell_immune():
+			continue
 		if global_position.distance_to(u.global_position) <= radius:
-			var sk := "%s_%d" % [_field_key, u.get_instance_id()]
-			u.apply_status_effect(_def, sk, 1, refresh_duration)
+			var sk = "%s_%d" % [_field_key, u.get_instance_id()]
+			u.apply_status_effect(_def, sk, 1, refresh_duration, null, {"from_spell": true})

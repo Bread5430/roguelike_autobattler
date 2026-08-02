@@ -1,0 +1,13 @@
+spell_id,display_name,explanation_blurb,mana_cost,cooldown
+circular_aoe,Circular Strike,Deals 25 damage to every non-immune unit in a 150 pixel area.,10,5
+attack_speed_aura,Overclock Field,Creates a field that increases allied attack speed.,10,5
+ground_slow_field,Ground Slow Field,Creates a persistent field that slows non-immune units.,10,5
+dot_ramp,Ramping Burn,Applies a stacking burn that deals increasing damage over time.,10,5
+beacon_spell,Beacon,Assigns nearby allied units a three-point movement path.,10,5
+aegis_spell,Aegis,Makes allied non-immune units in the area immune to damage for 1 second.,10,5
+goo_spell,Goo,"Creates a light green 150 pixel field for 10 seconds, slowing units inside and for 0.5 seconds after exit.",10,5
+fire_spell,Fire,"Creates a light orange 150 pixel field for 10 seconds, dealing 3 damage every 0.25 seconds.",10,5
+orbital_strike,Orbital Strike,After a 1 second cast and 2 second warning deals 100 damage in a 75 pixel area.,10,5
+crawler_swarm_spell,Crawler Swarm,Spawns 10 allied crawlers immediately and 2 more every 2 seconds for 10 seconds.,10,5
+reboot_spell,Reboot,For 10 seconds revives the first 5 non-immune units that die in the area as full-health allies.,10,5
+wormhole_spell,Wormhole,Moves every non-immune unit in one 150 pixel area to another area up to 600 pixels away.,10,5

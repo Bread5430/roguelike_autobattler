@@ -53,6 +53,15 @@ func remove_spell_at(slot: SpellBarSlot) -> void:
 	slot.clear_slot()
 
 
+## Consume the slot while leaving the spell alive for its cast timer.
+func consume_spell_at(slot: SpellBarSlot) -> Base_Spell:
+	if not slot or slot.is_empty():
+		return null
+	var spell: Base_Spell = slot.spell_inst
+	slot.clear_slot()
+	return spell
+
+
 ## Clear slot UI without freeing the spell instance (used when buffering casts during soft pause).
 func detach_spell_at(slot: SpellBarSlot) -> Base_Spell:
 	if not slot or slot.is_empty():

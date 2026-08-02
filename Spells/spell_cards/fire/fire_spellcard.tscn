@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://delinjtwfuks7"]
+
+[ext_resource type="Texture2D" uid="uid://tsqss7tl8g2d" path="res://Assets/CardSprites/fire_spell.png" id="1_wagtp"]
+[ext_resource type="Script" uid="uid://d2esp2apkum71" path="res://Utilities/spell_card.gd" id="2"]
+[ext_resource type="PackedScene" path="res://Spells/spell_cards/fire/FireSpell.tscn" id="3"]
+
+[node name="FireSpellcard" type="Sprite2D"]
+texture = ExtResource("1_wagtp")
+script = ExtResource("2")
+related_spell_effect = ExtResource("3")
+mana_cost = 10
+cooldown = 5
+item_name = "fire_spell"
+max_stack_size = 1
+spell_slots = 1

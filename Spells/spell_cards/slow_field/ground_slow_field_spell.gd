@@ -34,7 +34,6 @@ func cast(world_pos: Vector2) -> void:
 	field.refresh_duration = refresh_duration
 	field.global_position = world_pos
 	unit_parent.add_child(field)
-	clear_preview()
 
 
 func clear_preview() -> void:

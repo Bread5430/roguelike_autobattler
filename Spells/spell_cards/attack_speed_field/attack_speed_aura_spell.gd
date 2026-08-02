@@ -34,7 +34,6 @@ func cast(world_pos: Vector2) -> void:
 	aura.refresh_duration = refresh_duration
 	aura.global_position = world_pos
 	unit_parent.add_child(aura)
-	clear_preview()
 
 
 func clear_preview() -> void:
