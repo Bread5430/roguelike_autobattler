@@ -25,9 +25,11 @@ Data-driven random events on map `RANDOM_EVENT` nodes. CSV defines event flavor 
 
 ## CSV schema
 
-**`Data/random_events.csv`:** `event_id`, `title`, `flavor_text`, `image_path`, `weight`, `min_stage`
+**`Data/random_events.csv`:** `event_id`, `title`, `flavor_text`, `image_path`, `weight`, `min_stage`, `event_type` (`exchange` \| `quest` \| `encounter`)
 
 **`Data/random_event_choices.csv`:** `event_id`, `choice_id`, `label`, `cost_kind`, `cost_amount`, `cost_filter`, `reward_kind`, `reward_amount`, `reward_item_id`, `reward_pool`
+
+Quest-specific CSVs and mark lifecycle: `.cursor/docs/systems/quest-events.md`.
 
 ### Cost kinds (v1)
 
@@ -92,6 +94,7 @@ Buttons disable when the player cannot afford the cost.
 
 ## Related docs
 
+- `.cursor/docs/systems/quest-events.md` — quest marks, encounters, exclusive siblings
 - `.cursor/docs/data-flow.md` — map exploration
 - `.cursor/docs/systems/battle-rewards-ui.md` — modal payload pattern
 - `.cursor/docs/input-coordination-plan.md` — mouse_filter, Passthrough_Helper

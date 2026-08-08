@@ -1,4 +1,11 @@
-event_id,title,flavor_text,image_path,weight,min_stage
-scrap_dealer,Scrap Dealer,"A tinkerer eyes your spare parts and rattles a coin purse.",res://Assets/CardSprites/circle_aoe_spell.png,10,1
-wandering_merchant,Wandering Merchant,"A hooded trader unfurls a dusty satchel of wares.",res://Assets/CardSprites/attack_speed_field.png,8,1
-blood_altar,Blood Altar,"A crimson altar hums softly. It demands a sacrifice.",res://Assets/CardSprites/dot_spell.png,6,1
+event_id,title,flavor_text,image_path,weight,min_stage,event_type
+scrap_dealer,Scrap Dealer,"A tinkerer eyes your spare parts and rattles a coin purse.",res://Assets/CardSprites/circle_aoe_spell.png,10,1,exchange
+wandering_merchant,Wandering Merchant,"A hooded trader unfurls a dusty satchel of wares.",res://Assets/CardSprites/attack_speed_field.png,8,1,exchange
+blood_altar,Blood Altar,"A crimson altar hums softly. It demands a sacrifice.",res://Assets/CardSprites/dot_spell.png,6,1,exchange
+depot_assault,Depot Assault,"Scouts report a heavily defended depot. Clear it out for a scrap bonus.",res://Assets/CardSprites/dot_spell.png,7,1,quest
+locked_cache,Locked Cache,"Two sealed caches appear on your charts. You can only claim one.",res://Assets/CardSprites/circle_aoe_spell.png,7,1,quest
+hidden_supplies,Hidden Supplies,"Rumors mark three quiet stockpiles. Each holds a little spare scrap.",res://Assets/CardSprites/attack_speed_field.png,7,1,quest
+depot_assault_reward,Depot Cleared,"The depot falls. Salvage crews haul out spare components.",res://Assets/CardSprites/dot_spell.png,0,1,encounter
+locked_cache_comp,Component Cache,"You crack the component cache and pocket the haul.",res://Assets/CardSprites/circle_aoe_spell.png,0,1,encounter
+locked_cache_gold,Gold Cache,"You crack the gold cache and pocket the haul.",res://Assets/CardSprites/attack_speed_field.png,0,1,encounter
+hidden_supplies_reward,Hidden Stockpile,"You uncover a small stash of spare components.",res://Assets/CardSprites/attack_speed_field.png,0,1,encounter

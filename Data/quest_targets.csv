@@ -1,0 +1,7 @@
+quest_id,slot_id,target_content,min_separation,encounter_id,map_label,difficulty_override,trigger_mode
+depot_assault,0,battle,0,depot_assault_reward,,heavy,after_battle
+locked_cache,0,any,2,locked_cache_comp,+50 Comp,,on_visit
+locked_cache,1,any,2,locked_cache_gold,+100 Gold,,on_visit
+hidden_supplies,0,any,2,hidden_supplies_reward,,,on_visit
+hidden_supplies,1,any,2,hidden_supplies_reward,,,on_visit
+hidden_supplies,2,any,2,hidden_supplies_reward,,,on_visit

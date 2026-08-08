@@ -559,6 +559,10 @@ func draw_node_border(node: MapNode) -> void:
 			draw_arc(pos, r, 0, TAU, 32, border_color, border_width)
 	if node == end_node and node.chaser_blockaded:
 		draw_arc(pos, r + 4.0, 0, TAU, 32, Color(0.15, 0.05, 0.05), 4.0)
+	if not node.special_mark.is_empty():
+		var is_preview = bool(node.special_mark.get("is_preview", false))
+		var quest_color = Color(1.0, 0.85, 0.2, 0.95) if not is_preview else Color(1.0, 0.85, 0.2, 0.55)
+		draw_arc(pos, r + 6.0, 0, TAU, 32, quest_color, 3.0)
 
 func draw_node_labels_visual():
 	"""Draw labels on nodes"""
@@ -570,6 +574,12 @@ func draw_node_labels_visual():
 		var text_size = font.get_string_size(label, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
 		var text_pos = node.global_position - text_size / 2
 		draw_string(font, text_pos, label, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color.WHITE)
+		if not node.special_mark.is_empty():
+			var map_label = str(node.special_mark.get("map_label", "")).strip_edges()
+			if not map_label.is_empty():
+				var map_label_size = font.get_string_size(map_label, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
+				var map_label_pos = node.global_position + Vector2(-map_label_size.x * 0.5, -node_radius - 14.0)
+				draw_string(font, map_label_pos, map_label, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color(1.0, 0.92, 0.45))
 
 func get_node_color(node: MapNode) -> Color:
 	"""Get fill color from content type, modulated by path role and visit state."""
@@ -656,6 +666,36 @@ func get_available_nodes() -> Array[MapNode]:
 			available.append(node)
 	return available
 
+
+func get_node_by_id(node_id: int) -> MapNode:
+	for node in nodes:
+		if node.id == node_id:
+			return node
+	return null
+
+
+func graph_distance(from_node: MapNode, to_node: MapNode) -> int:
+	if from_node == null or to_node == null:
+		return 999999
+	if from_node.id == to_node.id:
+		return 0
+	var queue: Array[MapNode] = [from_node]
+	var distances: Dictionary = {from_node.id: 0}
+	while not queue.is_empty():
+		var current: MapNode = queue.pop_front()
+		var current_dist = int(distances[current.id])
+		for neighbor in current.connections:
+			if neighbor == null:
+				continue
+			if distances.has(neighbor.id):
+				continue
+			var next_dist = current_dist + 1
+			if neighbor.id == to_node.id:
+				return next_dist
+			distances[neighbor.id] = next_dist
+			queue.append(neighbor)
+	return 999999
+
 func get_map_progress() -> Dictionary:
 	"""Get current map progress statistics"""
 	return {
@@ -674,6 +714,8 @@ func save_map_state() -> Dictionary:
 		"current_node_id": current_node.id if current_node else -1,
 		"node_content_types": {},
 		"node_chaser_blockaded": {},
+		"node_special_marks": {},
+		"node_difficulties": {},
 		"chaser_current_step": chaser.current_step,
 	}
 	
@@ -682,6 +724,9 @@ func save_map_state() -> Dictionary:
 	for node in nodes:
 		state.node_content_types[node.id] = node.content_type
 		state.node_chaser_blockaded[node.id] = node.chaser_blockaded
+		state.node_difficulties[node.id] = node.difficulty
+		if not node.special_mark.is_empty() and not bool(node.special_mark.get("is_preview", false)):
+			state.node_special_marks[node.id] = node.special_mark.duplicate(true)
 	
 	return state
 
@@ -691,7 +736,7 @@ func load_map_state(state: Dictionary):
 	
 	# Mark completed nodes
 	for node_id in state.get("completed_node_ids", []):
-		var id := int(node_id)
+		var id = int(node_id)
 		for node in nodes:
 			if node.id == id:
 				node.completed = true
@@ -699,7 +744,7 @@ func load_map_state(state: Dictionary):
 				break
 	
 	# Set current node
-	var current_id := int(state.get("current_node_id", -1))
+	var current_id = int(state.get("current_node_id", -1))
 	current_node = null
 	for node in nodes:
 		if node.id == current_id:
@@ -708,11 +753,19 @@ func load_map_state(state: Dictionary):
 
 	var saved_content_types: Dictionary = _normalize_int_key_dict(state.get("node_content_types", {}))
 	var saved_chaser_blockaded: Dictionary = _normalize_int_key_dict(state.get("node_chaser_blockaded", {}))
+	var saved_difficulties: Dictionary = _normalize_int_key_dict(state.get("node_difficulties", {}))
+	var saved_marks: Dictionary = _normalize_int_key_dict(state.get("node_special_marks", {}))
 	for node in nodes:
+		node.special_mark = {}
 		if saved_content_types.has(node.id):
 			node.content_type = int(saved_content_types[node.id])
 		if saved_chaser_blockaded.has(node.id):
 			node.chaser_blockaded = saved_chaser_blockaded[node.id]
+		if saved_difficulties.has(node.id):
+			node.difficulty = str(saved_difficulties[node.id])
+		if saved_marks.has(node.id) and saved_marks[node.id] is Dictionary:
+			node.special_mark = (saved_marks[node.id] as Dictionary).duplicate(true)
+			node.special_mark["is_preview"] = false
 
 	_configure_chaser(false, int(state.get("chaser_current_step", 0)))
 	

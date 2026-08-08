@@ -22,6 +22,8 @@ var difficulty: String = "easy"
 var stage: int = 1
 var completed: bool = false
 var available: bool = false
+## Active quest special encounter mark (empty when unmarked).
+var special_mark: Dictionary = {}
 
 func _init(node_id: int, pos: Vector2):
 	id = node_id

@@ -401,7 +401,15 @@ func _on_event_choice_selected(choice_id: String) -> void:
 	
 	if gsm == null or gsm.random_event_control == null or random_event_ui == null:
 		return
-	var payload := random_event_ui.get_payload()
+	var payload = random_event_ui.get_payload()
+	if bool(payload.get("is_quest_encounter", false)):
+		if not gsm.random_event_control.try_resolve_choice(payload, choice_id, inventory):
+			var refreshed_encounter = gsm.random_event_control.refresh_choice_enabled_flags(payload, inventory)
+			random_event_ui.set_payload(refreshed_encounter)
+			return
+		gsm.end_quest_encounter_visit()
+		_refresh_run_resources_hud()
+		return
 	if not gsm.random_event_control.try_resolve_choice(payload, choice_id, inventory):
 		var refreshed = gsm.random_event_control.refresh_choice_enabled_flags(payload, inventory)
 		random_event_ui.set_payload(refreshed)

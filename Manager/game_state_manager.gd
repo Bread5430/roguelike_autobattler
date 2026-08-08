@@ -24,6 +24,7 @@ enum GameState {
 @onready var shop_control: ShopControl = $ShopControl
 @onready var rest_control: RestControl = $RestControl
 @onready var random_event_control: RandomEventControl = $RandomEventControl
+@onready var quest_control: QuestControl = $QuestControl
 
 var current_state: GameState = GameState.MAP_EXPLORATION
 var current_battle_node: MapNode
@@ -32,6 +33,8 @@ var run_components: int = 0
 var shop_visit_active: bool = false
 var rest_visit_active: bool = false
 var event_visit_active: bool = false
+var encounter_visit_active: bool = false
+var _pending_after_encounter: String = "" ## "", "shop", "rest", "event", "map"
 
 const MAIN_MENU_SCENE := "res://UI/Menus/MainMenu.tscn"
 
@@ -55,6 +58,8 @@ func post_ready():
 		rest_control.setup(self)
 	if random_event_control:
 		random_event_control.setup(self)
+	if quest_control:
+		quest_control.setup(self)
 	for i in get_children():
 		if i.has_method("post_ready"):
 			i.post_ready()
@@ -145,7 +150,7 @@ func _on_map_node_selected(node: MapNode):
 		_leave_rest_visit_for_node(node)
 		return
 
-	if event_visit_active:
+	if event_visit_active or encounter_visit_active:
 		return
 
 	current_battle_node = node
@@ -194,8 +199,11 @@ func _enter_random_event_node(_node: MapNode) -> void:
 
 
 func open_event_visit() -> void:
+	if quest_control and quest_control.should_trigger_on_visit(current_battle_node):
+		_open_quest_encounter("event")
+		return
 	event_visit_active = true
-	var payload := random_event_control.build_event_payload(current_battle_node)
+	var payload = random_event_control.build_event_payload(current_battle_node)
 	gui.open_random_event(payload)
 
 
@@ -213,8 +221,11 @@ func _enter_repair_site_node(_node: MapNode) -> void:
 
 
 func open_rest_visit() -> void:
+	if quest_control and quest_control.should_trigger_on_visit(current_battle_node):
+		_open_quest_encounter("rest")
+		return
 	rest_visit_active = true
-	var offers := rest_control.generate_offers()
+	var offers = rest_control.generate_offers()
 	gui.open_rest(offers)
 
 
@@ -229,8 +240,11 @@ func _enter_shop_node(_node: MapNode) -> void:
 
 
 func open_shop_visit() -> void:
+	if quest_control and quest_control.should_trigger_on_visit(current_battle_node):
+		_open_quest_encounter("shop")
+		return
 	shop_visit_active = true
-	var stock := shop_control.generate_stock()
+	var stock = shop_control.generate_stock()
 	gui.open_shop(stock)
 
 
@@ -240,7 +254,58 @@ func end_shop_visit() -> void:
 		_notify_map_node_completed()
 	shop_visit_active = false
 
-func _complete_special_node_visit(node: MapNode) -> void:
+
+func _open_quest_encounter(continue_as: String) -> void:
+	if current_battle_node == null or quest_control == null:
+		return
+	var payload = quest_control.build_encounter_payload(current_battle_node)
+	if payload.is_empty():
+		quest_control.complete_mark(current_battle_node)
+		_continue_after_encounter(continue_as)
+		return
+	_pending_after_encounter = continue_as
+	encounter_visit_active = true
+	event_visit_active = true
+	gui.open_random_event(payload)
+
+
+func end_quest_encounter_visit() -> void:
+	var continue_as = _pending_after_encounter
+	_pending_after_encounter = ""
+	encounter_visit_active = false
+	event_visit_active = false
+	var marked_node = current_battle_node
+	if quest_control and marked_node:
+		quest_control.complete_mark(marked_node)
+	gui.close_random_event()
+	_continue_after_encounter(continue_as)
+
+
+func _continue_after_encounter(continue_as: String) -> void:
+	match continue_as:
+		"shop":
+			shop_visit_active = true
+			var stock = shop_control.generate_stock()
+			gui.open_shop(stock)
+		"rest":
+			rest_visit_active = true
+			var offers = rest_control.generate_offers()
+			gui.open_rest(offers)
+		"event":
+			event_visit_active = true
+			var payload = random_event_control.build_event_payload(current_battle_node)
+			gui.open_random_event(payload)
+		"map":
+			var is_campaign_end = current_battle_node != null and current_battle_node.node_type == "end"
+			current_battle_node = null
+			if is_campaign_end:
+				change_state(GameState.CAMPAIGN_COMPLETE)
+			else:
+				change_state(GameState.MAP_EXPLORATION)
+		_:
+			change_state(GameState.MAP_EXPLORATION)
+
+func _complete_special_node_visit(_node: MapNode) -> void:
 	map_generator.complete_current_battle()
 	current_battle_node = null
 	change_state(GameState.MAP_EXPLORATION)
@@ -407,10 +472,14 @@ func handle_battle_completion():
 	map_generator.complete_current_battle()
 	_notify_map_node_completed()
 	
-	var is_campaign_end := current_battle_node.node_type == "end"
-	var reward_payload := calculate_battle_rewards()
+	var is_campaign_end = current_battle_node.node_type == "end"
+	var reward_payload = calculate_battle_rewards()
 	print("Battle rewards: %s" % str(reward_payload))
 	await gui.show_battle_rewards(reward_payload)
+	
+	if quest_control and quest_control.should_trigger_after_battle(current_battle_node):
+		_open_quest_encounter("map")
+		return
 	
 	current_battle_node = null
 	
@@ -515,7 +584,11 @@ func calculate_battle_rewards() -> Dictionary:
 
 
 func _resolve_battle_difficulty(node: MapNode) -> String:
-	var base := node.difficulty
+	if node != null and not node.special_mark.is_empty():
+		var override_diff = str(node.special_mark.get("difficulty_override", "")).strip_edges()
+		if not override_diff.is_empty():
+			return override_diff
+	var base = node.difficulty
 	if node.content_type == MapNode.ContentType.BLOCKADE:
 		match base:
 			"light":
@@ -592,7 +665,11 @@ func start_new_campaign():
 	shop_visit_active = false
 	rest_visit_active = false
 	event_visit_active = false
+	encounter_visit_active = false
+	_pending_after_encounter = ""
 	_emit_run_currency_changed()
+	if quest_control:
+		quest_control.reset_run_state()
 	if gui:
 		gui.close_shop()
 		gui.close_rest()
@@ -645,6 +722,8 @@ func load_campaign_progress(save_data: Dictionary):
 	run_gold = int(save_data.get("run_gold", 0))
 	run_components = int(save_data.get("run_components", 0))
 	_emit_run_currency_changed()
+	if quest_control:
+		quest_control.sync_active_quests_from_map()
 
 func get_campaign_progress() -> Dictionary:
 	"""Get current campaign progress for UI display"""

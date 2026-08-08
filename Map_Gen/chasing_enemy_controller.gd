@@ -85,6 +85,8 @@ func apply_blockade_to_covered_nodes(nodes: Array, end_node: MapNode, node_radiu
 			continue
 		if node.content_type == MapNode.ContentType.BLOCKADE or node.chaser_blockaded:
 			continue
+		# Quest special_mark is intentionally preserved: marked nodes may be
+		# blockaded later and still resolve via after-battle encounter UI.
 		if node == end_node:
 			node.chaser_blockaded = true
 		else:

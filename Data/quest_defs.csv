@@ -1,0 +1,4 @@
+quest_id,exclusive_on_complete,max_targets
+depot_assault,false,1
+locked_cache,true,2
+hidden_supplies,false,3

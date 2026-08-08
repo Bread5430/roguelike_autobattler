@@ -40,7 +40,7 @@ func post_ready():
 	for i in starter_items.size():
 		add_item(starter_items[i],starter_items_count[i])
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if scrap_mode or craft_mode:
 		return
 	if Input.is_action_just_pressed("inventory") and can_open_inventory:
@@ -60,7 +60,7 @@ func toggle_window (open : bool):
 		for slot in inventory_grid.get_children():
 			slot.set_slot_invisible()
 
-func on_give_player_item (itemID : String, amount : int):
+func on_give_player_item (_itemID : String, _amount : int):
 	pass
 
 func add_item (itemID : String, count : int):
