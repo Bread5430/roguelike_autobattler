@@ -94,6 +94,11 @@ func begin_deployment() -> void:
 	_clear_placement_indicators_preview()
 
 
+## Re-run normal static router spawn (after clearing the board in formation editor).
+func respawn_static_routers() -> void:
+	_spawn_static_routers()
+
+
 func reset_current_selection() -> void:
 	curr_unit = null
 	curr_unit_inst = null
@@ -344,6 +349,40 @@ func refund_units_after_battle() -> void:
 				item_inst.queue_free()
 
 	clear_placement_grid()
+
+
+## During deployment: remove all player-placed units (not static routers), refund scrap, return cards to inventory.
+func return_placed_units_to_inventory() -> void:
+	var placements: Array = []
+	var map_height = unit_board_height + 2 * SIDE_ROWS
+	for x in unit_board_width:
+		for map_y in map_height:
+			var entry = unit_board_space_map[x][map_y]
+			if entry == null:
+				continue
+			var top_corner: Vector2i = entry[1]
+			var logical_y = map_y - SIDE_ROWS
+			if top_corner.x != x or top_corner.y != logical_y:
+				continue
+			placements.append(entry)
+
+	for entry in placements:
+		var unit_ref: PackedScene = entry[0]
+		var top_corner = entry[1]
+		var size: Vector2 = entry[2]
+		var top_i = Vector2i(int(top_corner.x), int(top_corner.y))
+		var item_inst = unit_ref.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+		if item_inst and item_inst.has_method("setup_unit"):
+			item_inst.setup_unit()
+		if item_inst is Unit_Card:
+			_refund_scrap_for_card(item_inst as Unit_Card)
+		if inventory and item_inst and "item_name" in item_inst:
+			inventory.add_item(item_inst.item_name, 1)
+		remove_from_board(top_i, size)
+		if item_inst:
+			item_inst.queue_free()
+
+	reset_current_selection()
 
 
 # =============================================================================

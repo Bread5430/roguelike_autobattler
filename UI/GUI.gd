@@ -14,6 +14,7 @@ var gsm
 @onready var battle_speed_bar: BattleSpeedBar = $BattleSpeedBar
 @onready var scrap_buffer_bar: ScrapBufferBar = $ScrapBufferBar
 @onready var end_prep : Button = $End_Prep
+@onready var clear_battlefield : Button = $Clear_Battlefield
 @onready var tactical_cursor = $TacticalCursor
 @onready var item_details_card: ItemDetailsCard = $ItemDetailsCard
 @onready var player_health_bar: PanelContainer = $PlayerHealthBar
@@ -248,13 +249,21 @@ func start_prep_phase():
 	_committed_spell_item_names.clear()
 	deployment_mode = true
 	toggle_inventory(true)
-	end_prep.show()
-	end_prep.disabled = false
+	_set_deployment_buttons_visible(true)
 	spell_bar.show()
 	hide_battle_speed_bar()
 	scrap_buffer_bar.show()
 	run_resources_hud.set_map_visible(false)
 	refresh_scrap_buffer()
+
+
+func _set_deployment_buttons_visible(visible_buttons: bool) -> void:
+	if end_prep:
+		end_prep.visible = visible_buttons
+		end_prep.disabled = not visible_buttons
+	if clear_battlefield:
+		clear_battlefield.visible = visible_buttons
+		clear_battlefield.disabled = not visible_buttons
 
 
 func show_battle_speed_bar() -> void:
@@ -286,8 +295,7 @@ func enter_map_exploration() -> void:
 	scrap_buffer_bar.hide()
 	run_resources_hud.set_map_visible(true)
 	_refresh_run_resources_hud()
-	end_prep.hide()
-	end_prep.disabled = true
+	_set_deployment_buttons_visible(false)
 	deployment_mode = false
 	toggle_inventory(true)
 
@@ -632,12 +640,17 @@ func _on_end_prep_pressed() -> void:
 		return
 
 	deployment_mode = false
-	end_prep.hide()
-	end_prep.disabled = true
+	_set_deployment_buttons_visible(false)
 	toggle_inventory(false)
 	if unit_placement:
 		unit_placement.reset_current_selection()
 	preperation_ended.emit()
+
+
+func _on_clear_battlefield_pressed() -> void:
+	if not deployment_mode or unit_placement == null:
+		return
+	unit_placement.return_placed_units_to_inventory()
 
 
 func enter_enemy_formation_editor_mode(default_name: String = "", default_level: String = "") -> String:
@@ -645,6 +658,7 @@ func enter_enemy_formation_editor_mode(default_name: String = "", default_level:
 		return "Enter battle preparation (deployment) first."
 	unit_placement.clear_board_allied_units()
 	unit_placement.clear_placement_grid()
+	unit_placement.respawn_static_routers()
 	inventory.clear_all_slots()
 	_clear_spells_from_inventory_and_bar()
 	_grant_all_unit_cards_to_inventory(999)
@@ -656,12 +670,21 @@ func enter_enemy_formation_editor_mode(default_name: String = "", default_level:
 	formation_editor_level = lvl
 	end_prep.text = "Confirm Position"
 	unit_placement.reset_current_selection()
+	_begin_formation_editor_scrap_tracking()
 	return ""
 
 
 func exit_enemy_formation_editor_mode() -> void:
 	enemy_formation_editor_mode = false
 	end_prep.text = END_PREP_DEFAULT_TEXT
+
+
+func _begin_formation_editor_scrap_tracking() -> void:
+	var scrap_buffer = gsm.get_node("ScrapBufferManager") as ScrapBufferManager
+	if scrap_buffer == null:
+		return
+	scrap_buffer.begin_formation_cost_tracking()
+	refresh_scrap_buffer()
 
 
 func dev_load_formation(formation_name: String) -> String:
@@ -675,6 +698,8 @@ func dev_load_formation(formation_name: String) -> String:
 	if enemy_formation_editor_mode:
 		unit_placement.clear_board_allied_units()
 		unit_placement.clear_placement_grid()
+		unit_placement.respawn_static_routers()
+		_begin_formation_editor_scrap_tracking()
 		var n = unit_placement.load_formation_rows_on_player_board(rows)
 		if n <= 0:
 			return "Failed to place formation on board."
@@ -725,13 +750,16 @@ func _sanitize_formation_filename_part(s: String) -> String:
 
 func _save_editor_formation_to_new_csv() -> String:
 	var row_dicts: Array = []
+	var map_height = unit_placement.unit_board_height + 2 * UnitPlacement.SIDE_ROWS
 	for x in unit_placement.unit_board_width:
-		for y in unit_placement.unit_board_height:
-			var entry = unit_placement.unit_board_space_map[x][y]
+		for map_y in map_height:
+			var entry = unit_placement.unit_board_space_map[x][map_y]
 			if entry == null:
 				continue
 			var top_corner: Vector2i = entry[1]
-			if top_corner.x != x or top_corner.y != y:
+			var logical_y = map_y - UnitPlacement.SIDE_ROWS
+			# Only emit once per placed unit (anchor tile), matching refund_units_after_battle.
+			if top_corner.x != x or top_corner.y != logical_y:
 				continue
 			var packed: PackedScene = entry[0]
 			var sz: Vector2 = entry[2]
@@ -891,10 +919,14 @@ func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 		if scrap_rect.has_point(mouse_pos):
 			return true
 	
-	# Check end prep button
+	# Check deployment buttons
 	if end_prep and end_prep.visible:
 		var button_rect = end_prep.get_global_rect()
 		if button_rect.has_point(mouse_pos):
+			return true
+	if clear_battlefield and clear_battlefield.visible:
+		var clear_rect = clear_battlefield.get_global_rect()
+		if clear_rect.has_point(mouse_pos):
 			return true
 	
 	if battle_rewards_ui and battle_rewards_ui.visible:
