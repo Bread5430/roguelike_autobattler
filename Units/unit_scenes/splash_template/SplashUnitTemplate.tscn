@@ -125,7 +125,7 @@ speed = 100
 lifetime_val = 1.0
 burst_size = 10
 burst_radius = 50.0
-attack_range = 1000
+attack_range = 600
 
 [node name="Attack_CD" parent="Ranged_Attack" index="0"]
 wait_time = 5.0

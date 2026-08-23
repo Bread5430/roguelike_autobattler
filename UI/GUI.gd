@@ -698,7 +698,8 @@ func dev_load_formation(formation_name: String) -> String:
 	if enemy_formation_editor_mode:
 		unit_placement.clear_board_allied_units()
 		unit_placement.clear_placement_grid()
-		unit_placement.respawn_static_routers()
+		# Formation CSV includes routers; do not pre-spawn defaults or they block load.
+		unit_placement.clear_static_router_state()
 		_begin_formation_editor_scrap_tracking()
 		var n = unit_placement.load_formation_rows_on_player_board(rows)
 		if n <= 0:
@@ -783,8 +784,39 @@ func _save_editor_formation_to_new_csv() -> String:
 				"exact": exact,
 			})
 
+	# Static routers live outside the space map; append them explicitly.
+	for rp in unit_placement.get_static_router_placements():
+		var top_left: Vector2i = rp["top_left"]
+		var sz2: Vector2 = rp["size"]
+		var scene: PackedScene = rp["scene"]
+		var exact_id = UnitPlacement.STATIC_ROUTER_CARD_ID
+		if scene != null:
+			var probe = scene.instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
+			if probe != null:
+				if probe.has_method("setup_unit"):
+					probe.setup_unit()
+				if "item_name" in probe and str(probe.item_name) != "":
+					exact_id = str(probe.item_name)
+				probe.queue_free()
+		row_dicts.append({
+			"x": top_left.x,
+			"y": top_left.y,
+			"w": int(sz2.x),
+			"h": int(sz2.y),
+			"role": 1,
+			"group": 1,
+			"exact": exact_id,
+		})
+
 	if row_dicts.is_empty():
 		return "Nothing placed on the board."
+
+	# Stable order: top-to-bottom, then left-to-right.
+	row_dicts.sort_custom(func(a, b):
+		if int(a["y"]) != int(b["y"]):
+			return int(a["y"]) < int(b["y"])
+		return int(a["x"]) < int(b["x"])
+	)
 
 	var lines: PackedStringArray = []
 	lines.append("Name,Level,X,Y,W,H,Role,Group,Exact_Unit")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://1x8lgit6c1ek"]
+[gd_scene load_steps=35 format=3 uid="uid://1x8lgit6c1ek"]
 
 [ext_resource type="PackedScene" uid="uid://dqe8xadue3a2n" path="res://Utilities/Base_Unit.tscn" id="1_y1ls7"]
 [ext_resource type="Script" uid="uid://bctncojb78b24" path="res://Units/unit_scenes/bruiser_unit/bruiser_unit.gd" id="2_1lovx"]
@@ -7,7 +7,8 @@
 [ext_resource type="Texture2D" uid="uid://dwlkavrk82taf" path="res://Assets/UnitSprites/vampiric_bruiser.png" id="4_4unam"]
 [ext_resource type="PackedScene" uid="uid://dyfsrdj085rjw" path="res://Utilities/Entity_Components/Attack_Base.tscn" id="4_otlbk"]
 [ext_resource type="Texture2D" uid="uid://cxkosrfrq7ma7" path="res://Assets/UnitSprites/berserk_bruiser.png" id="5_11wxx"]
-[ext_resource type="Script" uid="uid://bqv2g0eqmyue" path="res://Units/unit_scenes/melee_unit_template/basic_melee.gd" id="5_d3lu7"]
+[ext_resource type="Script" uid="uid://cbruiseraoeatk01" path="res://Units/unit_scenes/bruiser_unit/bruiser_melee_attack.gd" id="5_d3lu7"]
+[ext_resource type="PackedScene" uid="uid://bruisermeleehb1" path="res://Units/unit_scenes/bruiser_unit/bruiser_melee_hitbox.tscn" id="6_aoehb"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_1lovx"]
 atlas = ExtResource("2_vmuac")
@@ -240,3 +241,7 @@ script = ExtResource("3_jvx18")
 [node name="Melee_Attack" parent="." index="5" instance=ExtResource("4_otlbk")]
 script = ExtResource("5_d3lu7")
 attack_range = 30
+
+[node name="Bruiser_Melee_Hitbox" parent="Melee_Attack" index="1" instance=ExtResource("6_aoehb")]
+
+[editable path="Melee_Attack"]

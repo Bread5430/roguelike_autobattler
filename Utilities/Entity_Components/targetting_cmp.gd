@@ -111,9 +111,21 @@ func _sync_targets_from_manager_if_needed(num_targets: int) -> void:
 		return
 	curr_target_iter = target_manager.target_iter
 	var fetch_n: int = maxi(num_targets * 3, _MIN_TARGET_FETCH)
-	curr_targets = target_manager.get_closest_targets(!unit.faction, unit.position, fetch_n)
+	var fetch_range: int = _get_acquisition_range()
+	curr_targets = target_manager.get_closest_targets(!unit.faction, unit.position, fetch_n, fetch_range)
 	target_idx = 0
 
+
+func _get_acquisition_range() -> int:
+	var best: int = 0
+	for c in unit.get_children():
+		if c is Attack_Base:
+			best = maxi(best, int((c as Attack_Base).attack_range))
+	# Edge-to-edge attacks can engage slightly beyond center distance = attack_range.
+	if unit != null and unit.get("coll_circle") != null and unit.coll_circle != null:
+		if unit.coll_circle.shape is CircleShape2D:
+			best += int((unit.coll_circle.shape as CircleShape2D).radius)
+	return maxi(best, 1)
 
 
 func _get_non_null_idx() -> bool:

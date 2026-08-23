@@ -6,9 +6,10 @@ splash_template,Splash Artillery,5,20,1,2,Lobs physical projectiles that splash 
 arc_template,Arc Cleaver,10,45,2,2,Sweeps a wide arc in front of the unit to hit multiple foes.
 arc_launcher,Arc Launcher,5,35,1,2,Fires an arc-shaped strike at the end of an aiming line.
 sniper_unit,Sniper,5,30,10,4,"Extremely long range and high damage, slow and fragile."
-bruiser_unit,Bruiser,30,80,4,5,"Fast, Tanky and Dangerous melee unit who both protects chaff and destroys single targets."
+bruiser_unit,Bruiser,30,80,4,5,"Fast, tanky melee fighter whose strikes splash all enemies in melee range."
 exploder_unit,Exploder,28,90,3,5,"Fast durable melee fighter that detonates in a splash when destroyed."
 router_unit,Router,20,35,1,4,"Core of an army. Make sure to protect to avoid being debuffed."
 static_router_unit,Static Router,40,0,1,0,"Stationary core of an army. High Value target."
 railgun_unit,Railgun Skirmisher,5,30,8,4,Fires a fast slug that pierces through one foe and stops on the next.
+battering_ram,Battering Ram,45,28,4,5,Siege unit that marches on player routers and only reverts to normal targeting once they are gone.
 factory,Factory,100,30,3,0,Last-stand structure representing player health.

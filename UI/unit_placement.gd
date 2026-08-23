@@ -29,6 +29,8 @@ var unit_board_space_map : Array[Array] = [] # Stores references to units on the
 var _placed_router_exclusions: Array[Dictionary] = []
 ## Board tiles occupied by unremovable static routers (Vector2i -> true); kept out of the space map so they can't be removed/refunded.
 var _static_router_tiles: Dictionary = {}
+## Formation-editor save support: each static router anchor { "top_left": Vector2i, "size": Vector2, "scene": PackedScene }.
+var _static_router_placements: Array = []
 
 # Current placement selection / preview state.
 var targetCell
@@ -248,6 +250,7 @@ func _remove_placed_router_exclusion_if_matches(top_corner: Vector2i, size: Vect
 ## Centered horizontally; first ~1/4 down and second ~3/4 down the vertical.
 func _spawn_static_routers() -> void:
 	_static_router_tiles.clear()
+	_static_router_placements.clear()
 	var scene: PackedScene = ITEM_NAME.item_lookup(STATIC_ROUTER_CARD_ID)
 	if scene == null:
 		push_warning("Static router card not found: %s" % STATIC_ROUTER_CARD_ID)
@@ -281,11 +284,18 @@ func _spawn_one_static_router(scene: PackedScene, top_left: Vector2i, size: Vect
 		return
 	item_inst.setup_unit()
 	# Occupy the grid so players can't place on top. Intentionally NOT added to
-	# unit_board_space_map, so right-click removal and end-of-battle refund skip it.
+	# unit_board_space_map during normal battles, so right-click removal and
+	# end-of-battle refund skip it. Formation editor save reads placements via
+	# get_static_router_placements().
 	for cell in cells:
 		cell.full = true
 		var bp : Vector2 = (cell as BoardSlot).board_position
 		_static_router_tiles[Vector2i(int(bp.x), int(bp.y))] = true
+	_static_router_placements.append({
+		"top_left": top_left,
+		"size": size,
+		"scene": scene,
+	})
 	# Derive the anchor from grid coords + cell size directly. BoardUI is a
 	# GridContainer that may not have laid out its cells yet when prep begins,
 	# so BoardSlot.position can still read (0,0) here. unit_board's own
@@ -294,6 +304,17 @@ func _spawn_one_static_router(scene: PackedScene, top_left: Vector2i, size: Vect
 	var start_position = unit_board.global_position + Vector2(top_left.x * unit_board.cellWidth, top_left.y * unit_board.cellHeight)
 	battle_manager.add_unit_to_board(item_inst, start_position, item_inst.placement_vectors, true)
 	item_inst.queue_free()
+
+
+## Static router anchors for formation CSV export (not stored in the space map).
+func get_static_router_placements() -> Array:
+	return _static_router_placements
+
+
+## Clear static router tile locks without respawning (used when loading a formation that includes routers).
+func clear_static_router_state() -> void:
+	_static_router_tiles.clear()
+	_static_router_placements.clear()
 
 
 # =============================================================================
@@ -458,21 +479,36 @@ func place_unit_card_programmatic(p_scene: PackedScene, top_left: Vector2i, rota
 	var unit_size = item_inst.rotated_placement_size if rotated else item_inst.placement_size
 	var unit_vec = item_inst.rotated_vectors if rotated else item_inst.placement_vectors
 
-	place_on_board(grid_pos, unit_size, p_scene)
+	var is_static_router = item_inst is Unit_Card and str((item_inst as Unit_Card).item_name) == STATIC_ROUTER_CARD_ID
+	if is_static_router:
+		# Keep static routers out of the space map (same as auto-spawn) so save
+		# exports them once via get_static_router_placements().
+		var top_i = Vector2i(int(grid_pos.x), int(grid_pos.y))
+		for cell in objectCells:
+			if cell is BoardSlot:
+				var bp : Vector2 = (cell as BoardSlot).board_position
+				_static_router_tiles[Vector2i(int(bp.x), int(bp.y))] = true
+		_static_router_placements.append({
+			"top_left": top_i,
+			"size": unit_size,
+			"scene": p_scene,
+		})
+	else:
+		place_on_board(grid_pos, unit_size, p_scene)
 
 	var router_excl = _router_exclusion_radius_from_card_inst(item_inst)
 	if router_excl > 0.0:
 		var center = _placement_center_global_from_cells(objectCells, unit_size)
-		var top_i = Vector2i(int(grid_pos.x), int(grid_pos.y))
+		var top_i2 = Vector2i(int(grid_pos.x), int(grid_pos.y))
 		_placed_router_exclusions.append({
 			"center": center,
 			"radius": router_excl,
-			"top_corner": top_i,
+			"top_corner": top_i2,
 			"size": unit_size,
 		})
 
 	battle_manager.add_unit_to_board(item_inst, objectCells[0].global_position, unit_vec, true)
-	if item_inst is Unit_Card:
+	if item_inst is Unit_Card and not is_static_router:
 		_spend_scrap_for_card(item_inst as Unit_Card)
 	_reset_highlight(objectCells)
 	item_inst.queue_free()
