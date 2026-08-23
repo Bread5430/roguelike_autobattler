@@ -20,6 +20,9 @@ const DIRECTIONS = [
 
 var cached_enemies = {}
 var cached_allies = {}
+## World max_range used when each cell's cache entry was built (for depth-adequacy checks).
+var cached_enemies_range = {}
+var cached_allies_range = {}
 var target_iter = 0
 var perf_counters := {
 	"queries": 0,
@@ -61,6 +64,8 @@ func reset_cache() -> void:
 	target_iter = (target_iter + 1) % 100
 	cached_allies.clear()
 	cached_enemies.clear()
+	cached_allies_range.clear()
+	cached_enemies_range.clear()
 	_ensure_snapshot_buffers()
 	_snapshot_wave_id += 1
 	_snapshot_refresh_cursor = 0
@@ -97,16 +102,18 @@ func get_targets(faction: bool, location: Vector2, num_targets: int = 10, max_ra
 	var target_location: Vector2i = get_parent().world_to_grid(location)
 
 	if target_location in cached_enemies and faction == false:
-		perf_counters["cache_hits"] += 1
-		if num_targets > cached_enemies[target_location].size():
-			num_targets = cached_enemies[target_location].size()
-		return cached_enemies[target_location].slice(0, num_targets)
+		if int(cached_enemies_range.get(target_location, 0)) >= max_range:
+			perf_counters["cache_hits"] += 1
+			if num_targets > cached_enemies[target_location].size():
+				num_targets = cached_enemies[target_location].size()
+			return cached_enemies[target_location].slice(0, num_targets)
 
 	if target_location in cached_allies and faction == true:
-		perf_counters["cache_hits"] += 1
-		if num_targets > cached_allies[target_location].size():
-			num_targets = cached_allies[target_location].size()
-		return cached_allies[target_location].slice(0, num_targets)
+		if int(cached_allies_range.get(target_location, 0)) >= max_range:
+			perf_counters["cache_hits"] += 1
+			if num_targets > cached_allies[target_location].size():
+				num_targets = cached_allies[target_location].size()
+			return cached_allies[target_location].slice(0, num_targets)
 
 	_ensure_snapshot_buffers()
 	perf_counters["bfs_calls"] += 1
@@ -140,8 +147,10 @@ func get_targets(faction: bool, location: Vector2, num_targets: int = 10, max_ra
 
 	if faction:
 		cached_allies[target_location] = result
+		cached_allies_range[target_location] = max_range
 	else:
 		cached_enemies[target_location] = result
+		cached_enemies_range[target_location] = max_range
 
 	if num_targets > result.size():
 		num_targets = result.size()

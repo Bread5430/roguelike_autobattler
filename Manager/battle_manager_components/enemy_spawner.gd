@@ -176,8 +176,9 @@ func pick_unit_scene_for_entry(parsed: Dictionary, seen_groups: Dictionary) -> P
 
 
 ## Spawns one formation entry as enemies. Returns spawn grid position on success, or null.
-## Side-row formation entries (top/bottom SIDE_ROWS) are also mirrored onto the
-## player-side board at the authored (x, y) cell as additional enemies.
+## Formation CSV coords are authored on the player board; spawn mirrors X left-to-right
+## onto the enemy side so player-left (backline) maps to enemy-right (backline).
+## Side-row entries are also mirrored onto the player-side column at the same logical y.
 func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -> Variant:
 	if parsed.is_empty():
 		push_warning("Malformed Formation")
@@ -198,39 +199,94 @@ func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -
 	var local_y = int(parsed["y"])
 	var placement = unit_item_inst.get_placement(false)
 	var placement_size : Vector2 = placement[0]
+	var placement_vectors : Array = placement[1]
+	var footprint_w : int = int(placement_size.x)
 	var footprint_h : int = int(placement_size.y)
 
 	var board = bm.get_node("BoardUI")
+	var board_width : int = int(board.width)
 	var board_height : int = int(board.height)
-	var in_top_side_band : bool = local_y < SIDE_ROWS
+
+	# Player-board authorship → enemy-side L/R mirror of the footprint top-left.
+	var mirrored_x : int = board_width - footprint_w - local_x
+	var mirrored_vectors : Array = _mirror_placement_vectors_x(placement_vectors, float(footprint_w))
+
+	# Side strips sit outside the main board (top y < 0, bottom y >= height, plus
+	# legacy bottom band height-SIDE_ROWS..height-1).
+	var in_top_side_band : bool = local_y < 0
 	var in_bottom_side_band : bool = local_y >= board_height - SIDE_ROWS
 	var is_side_band : bool = in_top_side_band or in_bottom_side_band
 
-	# Validate side-slot placements: the unit footprint must not expand
-	# outside the 3-row side band (top or bottom).
+	var strip_local_y = 0
 	if is_side_band:
-		if in_top_side_band:
-			if local_y + footprint_h > SIDE_ROWS:
-				unit_item_inst.queue_free()
-				return null
-		elif local_y + footprint_h > board_height:
+		strip_local_y = _side_strip_local_y(local_y, board_height, in_top_side_band)
+		if strip_local_y < 0 or strip_local_y + footprint_h > SIDE_ROWS:
 			unit_item_inst.queue_free()
 			return null
 
-	var spawn_pos : Vector2i = Vector2i(local_x, local_y) + grid_size
-	var world_spawn_pos = _board_grid_to_world(spawn_pos)
+	var world_spawn_pos: Vector2
+	var spawn_pos: Vector2i
+	if is_side_band:
+		world_spawn_pos = _side_strip_grid_to_world(
+			mirrored_x, local_y, strip_local_y, in_bottom_side_band, board_height
+		)
+		if in_top_side_band:
+			spawn_pos = Vector2i(mirrored_x, strip_local_y - SIDE_ROWS)
+		else:
+			spawn_pos = Vector2i(mirrored_x, board_height + strip_local_y)
+	else:
+		spawn_pos = Vector2i(mirrored_x, local_y) + grid_size
+		world_spawn_pos = _board_grid_to_world(spawn_pos)
 
-	bm.add_unit_to_board(unit_item_inst, world_spawn_pos, placement[1], false)
-	_register_enemy_pack_points(world_spawn_pos, placement[0], unit_item_inst.num_units > 1)
+	bm.add_unit_to_board(unit_item_inst, world_spawn_pos, mirrored_vectors, false)
+	_register_enemy_pack_points(world_spawn_pos, placement_size, unit_item_inst.num_units > 1)
 
 	if is_side_band:
-		var mirror_pos : Vector2i = Vector2i(local_x, local_y)
-		var mirror_world = _board_grid_to_world(mirror_pos)
-		bm.add_unit_to_board(unit_item_inst, mirror_world, placement[1], false)
-		_register_enemy_pack_points(mirror_world, placement[0], unit_item_inst.num_units > 1)
+		# Mirror copy on the player-side column at the same logical strip y (unflipped
+		# player x — this is the authored left-side counterpart).
+		var mirror_world = _board_grid_to_world(Vector2i(local_x, spawn_pos.y))
+		bm.add_unit_to_board(unit_item_inst, mirror_world, placement_vectors, false)
+		_register_enemy_pack_points(mirror_world, placement_size, unit_item_inst.num_units > 1)
 
 	unit_item_inst.queue_free()
 	return spawn_pos
+
+
+## Flip placement centers horizontally within a footprint of width `footprint_w`.
+func _mirror_placement_vectors_x(vectors: Array, footprint_w: float) -> Array:
+	var out: Array = []
+	for v in vectors:
+		var p : Vector2 = v
+		out.append(Vector2(footprint_w - p.x, p.y))
+	return out
+
+
+## Maps authored formation y into 0..SIDE_ROWS-1 within the matching side strip.
+func _side_strip_local_y(local_y: int, board_height: int, in_top: bool) -> int:
+	if in_top:
+		return local_y + SIDE_ROWS
+	if local_y >= board_height:
+		return local_y - board_height
+	return local_y - (board_height - SIDE_ROWS)
+
+
+## World origin for a cell inside SideStripTop / SideStripBottom.
+## Editor-authored strip coords (y < 0 or y >= board height) use the strip's own
+## X origin. Legacy bottom-band rows keep the normal enemy X offset (grid_size).
+func _side_strip_grid_to_world(local_x: int, local_y: int, strip_local_y: int, bottom: bool, board_height: int) -> Vector2:
+	var strip = bm.side_strip_bottom_tiles if bottom else bm.side_strip_top_tiles
+	if strip == null:
+		return _board_grid_to_world(Vector2i(local_x, strip_local_y))
+	var cell_w = int(strip.cellWidth)
+	var cell_h = int(strip.cellHeight)
+	var world_y = strip.global_position.y + strip_local_y * cell_h
+	var world_x: float
+	if not bottom or local_y >= board_height or local_y < 0:
+		world_x = strip.global_position.x + local_x * cell_w
+	else:
+		var board = bm.get_node("BoardUI")
+		world_x = board.global_position.x + (local_x + grid_size.x) * int(board.cellWidth)
+	return Vector2(world_x, world_y)
 
 
 func _register_enemy_pack_points(anchor: Vector2, footprint_size: Vector2, is_multi: bool) -> void:
