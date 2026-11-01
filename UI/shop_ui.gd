@@ -3,8 +3,8 @@ class_name ShopUI
 
 signal purchase_requested(slot_data: Dictionary, row_key: String, slot_index: int)
 signal refresh_requested
-signal scrap_mode_entered
-signal scrap_mode_exited
+signal deconstruct_mode_entered
+signal deconstruct_mode_exited
 signal leave_requested
 
 const SHOP_SLOT_SCENE := preload("res://UI/ShopSlot.tscn")
@@ -19,10 +19,10 @@ const REFRESH_COST := 50
 @onready var _relic_row: HBoxContainer = $MainPanel/Margin/VBox/RelicRow
 @onready var _refresh_button: Button = $MainPanel/Margin/VBox/FooterRow/RefreshButton
 @onready var _leave_button: Button = $MainPanel/Margin/VBox/FooterRow/LeaveButton
-@onready var _scraper_button: Button = $MainPanel/Margin/VBox/FooterRow/ScraperButton
-@onready var _scrap_overlay: Control = $ScrapOverlay
-@onready var _scrap_backdrop: ColorRect = $ScrapOverlay/ScrapBackdrop
-@onready var _scrap_return_button: Button = $ScrapOverlay/ScrapPanel/Margin/VBox/ReturnButton
+@onready var _deconstruct_button: Button = $MainPanel/Margin/VBox/FooterRow/DeconstructButton
+@onready var _deconstruct_overlay: Control = $DeconstructOverlay
+@onready var _deconstruct_backdrop: ColorRect = $DeconstructOverlay/DeconstructBackdrop
+@onready var _deconstruct_return_button: Button = $DeconstructOverlay/DeconstructPanel/Margin/VBox/ReturnButton
 
 var _stock: Dictionary = {}
 var _unit_slots: Array[ShopSlot] = []
@@ -30,7 +30,7 @@ var _spell_slots: Array[ShopSlot] = []
 var _relic_slots: Array[ShopSlot] = []
 var _refresh_used := false
 var _panel_visible := true
-var _scrap_mode := false
+var _deconstruct_mode := false
 var _passthrough_helper: Node
 
 
@@ -39,15 +39,15 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
 	_main_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	_scrap_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	_scrap_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
-	_scrap_overlay.get_node("ScrapPanel").mouse_filter = Control.MOUSE_FILTER_STOP
+	_deconstruct_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_deconstruct_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	_deconstruct_overlay.get_node("DeconstructPanel").mouse_filter = Control.MOUSE_FILTER_STOP
 	_backdrop.gui_input.connect(_on_backdrop_gui_input)
-	_scrap_backdrop.gui_input.connect(_on_backdrop_gui_input)
+	_deconstruct_backdrop.gui_input.connect(_on_backdrop_gui_input)
 	_refresh_button.pressed.connect(_on_refresh_pressed)
 	_leave_button.pressed.connect(_on_leave_pressed)
-	_scraper_button.pressed.connect(_on_scraper_pressed)
-	_scrap_return_button.pressed.connect(_on_scrap_return_pressed)
+	_deconstruct_button.pressed.connect(_on_deconstruct_pressed)
+	_deconstruct_return_button.pressed.connect(_on_deconstruct_return_pressed)
 
 
 func setup(passthrough_helper: Node) -> void:
@@ -58,9 +58,9 @@ func open(stock: Dictionary, gold: int, components: int) -> void:
 	_stock = stock.duplicate(true)
 	_refresh_used = false
 	_panel_visible = true
-	_scrap_mode = false
-	_scrap_overlay.visible = false
-	_set_scrap_pass_through(false)
+	_deconstruct_mode = false
+	_deconstruct_overlay.visible = false
+	_set_deconstruct_pass_through(false)
 	_build_slot_rows()
 	_update_currency_labels(gold, components)
 	_update_refresh_button(gold)
@@ -69,8 +69,8 @@ func open(stock: Dictionary, gold: int, components: int) -> void:
 
 
 func close() -> void:
-	if _scrap_mode:
-		exit_scrap_mode()
+	if _deconstruct_mode:
+		exit_deconstruct_mode()
 	_set_panel_visible(false)
 	visible = false
 	_clear_slot_rows()
@@ -81,7 +81,7 @@ func is_panel_visible() -> bool:
 
 
 func toggle_panel_visibility() -> void:
-	if not visible or _scrap_mode:
+	if not visible or _deconstruct_mode:
 		return
 	_set_panel_visible(not _panel_visible)
 
@@ -100,26 +100,26 @@ func refresh_currency(gold: int, components: int) -> void:
 		slot._refresh_display()
 
 
-func enter_scrap_mode() -> void:
-	if _scrap_mode:
+func enter_deconstruct_mode() -> void:
+	if _deconstruct_mode:
 		return
-	_scrap_mode = true
-	_scrap_overlay.visible = true
+	_deconstruct_mode = true
+	_deconstruct_overlay.visible = true
 	# Inventory is brought to the front for item clicks; keep shop chrome
-	# pass-through so only the scrap return panel captures mouse.
-	_set_scrap_pass_through(true)
+	# pass-through so only the deconstruct return panel captures mouse.
+	_set_deconstruct_pass_through(true)
 	_set_shop_controls_enabled(false)
-	scrap_mode_entered.emit()
+	deconstruct_mode_entered.emit()
 
 
-func exit_scrap_mode() -> void:
-	if not _scrap_mode:
+func exit_deconstruct_mode() -> void:
+	if not _deconstruct_mode:
 		return
-	_scrap_mode = false
-	_scrap_overlay.visible = false
-	_set_scrap_pass_through(false)
+	_deconstruct_mode = false
+	_deconstruct_overlay.visible = false
+	_set_deconstruct_pass_through(false)
 	_set_shop_controls_enabled(true)
-	scrap_mode_exited.emit()
+	deconstruct_mode_exited.emit()
 
 
 func mark_slot_sold(row_key: String, slot_index: int) -> void:
@@ -176,31 +176,31 @@ func _clear_slot_rows() -> void:
 # NOTE: bound args (row_key, slot_index) are appended AFTER the signal's emitted
 # slot_data, so the emitted arg must be the first parameter here.
 func _on_slot_pressed(slot_data: Dictionary, row_key: String, slot_index: int) -> void:
-	if _scrap_mode:
+	if _deconstruct_mode:
 		return
 	purchase_requested.emit(slot_data, row_key, slot_index)
 
 
 func _on_refresh_pressed() -> void:
-	if _scrap_mode or _refresh_used:
+	if _deconstruct_mode or _refresh_used:
 		return
 	refresh_requested.emit()
 
 
 func _on_leave_pressed() -> void:
-	if _scrap_mode:
+	if _deconstruct_mode:
 		return
 	leave_requested.emit()
 
 
-func _on_scraper_pressed() -> void:
-	if _scrap_mode:
+func _on_deconstruct_pressed() -> void:
+	if _deconstruct_mode:
 		return
-	enter_scrap_mode()
+	enter_deconstruct_mode()
 
 
-func _on_scrap_return_pressed() -> void:
-	exit_scrap_mode()
+func _on_deconstruct_return_pressed() -> void:
+	exit_deconstruct_mode()
 
 
 func _on_backdrop_gui_input(event: InputEvent) -> void:
@@ -214,46 +214,46 @@ func _set_panel_visible(show_panel: bool) -> void:
 	_panel_visible = show_panel
 	_backdrop.visible = show_panel
 	_main_panel.visible = show_panel
-	if show_panel and visible and not _scrap_mode:
+	if show_panel and visible and not _deconstruct_mode:
 		if _passthrough_helper:
 			_passthrough_helper.block_input()
 	elif _passthrough_helper:
 		_passthrough_helper.unblock_input()
 
 
-func _set_scrap_pass_through(enabled: bool) -> void:
-	# While scrapping, inventory sits above most of the shop. Ignore mouse on
-	# the shop chrome so inventory stays clickable, but keep ScrapPanel STOP
-	# so "Leave Scraper" remains reachable even when overlapping the grid.
+func _set_deconstruct_pass_through(enabled: bool) -> void:
+	# While deconstructing, inventory sits above most of the shop. Ignore mouse on
+	# the shop chrome so inventory stays clickable, but keep DeconstructPanel STOP
+	# so "Leave Deconstruct" remains reachable even when overlapping the grid.
 	var filter = Control.MOUSE_FILTER_IGNORE if enabled else Control.MOUSE_FILTER_STOP
 	mouse_filter = filter
 	_backdrop.mouse_filter = filter
 	_main_panel.mouse_filter = filter
-	_scrap_overlay.mouse_filter = filter
-	_scrap_backdrop.mouse_filter = filter
-	_scrap_overlay.get_node("ScrapPanel").mouse_filter = Control.MOUSE_FILTER_STOP
-	_scrap_return_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_deconstruct_overlay.mouse_filter = filter
+	_deconstruct_backdrop.mouse_filter = filter
+	_deconstruct_overlay.get_node("DeconstructPanel").mouse_filter = Control.MOUSE_FILTER_STOP
+	_deconstruct_return_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	if enabled:
 		move_to_front()
-		_scrap_overlay.move_to_front()
+		_deconstruct_overlay.move_to_front()
 
 
 func _set_shop_controls_enabled(enabled: bool) -> void:
 	_refresh_button.disabled = not enabled or _refresh_used
 	_leave_button.disabled = not enabled
-	_scraper_button.disabled = not enabled
+	_deconstruct_button.disabled = not enabled
 	for slot in _all_slots():
 		slot.disabled = not enabled or slot.slot_data.get("sold", false) or str(slot.slot_data.get("kind", "")) == "relic"
 
 
 func _update_currency_labels(gold: int, components: int) -> void:
-	_gold_label.text = "Gold: %d" % gold
+	_gold_label.text = "Scrap: %d" % gold
 	_components_label.text = "Components: %d" % components
 
 
 func _update_refresh_button(gold: int) -> void:
-	_refresh_button.text = "Refresh shop (%dg)" % REFRESH_COST
-	_refresh_button.disabled = _refresh_used or _scrap_mode or gold < REFRESH_COST
+	_refresh_button.text = "Refresh shop (%d scrap)" % REFRESH_COST
+	_refresh_button.disabled = _refresh_used or _deconstruct_mode or gold < REFRESH_COST
 
 
 func mark_refresh_used(gold: int) -> void:

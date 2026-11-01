@@ -7,5 +7,5 @@ locked_cache,Locked Cache,"Two sealed caches appear on your charts. You can only
 hidden_supplies,Hidden Supplies,"Rumors mark three quiet stockpiles. Each holds a little spare scrap.",res://Assets/CardSprites/attack_speed_field.png,7,1,quest
 depot_assault_reward,Depot Cleared,"The depot falls. Salvage crews haul out spare components.",res://Assets/CardSprites/dot_spell.png,0,1,encounter
 locked_cache_comp,Component Cache,"You crack the component cache and pocket the haul.",res://Assets/CardSprites/circle_aoe_spell.png,0,1,encounter
-locked_cache_gold,Gold Cache,"You crack the gold cache and pocket the haul.",res://Assets/CardSprites/attack_speed_field.png,0,1,encounter
+locked_cache_gold,Scrap Cache,"You crack the scrap cache and pocket the haul.",res://Assets/CardSprites/attack_speed_field.png,0,1,encounter
 hidden_supplies_reward,Hidden Stockpile,"You uncover a small stash of spare components.",res://Assets/CardSprites/attack_speed_field.png,0,1,encounter

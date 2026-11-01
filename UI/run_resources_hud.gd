@@ -8,7 +8,7 @@ class_name RunResourcesHUD
 func update_values(gold: int, components: int) -> void:
 	if not is_node_ready():
 		return
-	_gold_label.text = "Gold: %d" % gold
+	_gold_label.text = "Scrap: %d" % gold
 	_components_label.text = "Components: %d" % components
 
 

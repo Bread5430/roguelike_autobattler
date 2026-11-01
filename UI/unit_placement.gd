@@ -1,7 +1,7 @@
 extends Node
 class_name UnitPlacement
 
-## Owns the deployment board grid, unit placement/removal, static routers, scrap
+## Owns the deployment board grid, unit placement/removal, static routers, bandwidth
 ## spend/refund on placement, and formation-editor board operations.
 ## The GUI keeps ownership of phase state (deployment_mode), spells, and UI routing,
 ## and delegates board interactions here.
@@ -206,7 +206,7 @@ func handle_board_click(mb: InputEventMouseButton, world_pos: Vector2) -> void:
 			item_inst.setup_unit()
 			remove_from_board(top_i, size)
 			if item_inst is Unit_Card:
-				_refund_scrap_for_card(item_inst as Unit_Card)
+				_refund_bandwidth_for_card(item_inst as Unit_Card)
 			inventory.add_item(item_inst.item_name, 1)
 			curr_unit = removed_unit_info[0]
 			curr_unit_inst = item_inst
@@ -318,21 +318,21 @@ func clear_static_router_state() -> void:
 
 
 # =============================================================================
-# SCRAP (spent/refunded on placement/removal)
+# BANDWIDTH (spent/refunded on placement/removal)
 # =============================================================================
 
-func _spend_scrap_for_card(card: Unit_Card) -> void:
-	if gsm == null or not gsm.has_node("ScrapBufferManager") or card == null:
+func _spend_bandwidth_for_card(card: Unit_Card) -> void:
+	if gsm == null or not gsm.has_node("BandwidthManager") or card == null:
 		return
-	var scrap_buffer := gsm.get_node("ScrapBufferManager") as ScrapBufferManager
-	scrap_buffer.spend_scrap(card.get_total_scrap_cost())
+	var bw = gsm.get_node("BandwidthManager") as BandwidthManager
+	bw.spend_bandwidth(card.get_total_bandwidth_cost())
 
 
-func _refund_scrap_for_card(card: Unit_Card) -> void:
-	if gsm == null or not gsm.has_node("ScrapBufferManager") or card == null:
+func _refund_bandwidth_for_card(card: Unit_Card) -> void:
+	if gsm == null or not gsm.has_node("BandwidthManager") or card == null:
 		return
-	var scrap_buffer := gsm.get_node("ScrapBufferManager") as ScrapBufferManager
-	scrap_buffer.refund_scrap(card.get_total_scrap_cost())
+	var bw = gsm.get_node("BandwidthManager") as BandwidthManager
+	bw.refund_bandwidth(card.get_total_bandwidth_cost())
 
 
 # =============================================================================
@@ -372,7 +372,7 @@ func refund_units_after_battle() -> void:
 	clear_placement_grid()
 
 
-## During deployment: remove all player-placed units (not static routers), refund scrap, return cards to inventory.
+## During deployment: remove all player-placed units (not static routers), refund bandwidth, return cards to inventory.
 func return_placed_units_to_inventory() -> void:
 	var placements: Array = []
 	var map_height = unit_board_height + 2 * SIDE_ROWS
@@ -396,7 +396,7 @@ func return_placed_units_to_inventory() -> void:
 		if item_inst and item_inst.has_method("setup_unit"):
 			item_inst.setup_unit()
 		if item_inst is Unit_Card:
-			_refund_scrap_for_card(item_inst as Unit_Card)
+			_refund_bandwidth_for_card(item_inst as Unit_Card)
 		if inventory and item_inst and "item_name" in item_inst:
 			inventory.add_item(item_inst.item_name, 1)
 		remove_from_board(top_i, size)
@@ -509,7 +509,7 @@ func place_unit_card_programmatic(p_scene: PackedScene, top_left: Vector2i, rota
 
 	battle_manager.add_unit_to_board(item_inst, objectCells[0].global_position, unit_vec, true)
 	if item_inst is Unit_Card and not is_static_router:
-		_spend_scrap_for_card(item_inst as Unit_Card)
+		_spend_bandwidth_for_card(item_inst as Unit_Card)
 	_reset_highlight(objectCells)
 	item_inst.queue_free()
 	curr_unit_inst = null
@@ -587,7 +587,7 @@ func _place_unit():
 		})
 	battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].global_position, unit_vec, true)
 	if curr_unit_inst is Unit_Card:
-		_spend_scrap_for_card(curr_unit_inst as Unit_Card)
+		_spend_bandwidth_for_card(curr_unit_inst as Unit_Card)
 	_reset_highlight(objectCells)
 	_clear_placement_indicators_preview()
 

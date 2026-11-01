@@ -3,6 +3,8 @@ class_name Unit_Card
 #const PLACEMENT_TILE_SIZE = 50
 
 @export var num_units : int
+## Duplicate-unit pricing multiplier; 1 is the default card tier.
+@export var unit_tier : int = 1
 @export var placement_size : Vector2
 var rotated_placement_size : Vector2 
 
@@ -41,14 +43,25 @@ func get_unit_glossary_id() -> String:
 	return glossary_id
 
 
-func get_total_scrap_cost() -> int:
-	var glossary_id := get_unit_glossary_id()
+func get_total_bandwidth_cost() -> int:
+	var glossary_id = get_unit_glossary_id()
 	if glossary_id.is_empty():
 		return 0
-	var cost := UNIT_GLOSSARY.get_scrap_cost(glossary_id) * num_units
+	var cost = UNIT_GLOSSARY.get_bandwidth_cost(glossary_id) * num_units
 	if not item_name.is_empty() and UnitUpgradeRegistry.has_upgrade(item_name):
 		cost *= 2
 	return cost
+
+
+func get_duplicate_cost() -> Dictionary:
+	# TODO: multiply by item rarity when rarity exists.
+	var tier = maxi(1, unit_tier)
+	var components = 1 * num_units * tier
+	var scrap = 10 * tier
+	if not item_name.is_empty() and UnitUpgradeRegistry.has_upgrade(item_name):
+		components *= 2
+		scrap *= 2
+	return {"components": components, "scrap": scrap}
 
 
 func _apply_upgraded_card_texture() -> void:

@@ -12,7 +12,7 @@
 [ext_resource type="PackedScene" path="res://UI/ShopUI.tscn" id="9_shop"]
 [ext_resource type="PackedScene" path="res://UI/RestUI.tscn" id="10_rest"]
 [ext_resource type="PackedScene" path="res://UI/RandomEventUI.tscn" id="11_event"]
-[ext_resource type="PackedScene" path="res://UI/ScrapBufferBar.tscn" id="12_scrap"]
+[ext_resource type="PackedScene" path="res://UI/BandwidthBar.tscn" id="12_bw"]
 [ext_resource type="Script" path="res://UI/unit_placement.gd" id="13_placement"]
 [ext_resource type="PackedScene" path="res://UI/BattleSpeedBar.tscn" id="14_speed"]
 
@@ -36,8 +36,8 @@ layout_mode = 1
 layout_mode = 0
 offset_left = 0.0
 offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
+offset_right = 1260.0
+offset_bottom = 1010.0
 columns = 10
 rows = 10
 
@@ -51,7 +51,7 @@ script = ExtResource("3_n3xue")
 [node name="BattleSpeedBar" parent="." instance=ExtResource("14_speed")]
 layout_mode = 1
 
-[node name="ScrapBufferBar" parent="." instance=ExtResource("12_scrap")]
+[node name="BandwidthBar" parent="." instance=ExtResource("12_bw")]
 visible = false
 layout_mode = 0
 offset_left = 328.0

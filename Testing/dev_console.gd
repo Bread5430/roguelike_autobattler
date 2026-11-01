@@ -296,7 +296,7 @@ func show_help():
 	log_message("formation_editor on [name [level]] | formation_editor off — enemy formation CSV editor (deployment)")
 	log_message("formation_load <name> — load formation (editor: player board; normal prep: enemy side)")
 	log_message("add_card <cardId> <count> — add unit/spell cards to inventory")
-	log_message("add_gold <amount> — add run gold")
+	log_message("add_gold <amount> — add run scrap")
 	log_message("add_components <amount> — add run components")
 
 func _cmd_formation_editor(args: Array) -> void:
@@ -403,7 +403,7 @@ func _cmd_add_gold(args: Array) -> void:
 		log_message("GameStateManager not found", "red")
 		return
 	gsm.add_gold(amount)
-	log_message("Added %d gold (total: %d)" % [amount, gsm.run_gold], "green")
+	log_message("Added %d scrap (total: %d)" % [amount, gsm.run_gold], "green")
 
 
 func _cmd_add_components(args: Array) -> void:

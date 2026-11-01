@@ -34,7 +34,7 @@ func _load_csv() -> void:
 			"max_hp": int(line[2]),
 			"movement_speed": int(line[3]),
 			"damage": int(line[4]),
-			"scrap_cost": int(line[5]),
+			"bandwidth_cost": int(line[5]),
 			"explanation_blurb": str(line[6])
 		}
 	file.close()
@@ -50,7 +50,7 @@ func get_entry(unit_id: String) -> Dictionary:
 	return {}
 
 
-func get_scrap_cost(unit_id: String) -> int:
+func get_bandwidth_cost(unit_id: String) -> int:
 	if has_entry(unit_id):
-		return int(entries[unit_id].get("scrap_cost", 0))
+		return int(entries[unit_id].get("bandwidth_cost", 0))
 	return 0

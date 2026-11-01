@@ -19,7 +19,7 @@ var unit_name : String
 ## Damage used when this unit strikes; overwritten from glossary when [member unit_glossary_id] matches.
 @export var base_damage: int = 1
 
-var scrap_cost: int = 0
+var bandwidth_cost: int = 0
 
 ## Flat damage subtracted after [member dmg_taken_mult] (e.g. Bruiser, Arc Path B).
 var flat_damage_reduction: int = 0
@@ -76,7 +76,7 @@ func _sync_from_glossary() -> void:
 	base_speed = int(e["movement_speed"])
 	move_speed = float(e["movement_speed"])
 	base_damage = int(e["damage"])
-	scrap_cost = int(e.get("scrap_cost", 0))
+	bandwidth_cost = int(e.get("bandwidth_cost", 0))
 	var dn := str(e.get("display_name", ""))
 	if dn != "":
 		unit_name = dn
@@ -197,7 +197,7 @@ func _apply_upgrade_stats() -> void:
 	max_hp *= 2
 	curr_hp = max_hp
 	base_damage *= 2
-	scrap_cost *= 2
+	bandwidth_cost *= 2
 
 
 ## Points the FSM at the upgraded animations authored on the AnimatedSprite2D.

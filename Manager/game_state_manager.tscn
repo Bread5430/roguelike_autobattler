@@ -14,7 +14,7 @@
 [ext_resource type="Script" uid="uid://lvglfpwp3ope" path="res://Manager/rest_control.gd" id="11_rest"]
 [ext_resource type="Script" uid="uid://pek8wyh8f0rq" path="res://Manager/random_event_control.gd" id="12_event"]
 [ext_resource type="Script" uid="uid://3fmraybc7gnt" path="res://Manager/quest_control.gd" id="12_quest"]
-[ext_resource type="Script" uid="uid://dvb2t11fw16ey" path="res://Manager/scrap_buffer_manager.gd" id="13_scrap"]
+[ext_resource type="Script" uid="uid://dvb2t11fw16ey" path="res://Manager/bandwidth_manager.gd" id="13_bw"]
 [ext_resource type="PackedScene" path="res://UI/Menus/PauseMenu.tscn" id="14_pause"]
 [ext_resource type="PackedScene" path="res://UI/Menus/LossScreen.tscn" id="15_loss"]
 
@@ -24,8 +24,8 @@ script = ExtResource("1_rks66")
 [node name="PlayerHealthManager" type="Node" parent="."]
 script = ExtResource("9_health")
 
-[node name="ScrapBufferManager" type="Node" parent="."]
-script = ExtResource("13_scrap")
+[node name="BandwidthManager" type="Node" parent="."]
+script = ExtResource("13_bw")
 
 [node name="ShopControl" type="Node" parent="."]
 script = ExtResource("10_shop")

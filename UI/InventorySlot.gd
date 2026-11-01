@@ -10,9 +10,11 @@ var item_inst : Item
 var quantity : int
 @onready var button_icon : TextureRect = $TextureRect
 @onready var quantity_text : Label = $Label
-@onready var scrap_cost_text : Label = $ScrapCostLabel
+@onready var bandwidth_cost_text : Label = $ScrapCostLabel
+@onready var tier_text : Label = $TierLabel
 
-const SCRAP_COST_COLOR := Color(0.4, 0.7, 1.0)
+const BANDWIDTH_COST_COLOR := Color(0.4, 0.7, 1.0)
+const DUPLICATE_COST_COLOR := Color(0.95, 0.75, 0.25)
 
 func set_slot_visible():
 	set_mouse_filter(Control.MOUSE_FILTER_STOP)
@@ -33,9 +35,12 @@ func set_item (itemID : String, new_item : PackedScene, count : int):
 			button_icon.texture = null
 		if quantity_text:
 			quantity_text.text = ""
-		if scrap_cost_text:
-			scrap_cost_text.visible = false
-			scrap_cost_text.text = ""
+		if bandwidth_cost_text:
+			bandwidth_cost_text.visible = false
+			bandwidth_cost_text.text = ""
+		if tier_text:
+			tier_text.visible = false
+			tier_text.text = ""
 		return
 
 	if item_inst and is_instance_valid(item_inst):
@@ -59,7 +64,7 @@ func set_item (itemID : String, new_item : PackedScene, count : int):
 	button_icon.scale = Vector2(self.size.x / max_dim, self.size.y / max_dim)
 	
 	update_quantity_text()
-	update_scrap_cost_text()
+	update_bandwidth_cost_text()
 
 func add_item(count : int):
 	quantity += count
@@ -83,16 +88,28 @@ func update_quantity_text ():
 		quantity_text.text = str(quantity)
 
 
-func update_scrap_cost_text() -> void:
-	if scrap_cost_text == null:
+func update_bandwidth_cost_text() -> void:
+	if bandwidth_cost_text == null:
 		return
 	if item_inst is Unit_Card:
-		scrap_cost_text.visible = true
-		scrap_cost_text.text = str((item_inst as Unit_Card).get_total_scrap_cost())
-		scrap_cost_text.add_theme_color_override("font_color", SCRAP_COST_COLOR)
+		var card = item_inst as Unit_Card
+		if tier_text:
+			tier_text.visible = true
+			tier_text.text = "T%d" % maxi(1, card.unit_tier)
+		bandwidth_cost_text.visible = true
+		if parent_inventory and parent_inventory.duplicate_mode:
+			var cost = card.get_duplicate_cost()
+			bandwidth_cost_text.text = "%dc %ds" % [int(cost.get("components", 0)), int(cost.get("scrap", 0))]
+			bandwidth_cost_text.add_theme_color_override("font_color", DUPLICATE_COST_COLOR)
+		else:
+			bandwidth_cost_text.text = str(card.get_total_bandwidth_cost())
+			bandwidth_cost_text.add_theme_color_override("font_color", BANDWIDTH_COST_COLOR)
 	else:
-		scrap_cost_text.visible = false
-		scrap_cost_text.text = ""
+		if tier_text:
+			tier_text.visible = false
+			tier_text.text = ""
+		bandwidth_cost_text.visible = false
+		bandwidth_cost_text.text = ""
 
 
 func _on_pressed():
@@ -100,14 +117,20 @@ func _on_pressed():
 	if item == null:
 		return
 
-	if parent_inventory.scrap_mode:
-		parent_inventory.scrap_item_requested.emit(item_name)
+	if parent_inventory.deconstruct_mode:
+		parent_inventory.deconstruct_item_requested.emit(item_name)
 		accept_event()
 		return
 
 	if parent_inventory.craft_mode:
 		if item_inst is Unit_Card:
 			parent_inventory.craft_item_requested.emit(item_name)
+		accept_event()
+		return
+
+	if parent_inventory.duplicate_mode:
+		if item_inst is Unit_Card:
+			parent_inventory.duplicate_unit_requested.emit(item_name)
 		accept_event()
 		return
   

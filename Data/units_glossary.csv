@@ -1,4 +1,4 @@
-unit_id,display_name,max_hp,movement_speed,damage,scrap_cost,explanation_blurb
+unit_id,display_name,max_hp,movement_speed,damage,bandwidth_cost,explanation_blurb
 melee_template,Frontline Fighter,10,40,2,2,Standard melee unit that closes distance and strikes in a short arc.
 basic_chaff,Chaff Swarm,2,60,2,1,Fragile but fast filler units meant to clog the battlefield. Terrifying Damage output when massed.
 ranged_template,Ranged Skirmisher,5,35,1,2,Keeps distance and plinks targets from afar.

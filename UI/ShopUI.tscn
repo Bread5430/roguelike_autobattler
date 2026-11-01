@@ -63,7 +63,7 @@ size_flags_horizontal = 3
 
 [node name="GoldLabel" type="Label" parent="MainPanel/Margin/VBox/HeaderRow"]
 layout_mode = 2
-text = "Gold: 0"
+text = "Scrap: 0"
 
 [node name="ComponentsLabel" type="Label" parent="MainPanel/Margin/VBox/HeaderRow"]
 layout_mode = 2
@@ -111,11 +111,11 @@ text = "Refresh shop (50g)"
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ScraperButton" type="Button" parent="MainPanel/Margin/VBox/FooterRow"]
+[node name="DeconstructButton" type="Button" parent="MainPanel/Margin/VBox/FooterRow"]
 layout_mode = 2
-text = "Scraper"
+text = "Deconstruct"
 
-[node name="ScrapOverlay" type="Control" parent="."]
+[node name="DeconstructOverlay" type="Control" parent="."]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -125,7 +125,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
 
-[node name="ScrapBackdrop" type="ColorRect" parent="ScrapOverlay"]
+[node name="DeconstructBackdrop" type="ColorRect" parent="DeconstructOverlay"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -135,7 +135,7 @@ grow_vertical = 2
 mouse_filter = 0
 color = Color(0, 0, 0, 0.45)
 
-[node name="ScrapPanel" type="PanelContainer" parent="ScrapOverlay"]
+[node name="DeconstructPanel" type="PanelContainer" parent="DeconstructOverlay"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -147,29 +147,29 @@ offset_bottom = 160.0
 grow_horizontal = 0
 mouse_filter = 0
 
-[node name="Margin" type="MarginContainer" parent="ScrapOverlay/ScrapPanel"]
+[node name="Margin" type="MarginContainer" parent="DeconstructOverlay/DeconstructPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="VBox" type="VBoxContainer" parent="ScrapOverlay/ScrapPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="DeconstructOverlay/DeconstructPanel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ScrapTitle" type="Label" parent="ScrapOverlay/ScrapPanel/Margin/VBox"]
+[node name="DeconstructTitle" type="Label" parent="DeconstructOverlay/DeconstructPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Scrap an item"
+text = "Deconstruct an item"
 horizontal_alignment = 1
 
-[node name="ScrapHint" type="Label" parent="ScrapOverlay/ScrapPanel/Margin/VBox"]
+[node name="DeconstructHint" type="Label" parent="DeconstructOverlay/DeconstructPanel/Margin/VBox"]
 layout_mode = 2
-text = "Click an inventory item to scrap all copies, or leave without scrapping."
+text = "Click an inventory item to deconstruct all copies, or leave without deconstructing."
 autowrap_mode = 2
 horizontal_alignment = 1
 
-[node name="ReturnButton" type="Button" parent="ScrapOverlay/ScrapPanel/Margin/VBox"]
+[node name="ReturnButton" type="Button" parent="DeconstructOverlay/DeconstructPanel/Margin/VBox"]
 layout_mode = 2
-text = "Leave Scraper"
+text = "Leave Deconstruct"

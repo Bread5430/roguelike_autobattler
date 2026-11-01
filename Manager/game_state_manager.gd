@@ -20,7 +20,7 @@ enum GameState {
 @onready var loss_screen = $UICanvas/LossScreen
 @onready var map_generator = $MapManager
 @onready var player_health: PlayerHealthManager = $PlayerHealthManager
-@onready var scrap_buffer: ScrapBufferManager = $ScrapBufferManager
+@onready var bandwidth: BandwidthManager = $BandwidthManager
 @onready var shop_control: ShopControl = $ShopControl
 @onready var rest_control: RestControl = $RestControl
 @onready var random_event_control: RandomEventControl = $RandomEventControl
@@ -30,6 +30,8 @@ var current_state: GameState = GameState.MAP_EXPLORATION
 var current_battle_node: MapNode
 var run_gold: int = 0
 var run_components: int = 0
+const BANDWIDTH_UPGRADE_COST: int = 2
+const BANDWIDTH_UPGRADE_AMOUNT: int = 10
 var shop_visit_active: bool = false
 var rest_visit_active: bool = false
 var event_visit_active: bool = false
@@ -350,7 +352,7 @@ func setup_battle_environment():
 		"is_blockade": is_blockade,
 		"is_chaser_pressured_exit": is_chaser_pressured_exit,
 	})
-	_init_scrap_buffer_from_enemies()
+	_begin_prep_bandwidth()
 	
 	print("stage " + str(current_battle_node.stage) + 
 		" difficulty " + _resolve_battle_difficulty(current_battle_node) +
@@ -362,19 +364,20 @@ func setup_battle_environment():
 	map_generator.hide()
 	map_generator.set_process_input(false)
 
-func _init_scrap_buffer_from_enemies() -> void:
-	if scrap_buffer == null:
+func _begin_prep_bandwidth() -> void:
+	if bandwidth == null:
 		return
-	var enemy_total := _sum_enemy_scrap_on_board()
-	scrap_buffer.begin_prep(enemy_total)
-	gui.refresh_scrap_buffer()
+	bandwidth.begin_prep()
+	gui.refresh_bandwidth()
 
-func _sum_enemy_scrap_on_board() -> int:
-	var total := 0
-	var unit_parent := battle_manager.get_node("Unit_Parent")
+
+# TODO: relic — scale player bandwidth from enemy bandwidth total.
+func _sum_enemy_bandwidth_on_board() -> int:
+	var total = 0
+	var unit_parent = battle_manager.get_node("Unit_Parent")
 	for child in unit_parent.get_children():
 		if child is Base_Unit and not (child as Base_Unit).faction:
-			total += (child as Base_Unit).scrap_cost
+			total += (child as Base_Unit).bandwidth_cost
 	return total
 
 func _end_prep_phase():
@@ -392,31 +395,31 @@ func start_battle_sequence():
 	print("Battle started at node %d" % current_battle_node.id)
 	if player_health:
 		player_health.snapshot_health_for_battle()
-	if scrap_buffer:
-		scrap_buffer.on_combat_start()
-		gui.refresh_scrap_buffer()
+	if bandwidth:
+		bandwidth.on_combat_start()
+		gui.refresh_bandwidth()
 	battle_manager.start_battle()
 	if gui:
 		gui.show_battle_speed_bar()
 	# The battle will run until _on_battle_ended is called
 
-func _settle_scrap_buffer() -> void:
-	var settlement := scrap_buffer.settle_battle()
+func _settle_bandwidth() -> void:
+	var settlement = bandwidth.settle_battle()
 	if settlement.repair_damage > 0 and player_health:
 		player_health.apply_damage_capped(settlement.repair_damage, 1)
-	gui.refresh_scrap_buffer()
+	gui.refresh_bandwidth()
 
 
 func _on_friendly_unit_died(unit: Base_Unit) -> void:
-	if scrap_buffer and current_state == GameState.BATTLE_ACTIVE:
-		scrap_buffer.on_friendly_unit_died(unit.scrap_cost)
-		gui.refresh_scrap_buffer()
+	if bandwidth and current_state == GameState.BATTLE_ACTIVE:
+		bandwidth.on_friendly_unit_died(unit.bandwidth_cost)
+		gui.refresh_bandwidth()
 
 func _on_battle_ended(victory: bool):
 	"""Handle battle completion from battle manager"""
 	print("Battle ended. Victory: %s" % victory)
 	
-	_settle_scrap_buffer()
+	_settle_bandwidth()
 	
 	# Store battle result
 	current_battle_node.completed = victory
@@ -438,7 +441,7 @@ func handle_battle_defeat():
 
 
 func _on_factory_destroyed() -> void:
-	_settle_scrap_buffer()
+	_settle_bandwidth()
 	handle_game_over()
 
 
@@ -526,6 +529,31 @@ func spend_components(amount: int) -> bool:
 	return true
 
 
+func try_upgrade_bandwidth() -> bool:
+	if bandwidth == null:
+		return false
+	if not spend_components(BANDWIDTH_UPGRADE_COST):
+		return false
+	bandwidth.increase_max(BANDWIDTH_UPGRADE_AMOUNT)
+	return true
+
+
+func try_duplicate_unit(item_id: String, inventory: Inventory, components_cost: int, scrap_cost: int) -> bool:
+	if inventory == null or item_id.is_empty():
+		return false
+	if run_components < components_cost or run_gold < scrap_cost:
+		return false
+	if inventory.get_slot_to_add(item_id) == null:
+		return false
+	if not spend_components(components_cost):
+		return false
+	if not spend_gold(scrap_cost):
+		add_components(components_cost)
+		return false
+	inventory.add_item(item_id, 1)
+	return true
+
+
 func _emit_run_currency_changed() -> void:
 	run_currency_changed.emit(run_gold, run_components)
 
@@ -554,7 +582,7 @@ func calculate_battle_rewards() -> Dictionary:
 		{
 			"id": "gold",
 			"kind": "instant",
-			"label": "Collect gold (+%d)" % gold_amount,
+			"label": "Collect scrap (+%d)" % gold_amount,
 			"gold": gold_amount,
 			"claimed": false
 		},
@@ -569,8 +597,8 @@ func calculate_battle_rewards() -> Dictionary:
 			"claimed": false
 		})
 	
-	if scrap_buffer:
-		var bonus := scrap_buffer.get_bonus_gold()
+	if bandwidth:
+		var bonus := bandwidth.get_bonus_gold()
 		if bonus > 0:
 			entries.append({
 				"id": "scrap_bonus",
@@ -676,8 +704,8 @@ func start_new_campaign():
 		gui.close_random_event()
 	if player_health:
 		player_health.reset_for_new_campaign()
-	if scrap_buffer:
-		scrap_buffer.reset()
+	if bandwidth:
+		bandwidth.reset()
 	UnitUpgradeRegistry.reset_for_new_campaign()
 	
 	# Generate new map
@@ -693,6 +721,7 @@ func save_campaign_progress() -> Dictionary:
 		"current_battle_node_id": current_battle_node.id if current_battle_node else -1,
 		"run_gold": run_gold,
 		"run_components": run_components,
+		"max_bandwidth": bandwidth.max_bandwidth if bandwidth else BandwidthManager.DEFAULT_MAX_BANDWIDTH,
 	}
 	
 	# Add map state
@@ -721,6 +750,8 @@ func load_campaign_progress(save_data: Dictionary):
 
 	run_gold = int(save_data.get("run_gold", 0))
 	run_components = int(save_data.get("run_components", 0))
+	if bandwidth:
+		bandwidth.set_max_bandwidth(int(save_data.get("max_bandwidth", BandwidthManager.DEFAULT_MAX_BANDWIDTH)))
 	_emit_run_currency_changed()
 	if quest_control:
 		quest_control.sync_active_quests_from_map()

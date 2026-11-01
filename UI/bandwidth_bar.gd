@@ -1,5 +1,5 @@
 extends Control
-class_name ScrapBufferBar
+class_name BandwidthBar
 
 const NEGATIVE_COLOR := Color(0.95, 0.25, 0.25)
 

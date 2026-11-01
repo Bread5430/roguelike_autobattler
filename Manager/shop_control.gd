@@ -71,18 +71,18 @@ func try_purchase(slot_data: Dictionary, inventory: Inventory) -> bool:
 	return true
 
 
-func process_scrap(item_id: String, inventory: Inventory) -> int:
+func process_deconstruct(item_id: String, inventory: Inventory) -> int:
 	if _game_state == null or inventory == null:
 		return 0
 	var count := inventory.remove_all_of_item(item_id)
 	if count <= 0:
 		return 0
-	var components := calculate_scrap_components(count, item_id)
+	var components := calculate_deconstruct_components(count, item_id)
 	_game_state.add_components(components)
 	return components
 
 
-func calculate_scrap_components(count: int, _item_id: String) -> int:
+func calculate_deconstruct_components(count: int, _item_id: String) -> int:
 	# TODO: multiply by item rarity when rarity exists.
 	return count
 

@@ -12,7 +12,7 @@ func has_save() -> bool:
 
 func save_run(data: Dictionary) -> void:
 	# Partial run save: map state, gold, components, current state.
-	# TODO: inventory, player health, scrap buffer, spell bar.
+	# TODO: inventory, player health, spell bar.
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
 		push_error("SaveManager: failed to open save file for writing")

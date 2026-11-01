@@ -62,7 +62,7 @@ Buttons disable when the player cannot afford the cost.
   "choices": [
     {
       "choice_id": "pay_gold",
-      "label": "Pay 75 gold for a random spell",
+      "label": "Pay 75 scrap for a random spell",
       "cost_kind": "gold", "cost_amount": 75,
       "reward_kind": "item_random", "reward_pool": "shop_spells",
       "enabled": true

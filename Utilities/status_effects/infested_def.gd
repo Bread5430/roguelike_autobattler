@@ -1,7 +1,7 @@
 extends StatusEffectDef
 class_name InfestedDef
 
-## On death, host spawns crawlers (basic_chaff) equal to its scrap_cost for the infector's faction.
+## On death, host spawns crawlers (basic_chaff) equal to its bandwidth_cost for the infector's faction.
 
 const CRAWLER_SCENE_PATH := "res://Units/unit_scenes/basic_chaff/basicChaff.tscn"
 
@@ -22,7 +22,7 @@ func on_host_death(instance: StatusEffectInstance, host: Base_Unit, _source: Bas
 	if host == null or not is_instance_valid(host):
 		return
 	var spawn_faction = bool(instance.custom_state.get("spawn_faction", false))
-	var count = maxi(1, host.scrap_cost)
+	var count = maxi(1, host.bandwidth_cost)
 	var parent_node = host.get_parent()
 	if parent_node == null:
 		return

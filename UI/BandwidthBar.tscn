@@ -1,14 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://5d5hnex70l5p"]
+[gd_scene format=3 uid="uid://5d5hnex70l5p"]
 
-[ext_resource type="Script" uid="uid://2saoad0uyvij" path="res://UI/scrap_buffer_bar.gd" id="1_scrap"]
+[ext_resource type="Script" uid="uid://2saoad0uyvij" path="res://UI/bandwidth_bar.gd" id="1_bw"]
 
-[node name="ScrapBufferBar" type="Control"]
+[node name="BandwidthBar" type="Control"]
 custom_minimum_size = Vector2(160, 48)
 layout_mode = 3
 anchors_preset = 0
 offset_right = 160.0
 offset_bottom = 48.0
-script = ExtResource("1_scrap")
+script = ExtResource("1_bw")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1

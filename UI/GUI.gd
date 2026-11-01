@@ -12,7 +12,7 @@ var gsm
 @onready var unit_placement : UnitPlacement = $UnitPlacement
 @onready var spell_bar : SpellBar = $SpellBar
 @onready var battle_speed_bar: BattleSpeedBar = $BattleSpeedBar
-@onready var scrap_buffer_bar: ScrapBufferBar = $ScrapBufferBar
+@onready var bandwidth_bar: BandwidthBar = $BandwidthBar
 @onready var end_prep : Button = $End_Prep
 @onready var clear_battlefield : Button = $Clear_Battlefield
 @onready var tactical_cursor = $TacticalCursor
@@ -82,8 +82,8 @@ func post_ready():
 			shop_ui.setup(passthrough_helper)
 			shop_ui.purchase_requested.connect(_on_shop_purchase_requested)
 			shop_ui.refresh_requested.connect(_on_shop_refresh_requested)
-			shop_ui.scrap_mode_entered.connect(_on_shop_scrap_mode_entered)
-			shop_ui.scrap_mode_exited.connect(_on_shop_scrap_mode_exited)
+			shop_ui.deconstruct_mode_entered.connect(_on_shop_deconstruct_mode_entered)
+			shop_ui.deconstruct_mode_exited.connect(_on_shop_deconstruct_mode_exited)
 			shop_ui.leave_requested.connect(_on_shop_leave_requested)
 		if shop_toggle_button:
 			shop_toggle_button.visible = false
@@ -110,15 +110,17 @@ func post_ready():
 			event_toggle_button.disabled = true
 			event_toggle_button.pressed.connect(_on_event_toggle_pressed)
 		if inventory:
-			inventory.scrap_item_requested.connect(_on_inventory_scrap_item_requested)
+			inventory.deconstruct_item_requested.connect(_on_inventory_deconstruct_item_requested)
 			inventory.craft_item_requested.connect(_on_inventory_craft_item_requested)
+			inventory.bandwidth_upgrade_requested.connect(_on_inventory_bandwidth_upgrade_requested)
+			inventory.duplicate_unit_requested.connect(_on_inventory_duplicate_unit_requested)
 		if gsm.has_signal("run_currency_changed"):
 			gsm.run_currency_changed.connect(_on_run_currency_changed)
-		if gsm.has_node("ScrapBufferManager"):
-			var scrap_buffer := gsm.get_node("ScrapBufferManager") as ScrapBufferManager
-			if scrap_buffer and not scrap_buffer.scrap_changed.is_connected(_on_scrap_buffer_changed):
-				scrap_buffer.scrap_changed.connect(_on_scrap_buffer_changed)
-			refresh_scrap_buffer()
+		if gsm.has_node("BandwidthManager"):
+			var bw = gsm.get_node("BandwidthManager") as BandwidthManager
+			if bw and not bw.bandwidth_changed.is_connected(_on_bandwidth_changed):
+				bw.bandwidth_changed.connect(_on_bandwidth_changed)
+			refresh_bandwidth()
 	inventory.inspect_requested.connect(_on_inventory_inspect_requested)
 	spell_bar.spell_slot_clicked.connect(_on_spell_slot_clicked)
 	spell_bar.spell_slot_right_clicked.connect(_on_spell_slot_right_clicked)
@@ -252,9 +254,9 @@ func start_prep_phase():
 	_set_deployment_buttons_visible(true)
 	spell_bar.show()
 	hide_battle_speed_bar()
-	scrap_buffer_bar.show()
+	bandwidth_bar.show()
 	run_resources_hud.set_map_visible(false)
-	refresh_scrap_buffer()
+	refresh_bandwidth()
 
 
 func _set_deployment_buttons_visible(visible_buttons: bool) -> void:
@@ -276,23 +278,23 @@ func hide_battle_speed_bar() -> void:
 		battle_speed_bar.hide_bar()
 
 
-func refresh_scrap_buffer() -> void:
-	if scrap_buffer_bar == null or gsm == null or not gsm.has_node("ScrapBufferManager"):
+func refresh_bandwidth() -> void:
+	if bandwidth_bar == null or gsm == null or not gsm.has_node("BandwidthManager"):
 		return
-	var scrap_buffer := gsm.get_node("ScrapBufferManager") as ScrapBufferManager
-	if scrap_buffer:
-		scrap_buffer_bar.update_display(scrap_buffer.current_scrap, scrap_buffer.max_scrap)
+	var bw = gsm.get_node("BandwidthManager") as BandwidthManager
+	if bw:
+		bandwidth_bar.update_display(bw.current_bandwidth, bw.max_bandwidth)
 
 
-func _on_scrap_buffer_changed(current: int, max_val: int) -> void:
-	if scrap_buffer_bar:
-		scrap_buffer_bar.update_display(current, max_val)
+func _on_bandwidth_changed(current: int, max_val: int) -> void:
+	if bandwidth_bar:
+		bandwidth_bar.update_display(current, max_val)
 
 
 func enter_map_exploration() -> void:
 	spell_bar.hide()
 	hide_battle_speed_bar()
-	scrap_buffer_bar.hide()
+	bandwidth_bar.hide()
 	run_resources_hud.set_map_visible(true)
 	_refresh_run_resources_hud()
 	_set_deployment_buttons_visible(false)
@@ -323,7 +325,7 @@ func close_shop() -> void:
 		shop_toggle_button.visible = false
 		shop_toggle_button.disabled = true
 	if inventory:
-		inventory.set_scrap_mode(false)
+		inventory.set_deconstruct_mode(false)
 	toggle_inventory(true)
 	passthrough_helper.unblock_input()
 	gsm.map_generator.set_process_input(true)
@@ -554,24 +556,46 @@ func _on_shop_refresh_requested() -> void:
 	shop_ui.mark_refresh_used(gsm.run_gold)
 
 
-func _on_shop_scrap_mode_entered() -> void:
-	inventory.set_scrap_mode(true)
-	# Inventory opens first; re-assert shop scrap panel on top so Leave/Return
+func _on_shop_deconstruct_mode_entered() -> void:
+	inventory.set_deconstruct_mode(true)
+	# Inventory opens first; re-assert shop deconstruct panel on top so Leave/Return
 	# remains clickable while inventory slots still receive pass-through clicks.
 	if shop_ui:
 		shop_ui.move_to_front()
 
 
-func _on_shop_scrap_mode_exited() -> void:
-	inventory.set_scrap_mode(false)
+func _on_shop_deconstruct_mode_exited() -> void:
+	inventory.set_deconstruct_mode(false)
 
 
-func _on_inventory_scrap_item_requested(item_id: String) -> void:
-	
-	if gsm.shop_control.process_scrap(item_id, inventory) <= 0:
+func _on_inventory_deconstruct_item_requested(item_id: String) -> void:
+	if gsm.shop_control.process_deconstruct(item_id, inventory) <= 0:
 		return
 	shop_ui.refresh_currency(gsm.run_gold, gsm.run_components)
-	shop_ui.exit_scrap_mode()
+	shop_ui.exit_deconstruct_mode()
+
+
+func _on_inventory_bandwidth_upgrade_requested() -> void:
+	if gsm == null:
+		return
+	if not gsm.try_upgrade_bandwidth():
+		return
+	if inventory:
+		inventory.refresh_upgrade_menu(gsm.run_components, gsm.run_gold)
+	refresh_bandwidth()
+
+
+func _on_inventory_duplicate_unit_requested(item_id: String) -> void:
+	if gsm == null or inventory == null:
+		return
+	var slot = inventory.get_slot_to_remove(item_id)
+	if slot == null or not (slot.item_inst is Unit_Card):
+		return
+	var cost = (slot.item_inst as Unit_Card).get_duplicate_cost()
+	if not gsm.try_duplicate_unit(item_id, inventory, int(cost.get("components", 0)), int(cost.get("scrap", 0))):
+		return
+	inventory.refresh_upgrade_menu(gsm.run_components, gsm.run_gold)
+	inventory.refresh_unit_card_icons()
 
 
 func _on_run_currency_changed(gold: int, components: int) -> void:
@@ -579,6 +603,8 @@ func _on_run_currency_changed(gold: int, components: int) -> void:
 		run_resources_hud.update_values(gold, components)
 	if rest_ui and rest_ui.visible:
 		rest_ui.refresh_display(components, _is_player_at_full_health())
+	if inventory:
+		inventory.refresh_upgrade_menu(components, gold)
 
 
 func _on_player_health_changed(_curr: int, _max_val: int) -> void:
@@ -592,6 +618,8 @@ func _is_player_at_full_health() -> bool:
 
 func _refresh_run_resources_hud() -> void:
 	run_resources_hud.update_values(gsm.run_gold, gsm.run_components)
+	if inventory:
+		inventory.refresh_upgrade_menu(gsm.run_components, gsm.run_gold)
 
 
 func _get_game_state_manager() -> Node:
@@ -670,7 +698,7 @@ func enter_enemy_formation_editor_mode(default_name: String = "", default_level:
 	formation_editor_level = lvl
 	end_prep.text = "Confirm Position"
 	unit_placement.reset_current_selection()
-	_begin_formation_editor_scrap_tracking()
+	_begin_formation_editor_bandwidth_tracking()
 	return ""
 
 
@@ -679,12 +707,12 @@ func exit_enemy_formation_editor_mode() -> void:
 	end_prep.text = END_PREP_DEFAULT_TEXT
 
 
-func _begin_formation_editor_scrap_tracking() -> void:
-	var scrap_buffer = gsm.get_node("ScrapBufferManager") as ScrapBufferManager
-	if scrap_buffer == null:
+func _begin_formation_editor_bandwidth_tracking() -> void:
+	var bw = gsm.get_node("BandwidthManager") as BandwidthManager
+	if bw == null:
 		return
-	scrap_buffer.begin_formation_cost_tracking()
-	refresh_scrap_buffer()
+	bw.begin_formation_cost_tracking()
+	refresh_bandwidth()
 
 
 func dev_load_formation(formation_name: String) -> String:
@@ -700,7 +728,7 @@ func dev_load_formation(formation_name: String) -> String:
 		unit_placement.clear_placement_grid()
 		# Formation CSV includes routers; do not pre-spawn defaults or they block load.
 		unit_placement.clear_static_router_state()
-		_begin_formation_editor_scrap_tracking()
+		_begin_formation_editor_bandwidth_tracking()
 		var n = unit_placement.load_formation_rows_on_player_board(rows)
 		if n <= 0:
 			return "Failed to place formation on board."
@@ -946,9 +974,9 @@ func is_mouse_over_ui_element(mouse_pos: Vector2) -> bool:
 		if speed_rect.has_point(mouse_pos):
 			return true
 	
-	if scrap_buffer_bar and scrap_buffer_bar.visible:
-		var scrap_rect = scrap_buffer_bar.get_global_rect()
-		if scrap_rect.has_point(mouse_pos):
+	if bandwidth_bar and bandwidth_bar.visible:
+		var bw_rect = bandwidth_bar.get_global_rect()
+		if bw_rect.has_point(mouse_pos):
 			return true
 	
 	# Check deployment buttons

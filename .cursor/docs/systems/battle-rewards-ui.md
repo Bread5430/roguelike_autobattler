@@ -3,7 +3,7 @@
 ## Project overview
 
 - **Goal:** Modal post-victory rewards window after battle win; player claims rewards before returning to map.
-- **Constraints:** Top-level UI must block clicks from reaching lower layers; instant rewards (gold) vs submenu rewards (pick 1 of 3 units); repair-damage display with unresolved value as TODO stub.
+- **Constraints:** Top-level UI must block clicks from reaching lower layers; instant rewards (scrap / `run_gold`) vs submenu rewards (pick 1 of 3 units); repair-damage display with unresolved value as TODO stub.
 - **Stack:** Godot 4.4; `GameStateManager` state machine; `GUI` on `UICanvas` CanvasLayer; existing `Passthrough_Helper`, `InputCoordinator`, `Inventory`, `ITEM_NAME`, `UNIT_GLOSSARY`.
 
 ## Final architecture
@@ -22,7 +22,7 @@
 1. `BattleManager.battle_ended(true)` → `GameStateManager._on_battle_ended` → `change_state(BATTLE_COMPLETE)`.
 2. `handle_battle_completion()`: `map_generator.complete_current_battle()` → `calculate_battle_rewards()` → `await gui.show_battle_rewards(payload)`.
 3. `BattleRewardsUI.open(payload)`: show modal, `Passthrough_Helper.block_input()`, `await rewards_closed`.
-4. Player claims rewards (instant gold and/or unit submenu) or skips unclaimed entries.
+4. Player claims rewards (instant scrap and/or unit submenu) or skips unclaimed entries.
 5. **Continue** → `close()` → `rewards_closed` → GSM nulls `current_battle_node` → map or campaign-complete state.
 
 **Scene tree (under `Gui`)**
@@ -51,7 +51,7 @@ BattleRewardsUI (Control, full-screen, MOUSE_FILTER_STOP)
 
 - Victory modal with "Victory!" blurb and "Repair damage: N" line.
 - Dynamic reward list from payload `entries`.
-- Instant gold reward: button disables, label suffix `(claimed)`, increments `run_gold`.
+- Instant scrap reward: button disables, label suffix `(claimed)`, increments `run_gold` (HUD label **Scrap**).
 - Unit choice submenu: 3 random recruitable units, pick adds to `Inventory`, Back returns to main menu without claiming.
 - Main **Continue** closes modal and resumes campaign flow.
 - `run_gold` on `GameStateManager`; reset on `start_new_campaign()`.
@@ -62,7 +62,7 @@ BattleRewardsUI (Control, full-screen, MOUSE_FILTER_STOP)
 ## Open problems / TODOs
 
 - **`PlayerHealthManager.get_repair_damage_taken_this_battle()`:** Returns `0`; `_health_snapshot_at_battle_start` stored but unused — implement factory/repair damage math.
-- **No run-gold HUD:** Gold accumulates in `run_gold` only; no UI display yet.
+- **Run scrap HUD:** `RunResourcesHUD` shows **Scrap** for `run_gold` and **Components** for `run_components`.
 - **`award_battle_rewards()`:** Deprecated no-op; safe to remove later.
 - **Campaign end:** Rewards UI shows before `CAMPAIGN_COMPLETE`; dedicated campaign victory screen still TODO elsewhere.
 - **Experience reward:** Removed from old flat dict; not in current payload.
@@ -83,7 +83,7 @@ BattleRewardsUI (Control, full-screen, MOUSE_FILTER_STOP)
 ```gdscript
 {
   "entries": [
-    { "id": "gold", "kind": "instant", "label": "Collect gold (+150)", "gold": 150, "claimed": false },
+    { "id": "gold", "kind": "instant", "label": "Collect scrap (+150)", "gold": 150, "claimed": false },
     { "id": "unit_pick", "kind": "unit_choice", "label": "Recruit a unit", "options": ["sniper_card", ...], "claimed": false }
   ]
 }
