@@ -68,7 +68,8 @@ func _build_unit_payload(unit_card: Unit_Card, item_name: String) -> Dictionary:
 		{"label": "Max HP", "value": str(hp)},
 		{"label": "Movement Speed", "value": str(speed)},
 		{"label": "Damage", "value": str(damage)},
-		{"label": "Bandwidth Cost", "value": str(unit_card.get_total_bandwidth_cost())},
+		{"label": "Deploy Cost", "value": str(unit_card.get_total_bandwidth_cost())},
+		{"label": "Loss Cost", "value": str(unit_card.get_total_loss_cost())},
 		{
 			"label": "Deployment Size",
 			"value": "%d x %d" % [int(unit_card.placement_size.x), int(unit_card.placement_size.y)]

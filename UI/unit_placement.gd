@@ -321,18 +321,29 @@ func clear_static_router_state() -> void:
 # BANDWIDTH (spent/refunded on placement/removal)
 # =============================================================================
 
-func _spend_bandwidth_for_card(card: Unit_Card) -> void:
+func _spend_bandwidth_for_card(card: Unit_Card) -> bool:
 	if gsm == null or not gsm.has_node("BandwidthManager") or card == null:
-		return
+		return false
 	var bw = gsm.get_node("BandwidthManager") as BandwidthManager
-	bw.spend_bandwidth(card.get_total_bandwidth_cost())
+	return bw.spend_bandwidth(card.get_total_bandwidth_cost(), card.get_total_loss_cost())
 
 
 func _refund_bandwidth_for_card(card: Unit_Card) -> void:
 	if gsm == null or not gsm.has_node("BandwidthManager") or card == null:
 		return
 	var bw = gsm.get_node("BandwidthManager") as BandwidthManager
-	bw.refund_bandwidth(card.get_total_bandwidth_cost())
+	bw.refund_bandwidth(card.get_total_bandwidth_cost(), card.get_total_loss_cost())
+
+
+func _can_afford_card(card: Unit_Card) -> bool:
+	if card == null:
+		return false
+	if gsm == null or not gsm.has_node("BandwidthManager"):
+		return true
+	var bw = gsm.get_node("BandwidthManager") as BandwidthManager
+	if bw == null:
+		return true
+	return bw.can_spend(card.get_total_bandwidth_cost())
 
 
 # =============================================================================
@@ -494,6 +505,13 @@ func place_unit_card_programmatic(p_scene: PackedScene, top_left: Vector2i, rota
 			"scene": p_scene,
 		})
 	else:
+		if not _spend_bandwidth_for_card(item_inst as Unit_Card):
+			for cell in objectCells:
+				cell.full = false
+			item_inst.queue_free()
+			curr_unit_inst = null
+			curr_unit = null
+			return false
 		place_on_board(grid_pos, unit_size, p_scene)
 
 	var router_excl = _router_exclusion_radius_from_card_inst(item_inst)
@@ -508,8 +526,6 @@ func place_unit_card_programmatic(p_scene: PackedScene, top_left: Vector2i, rota
 		})
 
 	battle_manager.add_unit_to_board(item_inst, objectCells[0].global_position, unit_vec, true)
-	if item_inst is Unit_Card and not is_static_router:
-		_spend_bandwidth_for_card(item_inst as Unit_Card)
 	_reset_highlight(objectCells)
 	item_inst.queue_free()
 	curr_unit_inst = null
@@ -563,10 +579,16 @@ func _check_and_highlight_cells(cells: Array) -> bool:
 		valid = false
 		for cell in cells:
 			cell.change_color(Color.RED)
+	if valid and curr_unit_inst is Unit_Card and not _can_afford_card(curr_unit_inst as Unit_Card):
+		valid = false
+		for cell in cells:
+			cell.change_color(Color.RED)
 	return valid
 
 
 func _place_unit():
+	if curr_unit_inst is Unit_Card and not _spend_bandwidth_for_card(curr_unit_inst as Unit_Card):
+		return
 	for cell in objectCells:
 		cell.full = true
 
@@ -586,8 +608,6 @@ func _place_unit():
 			"size": unit_size,
 		})
 	battle_manager.add_unit_to_board(curr_unit_inst, objectCells[0].global_position, unit_vec, true)
-	if curr_unit_inst is Unit_Card:
-		_spend_bandwidth_for_card(curr_unit_inst as Unit_Card)
 	_reset_highlight(objectCells)
 	_clear_placement_indicators_preview()
 

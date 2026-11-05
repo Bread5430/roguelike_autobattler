@@ -59,11 +59,22 @@ func post_ready():
 		add_item(starter_items[i],starter_items_count[i])
 
 func _process(_delta: float) -> void:
-	if deconstruct_mode or craft_mode or duplicate_mode:
+	if deconstruct_mode or craft_mode:
+		return
+	if duplicate_mode:
 		return
 	if Input.is_action_just_pressed("inventory") and can_open_inventory:
 		toggle_window(!visible)
 		accept_event()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not duplicate_mode:
+		return
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	set_duplicate_mode(false)
+	get_viewport().set_input_as_handled()
 
 
 func toggle_window (open : bool):

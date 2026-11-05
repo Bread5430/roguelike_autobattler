@@ -283,12 +283,11 @@ func refresh_bandwidth() -> void:
 		return
 	var bw = gsm.get_node("BandwidthManager") as BandwidthManager
 	if bw:
-		bandwidth_bar.update_display(bw.current_bandwidth, bw.max_bandwidth)
+		bandwidth_bar.update_display(bw.get_remaining(), bw.get_potential_losses(), bw.max_bandwidth)
 
 
-func _on_bandwidth_changed(current: int, max_val: int) -> void:
-	if bandwidth_bar:
-		bandwidth_bar.update_display(current, max_val)
+func _on_bandwidth_changed(_current: int, _max_val: int) -> void:
+	refresh_bandwidth()
 
 
 func enter_map_exploration() -> void:
@@ -1053,5 +1052,7 @@ func should_block_pause_menu() -> bool:
 	if is_item_details_open():
 		return true
 	if is_modal_blocking():
+		return true
+	if inventory and inventory.duplicate_mode:
 		return true
 	return false

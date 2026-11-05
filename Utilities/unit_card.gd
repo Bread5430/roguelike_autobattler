@@ -47,7 +47,17 @@ func get_total_bandwidth_cost() -> int:
 	var glossary_id = get_unit_glossary_id()
 	if glossary_id.is_empty():
 		return 0
-	var cost = UNIT_GLOSSARY.get_bandwidth_cost(glossary_id) * num_units
+	var cost = UNIT_GLOSSARY.get_bandwidth_deploy_cost(glossary_id) * num_units
+	if not item_name.is_empty() and UnitUpgradeRegistry.has_upgrade(item_name):
+		cost *= 2
+	return cost
+
+
+func get_total_loss_cost() -> int:
+	var glossary_id = get_unit_glossary_id()
+	if glossary_id.is_empty():
+		return 0
+	var cost = UNIT_GLOSSARY.get_bandwidth_loss_cost(glossary_id) * num_units
 	if not item_name.is_empty() and UnitUpgradeRegistry.has_upgrade(item_name):
 		cost *= 2
 	return cost

@@ -14,7 +14,6 @@ var quantity : int
 @onready var tier_text : Label = $TierLabel
 
 const BANDWIDTH_COST_COLOR := Color(0.4, 0.7, 1.0)
-const DUPLICATE_COST_COLOR := Color(0.95, 0.75, 0.25)
 
 func set_slot_visible():
 	set_mouse_filter(Control.MOUSE_FILTER_STOP)
@@ -97,13 +96,8 @@ func update_bandwidth_cost_text() -> void:
 			tier_text.visible = true
 			tier_text.text = "T%d" % maxi(1, card.unit_tier)
 		bandwidth_cost_text.visible = true
-		if parent_inventory and parent_inventory.duplicate_mode:
-			var cost = card.get_duplicate_cost()
-			bandwidth_cost_text.text = "%dc %ds" % [int(cost.get("components", 0)), int(cost.get("scrap", 0))]
-			bandwidth_cost_text.add_theme_color_override("font_color", DUPLICATE_COST_COLOR)
-		else:
-			bandwidth_cost_text.text = str(card.get_total_bandwidth_cost())
-			bandwidth_cost_text.add_theme_color_override("font_color", BANDWIDTH_COST_COLOR)
+		bandwidth_cost_text.text = str(card.get_total_bandwidth_cost())
+		bandwidth_cost_text.add_theme_color_override("font_color", BANDWIDTH_COST_COLOR)
 	else:
 		if tier_text:
 			tier_text.visible = false

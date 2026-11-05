@@ -412,7 +412,7 @@ func _settle_bandwidth() -> void:
 
 func _on_friendly_unit_died(unit: Base_Unit) -> void:
 	if bandwidth and current_state == GameState.BATTLE_ACTIVE:
-		bandwidth.on_friendly_unit_died(unit.bandwidth_cost)
+		bandwidth.on_friendly_unit_died(unit.bandwidth_loss_cost)
 		gui.refresh_bandwidth()
 
 func _on_battle_ended(victory: bool):

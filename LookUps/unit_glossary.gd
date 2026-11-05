@@ -23,19 +23,22 @@ func _load_csv() -> void:
 		var line := file.get_csv_line()
 		if line.is_empty():
 			continue
-		if line.size() < 7:
+		if line.size() < 8:
 			push_warning("Glossary row too short (%d cols): %s" % [line.size(), line])
 			continue
 		var unit_id := str(line[0]).strip_edges()
 		if unit_id.is_empty():
 			continue
+		var deploy_cost = int(line[5])
+		var loss_cost = int(line[6])
 		entries[unit_id] = {
 			"display_name": str(line[1]),
 			"max_hp": int(line[2]),
 			"movement_speed": int(line[3]),
 			"damage": int(line[4]),
-			"bandwidth_cost": int(line[5]),
-			"explanation_blurb": str(line[6])
+			"bandwidth_deploy_cost": deploy_cost,
+			"bandwidth_loss_cost": loss_cost,
+			"explanation_blurb": str(line[7])
 		}
 	file.close()
 
@@ -50,7 +53,17 @@ func get_entry(unit_id: String) -> Dictionary:
 	return {}
 
 
-func get_bandwidth_cost(unit_id: String) -> int:
+func get_bandwidth_deploy_cost(unit_id: String) -> int:
 	if has_entry(unit_id):
-		return int(entries[unit_id].get("bandwidth_cost", 0))
+		return int(entries[unit_id].get("bandwidth_deploy_cost", 0))
 	return 0
+
+
+func get_bandwidth_loss_cost(unit_id: String) -> int:
+	if has_entry(unit_id):
+		return int(entries[unit_id].get("bandwidth_loss_cost", 0))
+	return 0
+
+
+func get_bandwidth_cost(unit_id: String) -> int:
+	return get_bandwidth_deploy_cost(unit_id)
