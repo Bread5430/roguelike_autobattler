@@ -25,7 +25,7 @@ var payload : Dictionary = build_payload()
 - **File naming**: PascalCase for scenes (`.tscn`), snake_case for scripts (`.gd`)
 - **Node structure**: Managers as Control/Node2D, units as CharacterBody2D
 - **Input**: Custom actions in `project.godot` (leftClick, inventory=I, rotatePlacement=R)
-- **Debugging**: Dev console (`Testing/dev_console.gd`) toggled with `` ` `` for commands like `help`
+- **Debugging**: Dev console (`Testing/dev_console.gd`; see `.cursor/docs/systems/dev-console.md`) toggled with `` ` ``; Escape deselects the terminal without closing; while selected, game input is blocked via `DevConsole.is_blocking_game_input()`
 
 # Workflows
 

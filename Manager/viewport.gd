@@ -36,6 +36,10 @@ func _ready():
 		self.limit_bottom = limit_bottom
 
 func _input(event):
+	if DevConsole.is_blocking_game_input():
+		if is_panning:
+			stop_pan()
+		return
 	# Only consume zoom/pan so left/right click can reach InputCoordinator as unhandled.
 	if event.is_action_pressed("scroll_up"):
 		zoom_camera(-camera_scroll_speed)
@@ -105,6 +109,8 @@ func zoom_camera(zoom_change: float):
 
 func _process(delta: float) -> void:
 	if is_panning:
+		return
+	if DevConsole.is_blocking_game_input():
 		return
 	# Viewport movement with WASD/Arrow keys
 	var camera_move_dir := Vector2.ZERO

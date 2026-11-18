@@ -35,6 +35,8 @@ func setup(gsm: Node, gui: Control = null) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if DevConsole.is_blocking_game_input():
+		return
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	if _gsm and _gsm.has_node("UICanvas/LossScreen"):

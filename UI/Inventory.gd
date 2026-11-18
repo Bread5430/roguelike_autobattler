@@ -59,6 +59,8 @@ func post_ready():
 		add_item(starter_items[i],starter_items_count[i])
 
 func _process(_delta: float) -> void:
+	if DevConsole.is_blocking_game_input():
+		return
 	if deconstruct_mode or craft_mode:
 		return
 	if duplicate_mode:

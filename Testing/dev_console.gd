@@ -12,7 +12,13 @@ class_name DevConsole
 var console_panel: Panel
 var output_label: RichTextLabel
 var input_line: LineEdit
+var input_blocker: ColorRect
 var is_visible: bool = false
+# Set before intentional release_focus (Escape / close) so clicks on the blocker don't deselect.
+var _allow_terminal_unfocus: bool = false
+
+# When true, game systems should ignore input (terminal LineEdit is focused).
+static var _blocking_game_input: bool = false
 
 # Command history
 var command_history: Array[String] = []
@@ -25,6 +31,8 @@ var camera: Camera2D
 
 func _ready():
 	layer = 100
+	# Run before other _input handlers so we can swallow mouse while typing.
+	process_priority = 1000
 	# Build the console UI
 	setup_console_ui()
 	hide_console()
@@ -36,9 +44,20 @@ func _ready():
 	log_message("=== Developer Console ===")
 	log_message("Type 'help' for available commands")
 	log_message("Press ` to toggle console")
+	log_message("Escape releases the terminal without closing the console")
 
 func setup_console_ui():
 	"""Create the console UI elements"""
+	# Full-screen mouse sink while the terminal is selected (behind the panel).
+	input_blocker = ColorRect.new()
+	input_blocker.name = "InputBlocker"
+	input_blocker.color = Color(0, 0, 0, 0)
+	input_blocker.set_anchors_preset(Control.PRESET_FULL_RECT)
+	input_blocker.mouse_filter = Control.MOUSE_FILTER_STOP
+	input_blocker.visible = false
+	input_blocker.focus_mode = Control.FOCUS_NONE
+	add_child(input_blocker)
+
 	# Main panel container
 	console_panel = Panel.new()
 	console_panel.name = "ConsolePanel"
@@ -51,11 +70,13 @@ func setup_console_ui():
 		get_viewport().get_visible_rect().size.x,
 		get_viewport().get_visible_rect().size.y * console_height_ratio
 	)
+	console_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	
 	# Create a VBoxContainer for layout
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vbox.add_theme_constant_override("separation", 4)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	console_panel.add_child(vbox)
 	
 	# Output area (RichTextLabel for colored text)
@@ -63,6 +84,8 @@ func setup_console_ui():
 	output_label.bbcode_enabled = true
 	output_label.scroll_following = true
 	output_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	output_label.focus_mode = Control.FOCUS_NONE
+	output_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	output_label.add_theme_color_override("default_color", Color.WHITE)
 	output_label.add_theme_color_override("font_shadow_color", Color.BLACK)
 	vbox.add_child(output_label)
@@ -70,11 +93,13 @@ func setup_console_ui():
 	# Input area (HBoxContainer with label and line edit)
 	var input_container = HBoxContainer.new()
 	input_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	input_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(input_container)
 	
 	# Input prompt label
 	var prompt_label = Label.new()
 	prompt_label.text = " > "
+	prompt_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	input_container.add_child(prompt_label)
 	
 	# Input line edit
@@ -82,6 +107,8 @@ func setup_console_ui():
 	input_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	input_line.placeholder_text = "Enter command..."
 	input_line.text_submitted.connect(_on_command_submitted)
+	input_line.focus_entered.connect(_on_terminal_focus_entered)
+	input_line.focus_exited.connect(_on_terminal_focus_exited)
 	input_container.add_child(input_line)
 	
 	# Style the console (dark theme)
@@ -90,6 +117,10 @@ func setup_console_ui():
 	style_box.border_color = Color(0.3, 0.3, 0.3, 1.0)
 	style_box.set_border_width_all(2)
 	console_panel.add_theme_stylebox_override("panel", style_box)
+
+## True while the console terminal has focus and should eat game input.
+static func is_blocking_game_input() -> bool:
+	return _blocking_game_input
 
 func find_game_nodes():
 	"""Find references to important game nodes"""
@@ -103,18 +134,52 @@ func find_game_nodes():
 
 func _input(event: InputEvent):
 	# Toggle console with backtick key
-	if event is InputEventKey and event.pressed and event.keycode == toggle_key:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == toggle_key:
 		toggle_console()
 		get_viewport().set_input_as_handled()
-	
+		return
+
+	if not is_visible:
+		return
+
+	# Escape deselects the terminal but leaves the console open.
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE or event.is_action_pressed("ui_cancel"):
+			if input_line.has_focus():
+				_allow_terminal_unfocus = true
+				input_line.release_focus()
+				_refresh_input_block_state()
+				get_viewport().set_input_as_handled()
+				return
+
+	# While terminal is selected, swallow mouse outside the console panel.
+	# Clicks on the panel still reach LineEdit; game systems also check is_blocking_game_input().
+	if _blocking_game_input:
+		var mouse_pos = get_viewport().get_mouse_position()
+		var over_console = console_panel != null and console_panel.get_global_rect().has_point(mouse_pos)
+		if not over_console:
+			if event is InputEventMouseButton or event is InputEventMouseMotion or event is InputEventPanGesture:
+				get_viewport().set_input_as_handled()
+				return
+			if event.is_action_pressed("scroll_up") or event.is_action_pressed("scroll_down") or event.is_action_pressed("middle_mouse"):
+				get_viewport().set_input_as_handled()
+				return
+
 	# Command history navigation (up/down arrows)
-	if is_visible and event is InputEventKey and event.pressed:
+	if input_line.has_focus() and event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_UP:
 			navigate_history(-1)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_DOWN:
 			navigate_history(1)
 			get_viewport().set_input_as_handled()
+
+
+func _unhandled_input(_event: InputEvent) -> void:
+	# Safety net: any leftover game actions while typing into the terminal.
+	if not _blocking_game_input:
+		return
+	get_viewport().set_input_as_handled()
 
 func toggle_console():
 	"""Toggle console visibility"""
@@ -124,18 +189,46 @@ func toggle_console():
 		show_console()
 
 func show_console():
-	"""Show the console"""
+	"""Show the console and select the terminal"""
 	is_visible = true
 	console_panel.show()
 	input_line.grab_focus()
-	# Pause game input but not rendering
-	get_tree().paused = false
+	_refresh_input_block_state()
 
 func hide_console():
-	"""Hide the console"""
+	"""Hide the console and stop blocking game input"""
 	is_visible = false
 	console_panel.hide()
-	input_line.release_focus()
+	_allow_terminal_unfocus = true
+	if input_line.has_focus():
+		input_line.release_focus()
+	_refresh_input_block_state()
+
+
+func _on_terminal_focus_entered() -> void:
+	_allow_terminal_unfocus = false
+	_refresh_input_block_state()
+
+
+func _on_terminal_focus_exited() -> void:
+	# Defer: outside clicks clear focus before we can reclaim it; submit may re-grab same frame.
+	call_deferred("_on_terminal_focus_exited_deferred")
+
+
+func _on_terminal_focus_exited_deferred() -> void:
+	if is_visible and not _allow_terminal_unfocus:
+		# Click hit blocker/output (FOCUS_NONE) — keep terminal selected.
+		input_line.grab_focus()
+		return
+	_allow_terminal_unfocus = false
+	_refresh_input_block_state()
+
+
+func _refresh_input_block_state() -> void:
+	var should_block = is_visible and input_line != null and input_line.has_focus()
+	_blocking_game_input = should_block
+	if input_blocker:
+		input_blocker.visible = should_block
 
 func log_message(message: String, color: String = "white"):
 	"""Add a message to the console output"""
@@ -154,6 +247,10 @@ func log_message(message: String, color: String = "white"):
 func _on_command_submitted(command_text: String):
 	"""Handle command submission"""
 	if command_text.strip_edges().is_empty():
+		# Keep terminal selected even on empty submit.
+		input_line.clear()
+		input_line.grab_focus()
+		_refresh_input_block_state()
 		return
 	
 	# Log the command
@@ -166,8 +263,10 @@ func _on_command_submitted(command_text: String):
 	# Execute command
 	execute_command(command_text.strip_edges())
 	
-	# Clear input
+	# Clear input and keep the terminal selected for the next command.
 	input_line.clear()
+	input_line.grab_focus()
+	_refresh_input_block_state()
 
 func navigate_history(direction: int):
 	"""Navigate command history with up/down arrows"""

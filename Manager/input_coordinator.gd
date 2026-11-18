@@ -20,6 +20,8 @@ func _ready():
 func _unhandled_input(event: InputEvent):
 	# Only delegate mouse clicks in the game area; leave other input (e.g. R for rotate) to others.
 	# Ensure that event is a mouse pressed event
+	if DevConsole.is_blocking_game_input():
+		return
 	if not event is InputEventMouseButton:
 		return
 	var mb := event as InputEventMouseButton

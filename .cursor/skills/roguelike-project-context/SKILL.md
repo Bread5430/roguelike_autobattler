@@ -42,6 +42,7 @@ Dense summaries of specific features or subsystems: `.cursor/docs/systems/<name>
 | `.cursor/docs/systems/unit-card-upgrades.md` | `UNIT_UPGRADES`, `UnitUpgradeRegistry`, rest-site path choice, `is_upgradable`, `Base_Unit.apply_upgrade_from_card`, per-unit `_apply_upgrade_abilities()` |
 | `.cursor/docs/systems/battle-speed-control.md` | Battle speed bar, soft pause vs PauseMenu, `Engine.time_scale`, spell cast buffering while paused, combat audio pitch (future) |
 | `.cursor/docs/systems/deployment-map-geometry.md` | BoardUI vs side strips, player vs enemy flank zones, formation mirror, `grid_size`, mini formation surfaces, spawn world coords |
+| `.cursor/docs/systems/dev-console.md` | DevConsole, terminal focus input blocking, Escape deselect, `goto_node`, `complete_node`, `add_card`/`add_gold`/`add_components`, formation_editor commands |
 
 ## Usage
 

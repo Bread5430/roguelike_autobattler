@@ -47,6 +47,8 @@ func hide_bar() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if DevConsole.is_blocking_game_input():
+		return
 	if not visible or _controller == null:
 		return
 	if get_tree().paused:

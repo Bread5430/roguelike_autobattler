@@ -151,6 +151,8 @@ func _process(_delta):
 
 ## Casting mode only. Runs for every input so we always can confirm/cancel cast.
 func _input(event: InputEvent):
+	if DevConsole.is_blocking_game_input():
+		return
 	if not casting_mode:
 		return
 	var mouse_pos := get_viewport().get_mouse_position()
@@ -196,6 +198,8 @@ func _commit_spell_cast(spell_inst: Base_Spell, slot: SpellBarSlot, world_pos: V
 
 ## Only runs when no Control has accepted the event (e.g. keyboard when no button focused).
 func _unhandled_input(event: InputEvent):
+	if DevConsole.is_blocking_game_input():
+		return
 	if event.is_action_pressed("rotatePlacement"):
 		unit_placement.handle_rotate()
 		accept_event()
