@@ -28,11 +28,18 @@ const SIDE_ROWS : int = 3
 
 #var unit_bitstring_cache = {}
 var recently_seen_units = {}
+## Occupancy for random mini-formations (authoring grid, main board cells).
 var used_tiles = {}
+## Occupancy for side-strip mini-formations: key Vector3i(top_strip ? 1 : 0, x, y) strip-local.
+var used_side_strip_tiles = {}
+
+@export var random_mini_formation_attempts : int = 12
+@export var random_mini_formation_placements : int = 3
 
 func get_enemy_spawns(stage: int, difficulty: String, modifiers: Dictionary = {}) -> Array:
 	# Reset spawned tiles
 	used_tiles = {}
+	used_side_strip_tiles = {}
 	
 	# Decay spawn probabilities - int rounds down so eventually goes back to zero prob of spawn
 	for u in recently_seen_units.keys():
@@ -47,7 +54,7 @@ func get_enemy_spawns(stage: int, difficulty: String, modifiers: Dictionary = {}
 		push_warning("Invalid difficulty: %s" % spawn_difficulty)
 		return []
 	var formation = FORMATION_MAP.random_formation(spawn_difficulty)
-	
+
 	# Start filling in the formation with spawns
 	var all_spawn_positions: Array = []
 	var seen_groups = {}
@@ -63,6 +70,8 @@ func get_enemy_spawns(stage: int, difficulty: String, modifiers: Dictionary = {}
 			var spawn_pos = spawn_single_formation_entry(parsed, seen_groups)
 			if spawn_pos != null:
 				all_spawn_positions.append(spawn_pos)
+
+	_spawn_random_mini_formations(spawn_difficulty, seen_groups, all_spawn_positions)
 	
 	return all_spawn_positions
 	
@@ -207,15 +216,28 @@ func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -
 	var board_width : int = int(board.width)
 	var board_height : int = int(board.height)
 
-	# Player-board authorship → enemy-side L/R mirror of the footprint top-left.
-	var mirrored_x : int = board_width - footprint_w - local_x
-	var mirrored_vectors : Array = _mirror_placement_vectors_x(placement_vectors, float(footprint_w))
+	var placement_surface := str(parsed.get("placement_surface", "")).strip_edges().to_lower()
+	if placement_surface == FORMATION_MAP.SURFACE_SIDE:
+		unit_item_inst.queue_free()
+		push_warning("Side-strip mini rows must use spawn_side_strip_mini_formation_entry")
+		return null
 
 	# Side strips sit outside the main board (top y < 0, bottom y >= height, plus
 	# legacy bottom band height-SIDE_ROWS..height-1).
 	var in_top_side_band : bool = local_y < 0
 	var in_bottom_side_band : bool = local_y >= board_height - SIDE_ROWS
 	var is_side_band : bool = in_top_side_band or in_bottom_side_band
+
+	if placement_surface == FORMATION_MAP.SURFACE_MAIN and is_side_band:
+		unit_item_inst.queue_free()
+		return null
+	if placement_surface == FORMATION_MAP.SURFACE_MAIN and not _is_authored_main_board_rect(local_x, local_y, footprint_w, footprint_h, board_height):
+		unit_item_inst.queue_free()
+		return null
+
+	# Player-board authorship → enemy-side L/R mirror of the footprint top-left.
+	var mirrored_x : int = board_width - footprint_w - local_x
+	var mirrored_vectors : Array = _mirror_placement_vectors_x(placement_vectors, float(footprint_w))
 
 	var strip_local_y = 0
 	if is_side_band:
@@ -241,15 +263,259 @@ func spawn_single_formation_entry(parsed: Dictionary, seen_groups: Dictionary) -
 	bm.add_unit_to_board(unit_item_inst, world_spawn_pos, mirrored_vectors, false)
 	_register_enemy_pack_points(world_spawn_pos, placement_size, unit_item_inst.num_units > 1)
 
-	if is_side_band:
-		# Mirror copy on the player-side column at the same logical strip y (unflipped
-		# player x — this is the authored left-side counterpart).
-		var mirror_world = _board_grid_to_world(Vector2i(local_x, spawn_pos.y))
-		bm.add_unit_to_board(unit_item_inst, mirror_world, placement_vectors, false)
-		_register_enemy_pack_points(mirror_world, placement_size, unit_item_inst.num_units > 1)
+	if not is_side_band:
+		_mark_main_board_used(local_x, local_y, footprint_w, footprint_h)
 
 	unit_item_inst.queue_free()
 	return spawn_pos
+
+
+## Side-strip-only mini formations: authored strip-local coords (y=0..SIDE_ROWS-1), oriented up.
+## Bottom strip uses coords as-is; top strip flips Y (upside-down) so units still face the main board.
+func spawn_side_strip_mini_formation_entry(parsed: Dictionary, seen_groups: Dictionary, on_top_strip: bool) -> Variant:
+	if parsed.is_empty():
+		return null
+	var surface := str(parsed.get("placement_surface", "")).strip_edges().to_lower()
+	if surface != FORMATION_MAP.SURFACE_SIDE:
+		push_warning("spawn_side_strip_mini_formation_entry requires placement_surface side")
+		return null
+
+	var selected_unit_scene = pick_unit_scene_for_entry(parsed, seen_groups)
+	if not selected_unit_scene:
+		return null
+
+	var unit_item_inst = selected_unit_scene.instantiate()
+	if not unit_item_inst is Unit_Card:
+		unit_item_inst.queue_free()
+		return null
+	unit_item_inst.setup_unit()
+
+	var local_x = int(parsed["x"])
+	var strip_y = int(parsed["y"])
+	var placement = unit_item_inst.get_placement(false)
+	var placement_size : Vector2 = placement[0]
+	var placement_vectors : Array = placement[1]
+	var footprint_w : int = int(placement_size.x)
+	var footprint_h : int = int(placement_size.y)
+
+	if strip_y < 0 or strip_y + footprint_h > SIDE_ROWS:
+		unit_item_inst.queue_free()
+		return null
+
+	var board = bm.get_node("BoardUI")
+	var board_width : int = int(board.width)
+	var board_height : int = int(board.height)
+
+	var strip_y_spawn = strip_y
+	var vectors_for_spawn : Array = placement_vectors
+	if on_top_strip:
+		strip_y_spawn = SIDE_ROWS - footprint_h - strip_y
+		vectors_for_spawn = _mirror_placement_vectors_y(placement_vectors, float(footprint_h))
+
+	var mirrored_x : int = board_width - footprint_w - local_x
+	var mirrored_vectors : Array = _mirror_placement_vectors_x(vectors_for_spawn, float(footprint_w))
+
+	var logical_y : int
+	if on_top_strip:
+		logical_y = -SIDE_ROWS + strip_y_spawn
+	else:
+		logical_y = board_height + strip_y_spawn
+
+	var strip_local_y = _side_strip_local_y(logical_y, board_height, on_top_strip)
+	if strip_local_y < 0 or strip_local_y + footprint_h > SIDE_ROWS:
+		unit_item_inst.queue_free()
+		return null
+
+	var world_spawn_pos = _side_strip_grid_to_world(
+		mirrored_x, logical_y, strip_local_y, not on_top_strip, board_height
+	)
+	bm.add_unit_to_board(unit_item_inst, world_spawn_pos, mirrored_vectors, false)
+	_register_enemy_pack_points(world_spawn_pos, placement_size, unit_item_inst.num_units > 1)
+	_mark_side_strip_used(on_top_strip, local_x, strip_y_spawn, footprint_w, footprint_h)
+	unit_item_inst.queue_free()
+	return Vector2i(local_x, strip_y_spawn)
+
+
+func _spawn_random_mini_formations(spawn_difficulty: String, seen_groups: Dictionary, all_spawn_positions: Array) -> void:
+	if random_mini_formation_placements <= 0:
+		return
+	var placed := 0
+	var attempts := 0
+	while placed < random_mini_formation_placements and attempts < random_mini_formation_attempts:
+		attempts += 1
+		var surface := FORMATION_MAP.SURFACE_MAIN if randi() % 2 == 0 else FORMATION_MAP.SURFACE_SIDE
+		var mini_def = FORMATION_MAP.random_mini_formation(spawn_difficulty, surface)
+		if mini_def == null:
+			continue
+		if _try_place_random_mini_formation(mini_def, seen_groups, all_spawn_positions):
+			placed += 1
+
+
+func _try_place_random_mini_formation(mini_def: Dictionary, seen_groups: Dictionary, all_spawn_positions: Array) -> bool:
+	var surface: String = str(mini_def.get("surface", ""))
+	var rows: Array = mini_def.get("rows", [])
+	if rows.is_empty():
+		return false
+
+	var board = bm.get_node("BoardUI")
+	var board_width : int = int(board.width)
+	var board_height : int = int(board.height)
+	var bounds = _formation_rows_bounds(rows)
+	var bw : int = int(bounds["w"])
+	var bh : int = int(bounds["h"])
+
+	if surface == FORMATION_MAP.SURFACE_MAIN:
+		var min_x : int = 0
+		var max_x : int = board_width - bw
+		var min_y : int = SIDE_ROWS
+		var max_y : int = board_height - SIDE_ROWS - bh
+		if max_x < min_x or max_y < min_y:
+			return false
+		for _attempt in range(16):
+			var anchor = Vector2i(randi_range(min_x, max_x), randi_range(min_y, max_y))
+			if not _mini_rows_fit_main(rows, anchor, board_width, board_height):
+				continue
+			for row in rows:
+				var parsed: Dictionary = _translate_formation_row(row, anchor)
+				parsed["placement_surface"] = FORMATION_MAP.SURFACE_MAIN
+				var spawn_pos = spawn_single_formation_entry(parsed, seen_groups)
+				if spawn_pos == null:
+					return false
+				all_spawn_positions.append(spawn_pos)
+			return true
+		return false
+
+	if surface == FORMATION_MAP.SURFACE_SIDE:
+		var on_top := randi() % 2 == 1
+		var min_x2 : int = 0
+		var max_x2 : int = board_width - bw
+		var min_y2 : int = 0
+		var max_y2 : int = SIDE_ROWS - bh
+		if max_x2 < min_x2 or max_y2 < min_y2:
+			return false
+		for _attempt in range(16):
+			var anchor = Vector2i(randi_range(min_x2, max_x2), randi_range(min_y2, max_y2))
+			if not _mini_rows_fit_side(rows, anchor, on_top):
+				continue
+			for row in rows:
+				var parsed2: Dictionary = _translate_formation_row(row, anchor)
+				parsed2["placement_surface"] = FORMATION_MAP.SURFACE_SIDE
+				var spawn_pos2 = spawn_side_strip_mini_formation_entry(parsed2, seen_groups, on_top)
+				if spawn_pos2 == null:
+					return false
+				all_spawn_positions.append(spawn_pos2)
+			return true
+		return false
+
+	push_warning("Unknown mini formation surface: %s" % surface)
+	return false
+
+
+func _translate_formation_row(row: Dictionary, anchor: Vector2i) -> Dictionary:
+	var out: Dictionary = row.duplicate(true)
+	out["x"] = int(row["x"]) + anchor.x
+	out["y"] = int(row["y"]) + anchor.y
+	return out
+
+
+func _formation_rows_bounds(rows: Array) -> Dictionary:
+	var min_x := 9999
+	var min_y := 9999
+	var max_x := -9999
+	var max_y := -9999
+	for row in rows:
+		var x: int = int(row["x"])
+		var y: int = int(row["y"])
+		var w: int = int(row["w"])
+		var h: int = int(row["h"])
+		min_x = mini(min_x, x)
+		min_y = mini(min_y, y)
+		max_x = maxi(max_x, x + w)
+		max_y = maxi(max_y, y + h)
+	return {
+		"min_x": min_x,
+		"min_y": min_y,
+		"w": max_x - min_x,
+		"h": max_y - min_y,
+	}
+
+
+func _mini_rows_fit_main(rows: Array, anchor: Vector2i, board_width: int, board_height: int) -> bool:
+	for row in rows:
+		var x: int = int(row["x"]) + anchor.x
+		var y: int = int(row["y"]) + anchor.y
+		var w: int = int(row["w"])
+		var h: int = int(row["h"])
+		if not _is_authored_main_board_rect(x, y, w, h, board_height):
+			return false
+		if not _is_main_board_rect_free(x, y, w, h):
+			return false
+	return true
+
+
+func _mini_rows_fit_side(rows: Array, anchor: Vector2i, on_top: bool) -> bool:
+	for row in rows:
+		var x: int = int(row["x"]) + anchor.x
+		var y: int = int(row["y"]) + anchor.y
+		var w: int = int(row["w"])
+		var h: int = int(row["h"])
+		if y < 0 or y + h > SIDE_ROWS:
+			return false
+		var strip_y_check = y
+		if on_top:
+			strip_y_check = SIDE_ROWS - h - y
+		if strip_y_check < 0 or strip_y_check + h > SIDE_ROWS:
+			return false
+		if not _is_side_strip_rect_free(on_top, x, strip_y_check, w, h):
+			return false
+	return true
+
+
+func _is_authored_main_board_rect(x: int, y: int, w: int, h: int, board_height: int) -> bool:
+	var board_width : int = int(bm.get_node("BoardUI").width)
+	if x < 0 or y < SIDE_ROWS:
+		return false
+	if x + w > board_width:
+		return false
+	if y + h > board_height - SIDE_ROWS:
+		return false
+	return true
+
+
+func _main_board_cell_key(x: int, y: int) -> Vector2i:
+	return Vector2i(x, y)
+
+
+func _mark_main_board_used(x: int, y: int, w: int, h: int) -> void:
+	for cx in range(x, x + w):
+		for cy in range(y, y + h):
+			used_tiles[_main_board_cell_key(cx, cy)] = true
+
+
+func _is_main_board_rect_free(x: int, y: int, w: int, h: int) -> bool:
+	for cx in range(x, x + w):
+		for cy in range(y, y + h):
+			if used_tiles.has(_main_board_cell_key(cx, cy)):
+				return false
+	return true
+
+
+func _side_strip_cell_key(on_top: bool, x: int, y: int) -> Vector3i:
+	return Vector3i(1 if on_top else 0, x, y)
+
+
+func _mark_side_strip_used(on_top: bool, x: int, y: int, w: int, h: int) -> void:
+	for cx in range(x, x + w):
+		for cy in range(y, y + h):
+			used_side_strip_tiles[_side_strip_cell_key(on_top, cx, cy)] = true
+
+
+func _is_side_strip_rect_free(on_top: bool, x: int, y: int, w: int, h: int) -> bool:
+	for cx in range(x, x + w):
+		for cy in range(y, y + h):
+			if used_side_strip_tiles.has(_side_strip_cell_key(on_top, cx, cy)):
+				return false
+	return true
 
 
 ## Flip placement centers horizontally within a footprint of width `footprint_w`.
@@ -258,6 +524,15 @@ func _mirror_placement_vectors_x(vectors: Array, footprint_w: float) -> Array:
 	for v in vectors:
 		var p : Vector2 = v
 		out.append(Vector2(footprint_w - p.x, p.y))
+	return out
+
+
+## Flip placement centers vertically within a footprint of height `footprint_h`.
+func _mirror_placement_vectors_y(vectors: Array, footprint_h: float) -> Array:
+	var out: Array = []
+	for v in vectors:
+		var p : Vector2 = v
+		out.append(Vector2(p.x, footprint_h - p.y))
 	return out
 
 
@@ -270,22 +545,32 @@ func _side_strip_local_y(local_y: int, board_height: int, in_top: bool) -> int:
 	return local_y - (board_height - SIDE_ROWS)
 
 
-## World origin for a cell inside SideStripTop / SideStripBottom.
-## Editor-authored strip coords (y < 0 or y >= board height) use the strip's own
-## X origin. Legacy bottom-band rows keep the normal enemy X offset (grid_size).
+## World origin for side-band spawns.
+## External flanks (y < 0 or y >= board height) sit above/below the *player* main board
+## (BoardUI X span). Player deployment flanks use SideStripTop/Bottom beside the enemy board.
+## Legacy bottom-band rows on the authored grid still use enemy main-board X (grid_size).
 func _side_strip_grid_to_world(local_x: int, local_y: int, strip_local_y: int, bottom: bool, board_height: int) -> Vector2:
-	var strip = bm.side_strip_bottom_tiles if bottom else bm.side_strip_top_tiles
-	if strip == null:
-		return _board_grid_to_world(Vector2i(local_x, strip_local_y))
-	var cell_w = int(strip.cellWidth)
-	var cell_h = int(strip.cellHeight)
-	var world_y = strip.global_position.y + strip_local_y * cell_h
+	var board = bm.get_node("BoardUI")
+	var cell_w = int(board.cellWidth)
+	var cell_h = int(board.cellHeight)
+	var board_origin : Vector2 = board.global_position
 	var world_x: float
-	if not bottom or local_y >= board_height or local_y < 0:
-		world_x = strip.global_position.x + local_x * cell_w
+	var world_y: float
+	var is_external_flank : bool = local_y < 0 or local_y >= board_height
+
+	if is_external_flank:
+		world_x = board_origin.x + local_x * cell_w
+		if bottom:
+			world_y = board_origin.y + board_height * cell_h + strip_local_y * cell_h
+		else:
+			world_y = board_origin.y - float(SIDE_ROWS - strip_local_y) * cell_h
 	else:
-		var board = bm.get_node("BoardUI")
-		world_x = board.global_position.x + (local_x + grid_size.x) * int(board.cellWidth)
+		var strip = bm.side_strip_bottom_tiles if bottom else bm.side_strip_top_tiles
+		if strip == null:
+			return _board_grid_to_world(Vector2i(local_x + grid_size.x, strip_local_y))
+		world_x = board.global_position.x + (local_x + grid_size.x) * cell_w
+		world_y = strip.global_position.y + strip_local_y * cell_h
+
 	return Vector2(world_x, world_y)
 
 
@@ -351,5 +636,6 @@ func get_spawn_statistics() -> Dictionary:
 	return {
 		"recently_seen_units": recently_seen_units.duplicate(),
 		"used_tiles": used_tiles.duplicate(),
+		"used_side_strip_tiles": used_side_strip_tiles.duplicate(),
 		"test_mode": test_mode
 	}

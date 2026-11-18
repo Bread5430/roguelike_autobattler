@@ -1,0 +1,6 @@
+Name,Level,Surface,X,Y,W,H,Role,Group,Exact_Unit
+chaff_pair_main,light,main,0,0,2,2,1,1,chaff_swarm
+,,,2,0,2,2,1,1,chaff_swarm
+melee_wedge_main,light,main,0,0,1,4,1,1,four_melee
+strip_hook_side,light,side,0,1,2,2,1,1,chaff_swarm
+,,,3,0,2,2,1,1,chaff_swarm

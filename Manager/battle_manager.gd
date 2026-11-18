@@ -322,25 +322,40 @@ func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vect
 func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
 	var cell_w = float(board_tiles.cellWidth)
 	var cell_h = float(board_tiles.cellHeight)
-	var side_h = 3
-	var origin: Vector2
-	if top_corner.y < 0 and side_strip_top_tiles:
-		# Top strip logical y is -side_h .. -1
-		var local_y = top_corner.y + side_h
-		origin = side_strip_top_tiles.global_position + Vector2(top_corner.x * cell_w, local_y * cell_h)
-	elif top_corner.y >= int(board_tiles.height) and side_strip_bottom_tiles:
-		# Bottom strip logical y is height .. height+side_h-1
-		var local_y = top_corner.y - int(board_tiles.height)
-		origin = side_strip_bottom_tiles.global_position + Vector2(top_corner.x * cell_w, local_y * cell_h)
-	else:
-		origin = board_tiles.global_position + Vector2(top_corner.x * cell_w, top_corner.y * cell_h)
+	var origin: Vector2 = _deployment_footprint_origin_global(top_corner)
+	if origin == Vector2.INF:
+		push_warning("remove_unit_from_board: invalid anchor %s" % top_corner)
+		return
 
 	var footprint : Rect2 = Rect2(origin, Vector2(size.x * cell_w, size.y * cell_h))
 	for u in unit_parent.get_children():
 		if not u is Base_Unit:
 			continue
-		if footprint.has_point((u as Base_Unit).position):
+		if footprint.has_point((u as Base_Unit).global_position):
 			u.queue_free()
+
+
+## Top-left cell world position for prep placement (main board or side strips).
+func _deployment_footprint_origin_global(top_corner: Vector2i) -> Vector2:
+	const SIDE_H := 3
+	if top_corner.y < 0 and side_strip_top_tiles:
+		var local_y = top_corner.y + SIDE_H
+		var idx = top_corner.x + local_y * int(side_strip_top_tiles.columns)
+		var children = side_strip_top_tiles.get_children()
+		if idx >= 0 and idx < children.size():
+			return children[idx].global_position
+	elif top_corner.y >= int(board_tiles.height) and side_strip_bottom_tiles:
+		var local_y = top_corner.y - int(board_tiles.height)
+		var idx = top_corner.x + local_y * int(side_strip_bottom_tiles.columns)
+		var children = side_strip_bottom_tiles.get_children()
+		if idx >= 0 and idx < children.size():
+			return children[idx].global_position
+	else:
+		var idx = top_corner.x + top_corner.y * int(board_tiles.columns)
+		var children = board_tiles.get_children()
+		if idx >= 0 and idx < children.size():
+			return children[idx].global_position
+	return Vector2.INF
 
 
 ## Called by InputCoordinator for game-area clicks in BATTLE_ACTIVE.

@@ -104,6 +104,7 @@ func respawn_static_routers() -> void:
 func reset_current_selection() -> void:
 	curr_unit = null
 	curr_unit_inst = null
+	curr_inv_slot = null
 	objectCells.clear()
 	_clear_placement_stat_cache()
 	_clear_placement_indicators_preview()
@@ -210,6 +211,8 @@ func handle_board_click(mb: InputEventMouseButton, world_pos: Vector2) -> void:
 			inventory.add_item(item_inst.item_name, 1)
 			curr_unit = removed_unit_info[0]
 			curr_unit_inst = item_inst
+			# Card returned to inventory; don't use a stale slot from a prior selection.
+			curr_inv_slot = null
 
 			# Force a placement validity recalculation with this new unit
 			_reset_highlight(cells_to_reset)
@@ -612,20 +615,38 @@ func _place_unit():
 	_clear_placement_indicators_preview()
 
 	# Allow the player to keep placing this unit as long as there still are cards left
-	if curr_inv_slot.remove_item(1) == false:
+	if _consume_inventory_after_placement():
+		_check_and_highlight_cells(objectCells)
+		_update_placement_indicators_preview()
+	else:
 		curr_unit = null
 		curr_unit_inst = null
+		curr_inv_slot = null
 		_clear_placement_stat_cache()
 		if gui.selector_rect_debug:
 			gui.selector_rect = Rect2(0,0,0,0)
-
 		objectCells.clear()
-	else:
-		# Visually mark that you cannot keep placing here
-		_check_and_highlight_cells(objectCells)
-		_update_placement_indicators_preview()
 
 	isValid = false
+
+
+## Decrement inventory for the placed card. Uses the selected slot when valid, otherwise
+## any stack with this item (e.g. after right-click pickup from the board).
+func _consume_inventory_after_placement() -> bool:
+	if curr_unit_inst == null or not curr_unit_inst is Unit_Card:
+		return false
+	var card: Unit_Card = curr_unit_inst as Unit_Card
+	if card.item_name.is_empty():
+		return false
+	if curr_inv_slot != null and is_instance_valid(curr_inv_slot):
+		if curr_inv_slot.item == curr_unit and curr_inv_slot.item_inst != null:
+			if curr_inv_slot.remove_item(1):
+				return curr_inv_slot.item != null
+			return false
+	if inventory == null:
+		push_warning("UnitPlacement: no inventory to consume card '%s'" % card.item_name)
+		return false
+	return inventory.remove_item(card.item_name, 1)
 
 
 # Placement logic using logical grid
@@ -642,12 +663,13 @@ func check_unit_space_availability(top_corner: Vector2, size: Vector2) -> bool:
 
 
 func place_on_board(top_corner: Vector2, size: Vector2, unit_ref: PackedScene) -> void:
+	var anchor := Vector2i(int(top_corner.x), int(top_corner.y))
 	for x in size.x:
 		for y in size.y:
 			var lx = int(top_corner.x) + int(x)
 			var ly = int(top_corner.y) + int(y)
 			if _is_valid_logical_tile(Vector2i(lx, ly)):
-				unit_board_space_map[lx][_space_map_y(ly)] = [unit_ref, top_corner, size]
+				unit_board_space_map[lx][_space_map_y(ly)] = [unit_ref, anchor, size]
 
 
 func _router_exclusion_radius_for_current_unit() -> float:
