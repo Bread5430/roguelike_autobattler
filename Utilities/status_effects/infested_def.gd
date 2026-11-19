@@ -31,12 +31,18 @@ func on_host_death(instance: StatusEffectInstance, host: Base_Unit, _source: Bas
 	var crawler_scene: PackedScene = load(CRAWLER_SCENE_PATH) as PackedScene
 	if crawler_scene == null:
 		return
+	var spawn_origin = host.global_position
+	var battle_manager = parent_node.get_parent()
 	for i in count:
+		var angle = TAU * float(i) / float(count)
+		var world_pos = spawn_origin + Vector2(cos(angle), sin(angle)) * 12.0
+		if battle_manager != null and battle_manager.has_method("spawn_runtime_unit"):
+			battle_manager.spawn_runtime_unit(crawler_scene, world_pos, spawn_faction)
+			continue
 		var crawler = crawler_scene.instantiate()
 		if crawler == null:
 			continue
 		crawler.faction = spawn_faction
-		var angle = TAU * float(i) / float(count)
 		crawler.position = host.position + Vector2(cos(angle), sin(angle)) * 12.0
 		parent_node.add_child(crawler)
 		if crawler is Base_Unit:

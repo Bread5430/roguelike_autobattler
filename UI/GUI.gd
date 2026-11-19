@@ -113,6 +113,10 @@ func post_ready():
 			inventory.deconstruct_item_requested.connect(_on_inventory_deconstruct_item_requested)
 			inventory.craft_item_requested.connect(_on_inventory_craft_item_requested)
 			inventory.bandwidth_upgrade_requested.connect(_on_inventory_bandwidth_upgrade_requested)
+			inventory.fortress_upgrade_requested.connect(_on_inventory_fortress_upgrade_requested)
+			inventory.spell_power_upgrade_requested.connect(_on_inventory_spell_power_upgrade_requested)
+			inventory.unit_hp_upgrade_requested.connect(_on_inventory_unit_hp_upgrade_requested)
+			inventory.unit_dmg_upgrade_requested.connect(_on_inventory_unit_dmg_upgrade_requested)
 			inventory.duplicate_unit_requested.connect(_on_inventory_duplicate_unit_requested)
 		if gsm.has_signal("run_currency_changed"):
 			gsm.run_currency_changed.connect(_on_run_currency_changed)
@@ -586,6 +590,31 @@ func _on_inventory_bandwidth_upgrade_requested() -> void:
 	if inventory:
 		inventory.refresh_upgrade_menu(gsm.run_components, gsm.run_gold)
 	refresh_bandwidth()
+
+
+func _on_inventory_fortress_upgrade_requested() -> void:
+	_try_inventory_stat_upgrade("try_upgrade_fortress")
+
+
+func _on_inventory_spell_power_upgrade_requested() -> void:
+	_try_inventory_stat_upgrade("try_upgrade_spell_power")
+
+
+func _on_inventory_unit_hp_upgrade_requested() -> void:
+	_try_inventory_stat_upgrade("try_upgrade_unit_hp")
+
+
+func _on_inventory_unit_dmg_upgrade_requested() -> void:
+	_try_inventory_stat_upgrade("try_upgrade_unit_dmg")
+
+
+func _try_inventory_stat_upgrade(method_name: String) -> void:
+	if gsm == null or not gsm.has_method(method_name):
+		return
+	if not gsm.call(method_name):
+		return
+	if inventory:
+		inventory.refresh_upgrade_menu(gsm.run_components, gsm.run_gold)
 
 
 func _on_inventory_duplicate_unit_requested(item_id: String) -> void:

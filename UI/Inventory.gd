@@ -5,6 +5,10 @@ signal inspect_requested(item_inst: Item, item_name: String, source_global_pos: 
 signal deconstruct_item_requested(item_id: String)
 signal craft_item_requested(item_id: String)
 signal bandwidth_upgrade_requested
+signal fortress_upgrade_requested
+signal spell_power_upgrade_requested
+signal unit_hp_upgrade_requested
+signal unit_dmg_upgrade_requested
 signal duplicate_unit_requested(item_id: String)
 
 const BANDWIDTH_UPGRADE_COST: int = 2
@@ -15,6 +19,10 @@ var slots : Array[InventorySlot]
 @onready var inventory_grid : GridContainer = $InventoryGrid
 @onready var upgrade_menu : VBoxContainer = $UpgradeMenu
 @onready var upgrade_bandwidth_button : Button = $UpgradeMenu/UpgradeBandwidthButton
+@onready var upgrade_fortress_button : Button = $UpgradeMenu/UpgradeFortressButton
+@onready var upgrade_spell_power_button : Button = $UpgradeMenu/UpgradeSpellPowerButton
+@onready var upgrade_unit_hp_button : Button = $UpgradeMenu/UpgradeUnitHpButton
+@onready var upgrade_unit_dmg_button : Button = $UpgradeMenu/UpgradeUnitDmgButton
 @onready var duplicate_unit_button : Button = $UpgradeMenu/DuplicateUnitButton
 @export var starter_items : Array[String]
 @export var starter_items_count : Array[int]
@@ -46,6 +54,14 @@ func _ready():
 
 	if upgrade_bandwidth_button:
 		upgrade_bandwidth_button.pressed.connect(_on_upgrade_bandwidth_pressed)
+	if upgrade_fortress_button:
+		upgrade_fortress_button.pressed.connect(_on_upgrade_fortress_pressed)
+	if upgrade_spell_power_button:
+		upgrade_spell_power_button.pressed.connect(_on_upgrade_spell_power_pressed)
+	if upgrade_unit_hp_button:
+		upgrade_unit_hp_button.pressed.connect(_on_upgrade_unit_hp_pressed)
+	if upgrade_unit_dmg_button:
+		upgrade_unit_dmg_button.pressed.connect(_on_upgrade_unit_dmg_pressed)
 	if duplicate_unit_button:
 		duplicate_unit_button.pressed.connect(_on_duplicate_unit_pressed)
 
@@ -232,6 +248,22 @@ func refresh_upgrade_menu(components: int, scrap: int) -> void:
 	if upgrade_bandwidth_button:
 		upgrade_bandwidth_button.disabled = _run_components < BANDWIDTH_UPGRADE_COST
 		upgrade_bandwidth_button.text = "Upgrade Bandwidth\n+10  (%d Components)" % BANDWIDTH_UPGRADE_COST
+	var fortress_cost = _gsm_upgrade_cost("fortress_upgrade_cost")
+	var spell_cost = _gsm_upgrade_cost("spell_power_upgrade_cost")
+	var unit_hp_cost = _gsm_upgrade_cost("unit_hp_upgrade_cost")
+	var unit_dmg_cost = _gsm_upgrade_cost("unit_dmg_upgrade_cost")
+	if upgrade_fortress_button:
+		upgrade_fortress_button.disabled = _run_components < fortress_cost
+		upgrade_fortress_button.text = "Upgrade Fortress\n+10%% HP/DMG (%d Components)" % fortress_cost
+	if upgrade_spell_power_button:
+		upgrade_spell_power_button.disabled = _run_components < spell_cost
+		upgrade_spell_power_button.text = "Upgrade Spell Power\n+10%% (%d Components)" % spell_cost
+	if upgrade_unit_hp_button:
+		upgrade_unit_hp_button.disabled = _run_components < unit_hp_cost
+		upgrade_unit_hp_button.text = "Upgrade Unit HP\n+10%% (%d Components)" % unit_hp_cost
+	if upgrade_unit_dmg_button:
+		upgrade_unit_dmg_button.disabled = _run_components < unit_dmg_cost
+		upgrade_unit_dmg_button.text = "Upgrade Unit DMG\n+10%% (%d Components)" % unit_dmg_cost
 	_reset_duplicate_button_text()
 
 
@@ -241,10 +273,40 @@ func _refresh_upgrade_menu_visibility() -> void:
 	upgrade_menu.visible = visible and not deconstruct_mode and not craft_mode
 
 
-func _on_upgrade_bandwidth_pressed() -> void:
+func _gsm_upgrade_cost(prop: String) -> int:
+	var gui = get_parent()
+	if gui == null or gui.get("gsm") == null:
+		return 2
+	var value = gui.gsm.get(prop)
+	if value == null:
+		return 2
+	return int(value)
+
+
+func _emit_stat_upgrade(sig: Signal) -> void:
 	if deconstruct_mode or craft_mode:
 		return
-	bandwidth_upgrade_requested.emit()
+	sig.emit()
+
+
+func _on_upgrade_bandwidth_pressed() -> void:
+	_emit_stat_upgrade(bandwidth_upgrade_requested)
+
+
+func _on_upgrade_fortress_pressed() -> void:
+	_emit_stat_upgrade(fortress_upgrade_requested)
+
+
+func _on_upgrade_spell_power_pressed() -> void:
+	_emit_stat_upgrade(spell_power_upgrade_requested)
+
+
+func _on_upgrade_unit_hp_pressed() -> void:
+	_emit_stat_upgrade(unit_hp_upgrade_requested)
+
+
+func _on_upgrade_unit_dmg_pressed() -> void:
+	_emit_stat_upgrade(unit_dmg_upgrade_requested)
 
 
 func _on_duplicate_unit_pressed() -> void:

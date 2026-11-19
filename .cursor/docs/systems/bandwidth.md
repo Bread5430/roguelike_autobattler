@@ -23,7 +23,7 @@ Max bandwidth is a **run-persistent fixed cap** (start 50). Inventory upgrades a
 3. **Combat start** — no 50% refund.
 4. **Friendly death** — subtract that unit's `bandwidth_loss_cost` from remaining and from the loss overlay. Factory excluded.
 5. **Battle end** — negative remaining → repair damage; positive → scrap surplus reward.
-6. **Inventory** — Upgrade Bandwidth (+10 max, 2 components); Duplicate Unit uses component + scrap costs.
+6. **Inventory** — Upgrade Bandwidth (+10 max, 2 components); Duplicate Unit uses component + scrap costs. Fortress / spell power / unit HP / unit DMG upgrades sit on the same rail — see `run-stat-upgrades.md`.
 
 ## Relic TODO
 

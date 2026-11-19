@@ -24,7 +24,7 @@ layout_mode = 0
 offset_left = 1010.0
 offset_top = 8.0
 offset_right = 1240.0
-offset_bottom = 200.0
+offset_bottom = 460.0
 theme_override_constants/separation = 8
 
 [node name="UpgradeBandwidthButton" type="Button" parent="UpgradeMenu"]
@@ -32,6 +32,30 @@ custom_minimum_size = Vector2(220, 64)
 layout_mode = 2
 text = "Upgrade Bandwidth
 +10  (2 Components)"
+
+[node name="UpgradeFortressButton" type="Button" parent="UpgradeMenu"]
+custom_minimum_size = Vector2(220, 64)
+layout_mode = 2
+text = "Upgrade Fortress
++10% HP/DMG (2 Components)"
+
+[node name="UpgradeSpellPowerButton" type="Button" parent="UpgradeMenu"]
+custom_minimum_size = Vector2(220, 64)
+layout_mode = 2
+text = "Upgrade Spell Power
++10% (2 Components)"
+
+[node name="UpgradeUnitHpButton" type="Button" parent="UpgradeMenu"]
+custom_minimum_size = Vector2(220, 64)
+layout_mode = 2
+text = "Upgrade Unit HP
++10% (2 Components)"
+
+[node name="UpgradeUnitDmgButton" type="Button" parent="UpgradeMenu"]
+custom_minimum_size = Vector2(220, 64)
+layout_mode = 2
+text = "Upgrade Unit DMG
++10% (2 Components)"
 
 [node name="DuplicateUnitButton" type="Button" parent="UpgradeMenu"]
 custom_minimum_size = Vector2(220, 64)

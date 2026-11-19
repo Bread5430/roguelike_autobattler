@@ -1,8 +1,10 @@
 extends Node
 class_name PlayerHealthManager
 
-@export var max_health: int = 100
-@export var curr_health: int = 100
+const BASE_MAX_HEALTH: int = 100
+
+@export var max_health: int = BASE_MAX_HEALTH
+@export var curr_health: int = BASE_MAX_HEALTH
 
 var _health_snapshot_at_battle_start: int = -1
 var _repair_damage_this_battle: int = 0
@@ -12,9 +14,22 @@ signal game_over
 
 
 func reset_for_new_campaign() -> void:
+	max_health = BASE_MAX_HEALTH
 	curr_health = max_health
 	_health_snapshot_at_battle_start = -1
 	_repair_damage_this_battle = 0
+	_emit_health_changed()
+
+
+func set_max_health_from_base(base_max: int, bonus_pct: int) -> void:
+	var frac = get_health_fraction()
+	max_health = maxi(1, int(round(float(base_max) * (1.0 + float(bonus_pct) / 100.0))))
+	curr_health = clampi(int(round(frac * float(max_health))), 0, max_health)
+	_emit_health_changed()
+
+
+func restore_curr_health(value: int) -> void:
+	curr_health = clampi(value, 0, max_health)
 	_emit_health_changed()
 
 

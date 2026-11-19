@@ -36,6 +36,7 @@ Dense summaries of specific features or subsystems: `.cursor/docs/systems/<name>
 | `.cursor/docs/systems/beacon-spell-fsm.md` | BeaconSpell 3-click flow, BeaconController, beaconed FSM state, panic/cache behavior |
 | `.cursor/docs/systems/battle-rewards-ui.md` | Post-victory `BattleRewardsUI`, reward payload entries, scrap (`run_gold`)/unit submenu, repair damage, leftover-bandwidth scrap surplus, modal click blocking |
 | `.cursor/docs/systems/bandwidth.md` | `BandwidthManager`, remaining/loss overlay bar, `bandwidth_deploy_cost` / `bandwidth_loss_cost`, placement spend/refund, death drain, leftover bandwidth → scrap, inventory cap upgrade / duplicate |
+| `.cursor/docs/systems/run-stat-upgrades.md` | Inventory fortress / spell power / unit HP / unit DMG upgrades, per-upgrade component costs, `scale_stat`, friendly spawn modifiers, factory fortress scaling |
 | `.cursor/docs/systems/random-events.md` | `RANDOM_EVENT_DATA`, CSV event/choice schema, `RandomEventControl`, `RandomEventUI`, map `RANDOM_EVENT` nodes, resource exchange costs/rewards, `event_visit_active` |
 | `.cursor/docs/systems/quest-events.md` | Quest `event_type`, `QuestControl`, mark preview Accept/Decline, `quest_defs`/`quest_targets` CSV, encounter rewards, exclusive marks, Depot Assault / Locked Cache / Hidden Supplies |
 | `.cursor/docs/systems/chasing-enemy-blockades.md` | `ChasingEnemyController`, capsule sweep, on-map step preview arcs, `BLOCKADE` nodes, `chaser_blockaded` exit pressure, blockade combat/rewards |

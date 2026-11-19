@@ -32,6 +32,21 @@ var run_gold: int = 0
 var run_components: int = 0
 const BANDWIDTH_UPGRADE_COST: int = 2
 const BANDWIDTH_UPGRADE_AMOUNT: int = 10
+const FORTRESS_UPGRADE_PCT: int = 10
+const SPELL_POWER_UPGRADE_PCT: int = 10
+const UNIT_HP_UPGRADE_PCT: int = 10
+const UNIT_DMG_UPGRADE_PCT: int = 10
+
+@export var fortress_upgrade_cost: int = 2
+@export var spell_power_upgrade_cost: int = 2
+@export var unit_hp_upgrade_cost: int = 2
+@export var unit_dmg_upgrade_cost: int = 2
+
+var fortress_bonus_pct: int = 0
+var spell_power_bonus_pct: int = 0
+var friendly_hp_bonus_pct: int = 0
+var friendly_dmg_bonus_pct: int = 0
+
 var shop_visit_active: bool = false
 var rest_visit_active: bool = false
 var event_visit_active: bool = false
@@ -538,6 +553,67 @@ func try_upgrade_bandwidth() -> bool:
 	return true
 
 
+func scale_stat(base: int, pct: int) -> int:
+	return maxi(1, int(round(float(base) * (1.0 + float(pct) / 100.0))))
+
+
+func try_upgrade_fortress() -> bool:
+	if not spend_components(fortress_upgrade_cost):
+		return false
+	fortress_bonus_pct += FORTRESS_UPGRADE_PCT
+	if player_health:
+		player_health.set_max_health_from_base(PlayerHealthManager.BASE_MAX_HEALTH, fortress_bonus_pct)
+	return true
+
+
+func try_upgrade_spell_power() -> bool:
+	if not spend_components(spell_power_upgrade_cost):
+		return false
+	spell_power_bonus_pct += SPELL_POWER_UPGRADE_PCT
+	apply_spell_power_upgrade()
+	return true
+
+
+func apply_spell_power_upgrade() -> void:
+	# TODO: apply spell_power_bonus_pct to spell effects
+	pass
+
+
+func try_upgrade_unit_hp() -> bool:
+	if not spend_components(unit_hp_upgrade_cost):
+		return false
+	friendly_hp_bonus_pct += UNIT_HP_UPGRADE_PCT
+	return true
+
+
+func try_upgrade_unit_dmg() -> bool:
+	if not spend_components(unit_dmg_upgrade_cost):
+		return false
+	friendly_dmg_bonus_pct += UNIT_DMG_UPGRADE_PCT
+	return true
+
+
+func apply_friendly_spawn_modifiers(unit: Base_Unit) -> void:
+	if unit == null or not is_instance_valid(unit):
+		return
+	if not unit.faction or unit is FactoryUnit:
+		return
+	if friendly_hp_bonus_pct > 0:
+		unit.max_hp = scale_stat(unit.max_hp, friendly_hp_bonus_pct)
+		unit.curr_hp = unit.max_hp
+	if friendly_dmg_bonus_pct > 0:
+		unit.base_damage = scale_stat(unit.base_damage, friendly_dmg_bonus_pct)
+
+
+func apply_fortress_spawn_modifiers(unit: Base_Unit) -> void:
+	if unit == null or not is_instance_valid(unit):
+		return
+	if fortress_bonus_pct <= 0:
+		return
+	unit.max_hp = scale_stat(unit.max_hp, fortress_bonus_pct)
+	unit.base_damage = scale_stat(unit.base_damage, fortress_bonus_pct)
+
+
 func try_duplicate_unit(item_id: String, inventory: Inventory, components_cost: int, scrap_cost: int) -> bool:
 	if inventory == null or item_id.is_empty():
 		return false
@@ -690,6 +766,10 @@ func start_new_campaign():
 	current_battle_node = null
 	run_gold = 0
 	run_components = 0
+	fortress_bonus_pct = 0
+	spell_power_bonus_pct = 0
+	friendly_hp_bonus_pct = 0
+	friendly_dmg_bonus_pct = 0
 	shop_visit_active = false
 	rest_visit_active = false
 	event_visit_active = false
@@ -722,6 +802,12 @@ func save_campaign_progress() -> Dictionary:
 		"run_gold": run_gold,
 		"run_components": run_components,
 		"max_bandwidth": bandwidth.max_bandwidth if bandwidth else BandwidthManager.DEFAULT_MAX_BANDWIDTH,
+		"fortress_bonus_pct": fortress_bonus_pct,
+		"spell_power_bonus_pct": spell_power_bonus_pct,
+		"friendly_hp_bonus_pct": friendly_hp_bonus_pct,
+		"friendly_dmg_bonus_pct": friendly_dmg_bonus_pct,
+		"player_max_health": player_health.max_health if player_health else PlayerHealthManager.BASE_MAX_HEALTH,
+		"player_curr_health": player_health.curr_health if player_health else PlayerHealthManager.BASE_MAX_HEALTH,
 	}
 	
 	# Add map state
@@ -750,8 +836,15 @@ func load_campaign_progress(save_data: Dictionary):
 
 	run_gold = int(save_data.get("run_gold", 0))
 	run_components = int(save_data.get("run_components", 0))
+	fortress_bonus_pct = int(save_data.get("fortress_bonus_pct", 0))
+	spell_power_bonus_pct = int(save_data.get("spell_power_bonus_pct", 0))
+	friendly_hp_bonus_pct = int(save_data.get("friendly_hp_bonus_pct", 0))
+	friendly_dmg_bonus_pct = int(save_data.get("friendly_dmg_bonus_pct", 0))
 	if bandwidth:
 		bandwidth.set_max_bandwidth(int(save_data.get("max_bandwidth", BandwidthManager.DEFAULT_MAX_BANDWIDTH)))
+	if player_health:
+		player_health.set_max_health_from_base(PlayerHealthManager.BASE_MAX_HEALTH, fortress_bonus_pct)
+		player_health.restore_curr_health(int(save_data.get("player_curr_health", player_health.max_health)))
 	_emit_run_currency_changed()
 	if quest_control:
 		quest_control.sync_active_quests_from_map()

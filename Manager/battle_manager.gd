@@ -174,6 +174,7 @@ func _spawn_runtime_unit_deferred(
 	unit.post_ready()
 	if not saved_upgrade_path.is_empty():
 		unit.restore_upgrade_path(saved_upgrade_path)
+	_apply_friendly_spawn_modifiers(unit)
 	if spawn_faction and not unit.died.is_connected(_on_ally_unit_died):
 		unit.died.connect(_on_ally_unit_died)
 	unit.set_start_stop(true)
@@ -231,11 +232,29 @@ func _try_spawn_factory() -> void:
 	factory.player_health_manager = player_health
 	factory.position = _get_factory_spawn_position()
 	unit_parent.add_child(factory)
+	_apply_fortress_spawn_modifiers(factory)
+	factory.curr_hp = int(factory.max_hp * clampf(factory.initial_health_fraction, 0.0, 1.0))
+	if factory.curr_hp <= 0:
+		factory.state_machine.set_state(factory.state_machine.states.dead)
 	factory.post_ready()
 	factory.set_start_stop(true)
 	player_health.sync_from_unit_hp(factory.curr_hp, factory.max_hp)
 	if factory.curr_hp <= 0:
 		_handle_factory_destroyed()
+
+
+func _apply_friendly_spawn_modifiers(unit: Base_Unit) -> void:
+	var gsm = get_parent()
+	if gsm == null or not gsm.has_method("apply_friendly_spawn_modifiers"):
+		return
+	gsm.apply_friendly_spawn_modifiers(unit)
+
+
+func _apply_fortress_spawn_modifiers(unit: Base_Unit) -> void:
+	var gsm = get_parent()
+	if gsm == null or not gsm.has_method("apply_fortress_spawn_modifiers"):
+		return
+	gsm.apply_fortress_spawn_modifiers(unit)
 
 
 func _handle_factory_destroyed() -> void:
@@ -318,6 +337,8 @@ func add_unit_to_board(unit_ref : Item, start_position : Vector2, placement_vect
 			if faction and not base_unit.died.is_connected(_on_ally_unit_died):
 				base_unit.died.connect(_on_ally_unit_died)
 		this_inst.post_ready()
+		if this_inst is Base_Unit:
+			_apply_friendly_spawn_modifiers(this_inst as Base_Unit)
 	
 func remove_unit_from_board(top_corner: Vector2i, size: Vector2) -> void:
 	var cell_w = float(board_tiles.cellWidth)
